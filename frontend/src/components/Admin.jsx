@@ -11,7 +11,7 @@ export default function Admin() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/login', {
+      const res = await fetch('universite-quiz-app-production.up.railway.app/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code: formData.code })
