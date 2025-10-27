@@ -28,7 +28,7 @@ app.use(pinoHttp({ logger }));
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 // Email Transporter
-const transporter = nodemailer.createTransporter({
+const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: Number(process.env.SMTP_PORT),
   secure: false,
