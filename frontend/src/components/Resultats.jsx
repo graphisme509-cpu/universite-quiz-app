@@ -10,7 +10,7 @@ export default function Resultats({ user }) {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch('universite-quiz-app-production.up.railway.app/api/resultats', {
+      const res = await fetch('https://universite-quiz-app-production.up.railway.app/api/resultats', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
