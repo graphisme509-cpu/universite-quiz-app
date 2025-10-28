@@ -25,6 +25,7 @@ function usePasswordMeter() {
 
 export default function Inscription({ setUser }) {
   const [formData, setFormData] = useState({ nom: '', email: '', motdepasse: '' });
+  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [verifyLink, setVerifyLink] = useState('');
@@ -33,11 +34,14 @@ export default function Inscription({ setUser }) {
 
   const handleSubmit = async (e) => {
   e.preventDefault();
-  toast.info('⏳ Inscription en cours...', { autoClose: 1500 });
+
   if (!strength.ok) {
-    toast.error('Mot de passe faible. Corrigez les erreurs.');
+    toast.error('❌ Mot de passe faible. Corrigez les erreurs.');
     return;
   }
+
+  setLoading(true); // 🔒 Désactive le bouton
+  const pendingToast = toast.info('⏳ Inscription en cours...', { autoClose: false });
 
   try {
     const res = await fetch(
@@ -51,6 +55,7 @@ export default function Inscription({ setUser }) {
     );
 
     const data = await res.json();
+    toast.dismiss(pendingToast);
 
     if (res.ok) {
       setUser(data.user);
@@ -59,23 +64,26 @@ export default function Inscription({ setUser }) {
 
       toast.success('✅ Inscription réussie ! Vérifiez votre email.', {
         position: 'bottom-right',
+        autoClose: 4000,
       });
+
+      setTimeout(() => {
+        window.location.href = '/verify';
+      }, 3000);
+    } else if (res.status === 409) {
+      toast.error('⚠️ Cet email est déjà utilisé.', { autoClose: 3000 });
+    } else if (res.status === 400 && data.details) {
+      toast.error(`⚠️ Mot de passe faible : ${data.details.join(', ')}`);
     } else {
-      const details = Array.isArray(data.details)
-        ? data.details.join(', ')
-        : '';
-      toast.error(`❌ ${data.message || details || 'Erreur inconnue.'}`);
+      toast.error(`❌ ${data.message || 'Erreur inconnue.'}`);
     }
   } catch (err) {
-    toast.error('⚠️ Erreur réseau. Réessayez.');
+    toast.dismiss(pendingToast);
+    toast.error('⚠️ Erreur réseau. Réessayez.', { autoClose: 3000 });
+  } finally {
+    setLoading(false); // 🔓 Réactive le bouton
   }
 };
-
-  const handlePasswordChange = (e) => {
-    const newPw = e.target.value;
-    setFormData({ ...formData, motdepasse: newPw });
-    updatePasswordMeter(newPw, formData.email, formData.nom);
-  };
 
   return (
     <>
@@ -99,7 +107,13 @@ export default function Inscription({ setUser }) {
           <div style={{ width: `${strength.score}%`, background: strength.ok ? 'green' : strength.score > 50 ? 'orange' : 'red' }}></div>
           {!strength.ok && <ul>{strength.issues.map((issue, i) => <li key={i}>{issue}</li>)}</ul>}
         </div>
-        <button type="submit" disabled={!strength.ok}>S'inscrire</button>
+        <button
+  type="submit"
+  disabled={loading}
+  className={`btn-inscription ${loading ? 'loading' : ''}`}
+>
+  {loading ? '⏳ Inscription...' : 'S’inscrire'}
+</button>
       </form>
       {message && <p className={message.includes('OK') ? 'success' : 'error'}>{message}</p>}
       {verifyLink && <p>Vérifiez votre email : <a href={verifyLink}>Lien de vérification</a></p>}
