@@ -85,6 +85,13 @@ export default function Inscription({ setUser }) {
   }
 };
 
+const handlePasswordChange = (e) => {
+  const newPass = e.target.value;
+  setFormData({ ...formData, motdepasse: newPass });
+  updatePasswordMeter(newPass, formData.email, formData.nom);
+};
+
+  
   return (
     <>
     <section>
@@ -93,14 +100,14 @@ export default function Inscription({ setUser }) {
         <input type="text" placeholder="Nom" value={formData.nom} onChange={(e) => setFormData({...formData, nom: e.target.value})} required minLength={2} maxLength={100} />
         <input type="email" placeholder="Email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} required />
         <input
-          type={showPass ? 'text' : 'password'}
-          placeholder="Mot de passe"
-          value={formData.motdepasse}
-          onChange={handlePasswordChange}
-          required
-          minLength={8}
-          maxLength={72}
-        />
+  type={showPass ? 'text' : 'password'}
+  placeholder="Mot de passe"
+  value={formData.motdepasse}
+  onChange={handlePasswordChange}
+  required
+  minLength={8}
+  maxLength={72}
+/>
         <button type="button" onClick={() => setShowPass(!showPass)}>👁️</button>
         {/* Barre de force */}
         <div className="password-meter">
