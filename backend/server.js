@@ -32,8 +32,11 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: Number(process.env.SMTP_PORT),
-  secure: false,
-  auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+  secure: Number(process.env.SMTP_PORT) === 465, // true seulement pour SSL
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
 });
 
 app.set('trust proxy', 1); // fait confiance au proxy de la plateforme
