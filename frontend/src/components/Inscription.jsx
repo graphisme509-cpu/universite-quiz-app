@@ -59,17 +59,18 @@ export default function Inscription({ setUser }) {
 
     if (res.ok) {
   setUser(data.user);
-  setVerifyLink(`https://universite-quiz-app-production.up.railway.app/api/auth/verify?token=check-email`);
+  const backendVerifyLink = `${process.env.PUBLIC_BASE_URL}/api/auth/verify-email?token=${data.user.email_verify_token}`;
+  setVerifyLink(backendVerifyLink);
   setFormData({ nom: '', email: '', motdepasse: '' });
-  setLoading(false); // 🔹 stop le spinner immédiatement
+  setLoading(false);
 
-  toast.success('✓ Inscription réussie ! Vérifiez votre email.', {
-    position: 'bottom-right',
-    autoClose: 4000,
-  });
+  toast.success('✓ Inscription réussie ! Vérifiez votre email.', { autoClose: 4000 });
+
+  // Redirection automatique vers backend pour vérifier
   setTimeout(() => {
-    navigate('/verify'); // 🔹 navigation SPA
+    window.location.href = backendVerifyLink;
   }, 2000);
+}
     } else if (res.status === 409) {
       toast.error('⚠️ Cet email est déjà utilisé.', { autoClose: 3000 });
     } else if (res.status === 400 && data.details) {
