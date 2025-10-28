@@ -59,7 +59,7 @@ export default function Inscription({ setUser }) {
 
     if (res.ok) {
   setUser(data.user);
-  setVerifyLink(`${window.location.origin}/verify?token=check-email`);
+  setVerifyLink(`https://universite-quiz-app-production.up.railway.app/api/auth/verify?token=check-email`);
   setFormData({ nom: '', email: '', motdepasse: '' });
   setLoading(false); // 🔹 stop le spinner immédiatement
 
