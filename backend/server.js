@@ -15,6 +15,7 @@ import pinoHttp from 'pino-http';
 import promClient from 'prom-client';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import bodyParser from 'body-parser';
 
 dotenv.config();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
