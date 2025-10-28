@@ -61,6 +61,15 @@ app.get('/metrics', async (req, res) => {
   res.set('Content-Type', register.contentType);
   res.end(await register.metrics());
 });
+// test smtp
+app.get('/test-smtp', async (req, res) => {
+  try {
+    await transporter.verify(); // Nodemailer tente la connexion
+    res.send('SMTP OK ✅');
+  } catch (err) {
+    res.status(500).send('SMTP FAIL ❌ : ' + err.message);
+  }
+});
 
 // Utils
 const normalizeEmail = (email) => email.trim().toLowerCase();
