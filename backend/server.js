@@ -36,7 +36,7 @@ const transporter = nodemailer.createTransport({
   auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
 });
 
-app.set('trust proxy', true); // fait confiance aux X-Forwarded-For
+app.set('trust proxy', 1); // fait confiance au proxy de la plateforme
 
 // Middlewares Sécurité/Scalabilité
 app.use(helmet());
