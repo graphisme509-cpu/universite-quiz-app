@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // Hook personnalisé pour la barre de force du mot de passe (basé sur les règles backend)
 function usePasswordMeter() {
@@ -30,29 +32,44 @@ export default function Inscription({ setUser }) {
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!strength.ok) {
-      setMessage('Mot de passe faible. Corrigez les erreurs.');
-      return;
-    }
-    try {
-      const res = await fetch('https://universite-quiz-app-production.up.railway.app/api/auth/inscription', {
+  e.preventDefault();
+  toast.info('⏳ Inscription en cours...', { autoClose: 1500 });
+  if (!strength.ok) {
+    toast.error('Mot de passe faible. Corrigez les erreurs.');
+    return;
+  }
+
+  try {
+    const res = await fetch(
+      'https://universite-quiz-app-production.up.railway.app/api/auth/inscription',
+      {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData),
+      }
+    );
+
+    const data = await res.json();
+
+    if (res.ok) {
+      setUser(data.user);
+      setVerifyLink(`${window.location.origin}/verify?token=check-email`);
+      setFormData({ nom: '', email: '', motdepasse: '' });
+
+      toast.success('✅ Inscription réussie ! Vérifiez votre email.', {
+        position: 'bottom-right',
       });
-      const data = await res.json();
-      if (res.ok) {
-        setUser(data.user); // Met à jour le state global, même si email non vérifié
-        setVerifyLink(`${window.location.origin}/verify?token=check-email`); // Lien générique ; backend gère le token réel via email
-        setMessage('Inscription OK ! Vérifiez votre email pour activer le compte.');
-        // Ne redirige pas auto ; user doit vérifier email avant full access
-      } else setMessage(data.message || data.details?.join(', '));
-    } catch (err) {
-      setMessage('Erreur réseau.');
+    } else {
+      const details = Array.isArray(data.details)
+        ? data.details.join(', ')
+        : '';
+      toast.error(`❌ ${data.message || details || 'Erreur inconnue.'}`);
     }
-  };
+  } catch (err) {
+    toast.error('⚠️ Erreur réseau. Réessayez.');
+  }
+};
 
   const handlePasswordChange = (e) => {
     const newPw = e.target.value;
@@ -87,5 +104,6 @@ export default function Inscription({ setUser }) {
       {verifyLink && <p>Vérifiez votre email : <a href={verifyLink}>Lien de vérification</a></p>}
       <p><a href="/connexion">Déjà un compte ?</a></p>
     </section>
+    <ToastContainer />
   );
     }
