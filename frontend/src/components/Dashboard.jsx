@@ -11,10 +11,10 @@ export default function Dashboard({ user }) {
   useEffect(() => {
     const loadData = async () => {
       const [statsRes, classRes, progRes, quizRes] = await Promise.all([
-        fetch('universite-quiz-app-production.up.railway.app/api/dashboard/stats', { credentials: 'include' }).then(r => r.json()),
-        fetch('universite-quiz-app-production.up.railway.app/api/dashboard/classement', { credentials: 'include' }).then(r => r.json()),
-        fetch('universite-quiz-app-production.up.railway.app/api/dashboard/progression', { credentials: 'include' }).then(r => r.json()),
-        fetch('universite-quiz-app-production.up.railway.app/api/dashboard/quizzes', { credentials: 'include' }).then(r => r.json())
+        fetch('https://universite-quiz-app-production.up.railway.app/api/dashboard/stats', { credentials: 'include' }).then(r => r.json()),
+        fetch('https://universite-quiz-app-production.up.railway.app/api/dashboard/classement', { credentials: 'include' }).then(r => r.json()),
+        fetch('https://universite-quiz-app-production.up.railway.app/api/dashboard/progression', { credentials: 'include' }).then(r => r.json()),
+        fetch('https://universite-quiz-app-production.up.railway.app/api/dashboard/quizzes', { credentials: 'include' }).then(r => r.json())
       ]);
       setData({ stats: statsRes, classement: classRes, progression: progRes, quizzes: quizRes });
     };
