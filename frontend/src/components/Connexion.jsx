@@ -11,7 +11,7 @@ export default function Connexion({ setUser }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('universite-quiz-app-production.up.railway.app/api/auth/connexion', {
+      const res = await fetch('https://universite-quiz-app-production.up.railway.app/api/auth/connexion', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
