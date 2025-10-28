@@ -70,7 +70,6 @@ export default function Inscription({ setUser }) {
   setTimeout(() => {
     window.location.href = backendVerifyLink;
   }, 2000);
-}
     } else if (res.status === 409) {
       toast.error('⚠️ Cet email est déjà utilisé.', { autoClose: 3000 });
     } else if (res.status === 400 && data.details) {
