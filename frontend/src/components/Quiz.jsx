@@ -9,7 +9,7 @@ export default function Quiz({ user }) {
   }, []);
 
   const handleSubmit = async (quizName, answers) => {
-    const res = await fetch(`universite-quiz-app-production.up.railway.app/api/quiz/${quizName}`, {
+    const res = await fetch(`https://universite-quiz-app-production.up.railway.app/api/quiz/${quizName}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
