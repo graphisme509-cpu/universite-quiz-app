@@ -23,5 +23,48 @@ button:hover { background: #2b6cb0; }
 table { width: 100%; border-collapse: collapse; }
 th, td { padding: 1rem; border-bottom: 1px solid #cbd5e0; }
 
+/* Button inscription */
+.btn-inscription {
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-inscription:hover:not(:disabled) {
+  background-color: #1d4ed8;
+}
+
+.btn-inscription:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-inscription.loading {
+  position: relative;
+}
+
+.btn-inscription.loading::after {
+  content: '';
+  border: 2px solid white;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  width: 14px;
+  height: 14px;
+  display: inline-block;
+  margin-left: 8px;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Responsive */
 @media (max-width: 600px) { section { margin: 20px; padding: 20px; } }
