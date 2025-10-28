@@ -443,5 +443,9 @@ app.delete('/api/dashboard/quizzes/:id', requireAuth, async (req, res) => {
 // Static Files (servir React build en prod, dev: proxy)
 // app.use(express.static(path.join(__dirname, '../frontend/dist')));  // Build React ici
 // app.get('*', (req, res) => res.sendFile(path.join(__dirname, '../frontend/dist/index.html')));
+transporter.verify((error, success) => {
+  if (error) console.error('❌ SMTP non fonctionnel :', error);
+  else console.log('✅ SMTP prêt à envoyer les emails');
+});
 
 app.listen(PORT, () => logger.info(`Serveur unifié sur http://localhost:${PORT}`));
