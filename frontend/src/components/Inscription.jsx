@@ -78,6 +78,7 @@ export default function Inscription({ setUser }) {
   };
 
   return (
+    <>
     <section>
       <h2>Inscription</h2>
       <form onSubmit={handleSubmit}>
@@ -105,5 +106,6 @@ export default function Inscription({ setUser }) {
       <p><a href="/connexion">Déjà un compte ?</a></p>
     </section>
     <ToastContainer />
+    </>
   );
     }
