@@ -53,7 +53,6 @@ export default function Inscription({ setUser }) {
         body: JSON.stringify(formData),
       }
     );
-
     const data = await res.json();
     toast.dismiss(pendingToast);
 
@@ -66,7 +65,7 @@ export default function Inscription({ setUser }) {
 
   // ⚡ Ajouter le message de vérification
   setMessage("Un email de vérification vous a été envoyé. Cliquez sur le lien dans l’email pour activer votre compte.");
-}
+
     } else if (res.status === 409) {
       toast.error('⚠️ Cet email est déjà utilisé.', { autoClose: 3000 });
     } else if (res.status === 400 && data.details) {
