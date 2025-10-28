@@ -67,14 +67,9 @@ export default function Inscription({ setUser }) {
     position: 'bottom-right',
     autoClose: 4000,
   });
-
   setTimeout(() => {
     navigate('/verify'); // 🔹 navigation SPA
   }, 2000);
-}
-      setTimeout(() => {
-        window.location.href = '/verify';
-      }, 3000);
     } else if (res.status === 409) {
       toast.error('⚠️ Cet email est déjà utilisé.', { autoClose: 3000 });
     } else if (res.status === 400 && data.details) {
