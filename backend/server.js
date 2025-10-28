@@ -438,7 +438,7 @@ app.delete('/api/dashboard/quizzes/:id', requireAuth, async (req, res) => {
 });
 
 // Static Files (servir React build en prod, dev: proxy)
-app.use(express.static(path.join(__dirname, '../frontend/dist')));  // Build React ici
-app.get('*', (req, res) => res.sendFile(path.join(__dirname, '../frontend/dist/index.html')));
+// app.use(express.static(path.join(__dirname, '../frontend/dist')));  // Build React ici
+// app.get('*', (req, res) => res.sendFile(path.join(__dirname, '../frontend/dist/index.html')));
 
 app.listen(PORT, () => logger.info(`Serveur unifié sur http://localhost:${PORT}`));
