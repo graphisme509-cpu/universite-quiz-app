@@ -58,15 +58,20 @@ export default function Inscription({ setUser }) {
     toast.dismiss(pendingToast);
 
     if (res.ok) {
-      setUser(data.user);
-      setVerifyLink(`${window.location.origin}/verify?token=check-email`);
-      setFormData({ nom: '', email: '', motdepasse: '' });
+  setUser(data.user);
+  setVerifyLink(`${window.location.origin}/verify?token=check-email`);
+  setFormData({ nom: '', email: '', motdepasse: '' });
+  setLoading(false); // 🔹 stop le spinner immédiatement
 
-      toast.success('✅ Inscription réussie ! Vérifiez votre email.', {
-        position: 'bottom-right',
-        autoClose: 4000,
-      });
+  toast.success('✓ Inscription réussie ! Vérifiez votre email.', {
+    position: 'bottom-right',
+    autoClose: 4000,
+  });
 
+  setTimeout(() => {
+    navigate('/verify'); // 🔹 navigation SPA
+  }, 2000);
+}
       setTimeout(() => {
         window.location.href = '/verify';
       }, 3000);
