@@ -16,7 +16,7 @@ export default function Quiz({ user }: QuizProps) {
 
   useEffect(() => {
     if (user) {
-      fetch('/api/dashboard/quizzes', { credentials: 'include' })
+      fetch('https://universite-quiz-app-production.up.railway.app/api/dashboard/quizzes', { credentials: 'include' })
         .then(res => {
           if (!res.ok) throw new Error("Erreur lors de la récupération des quizzes.");
           return res.json();
