@@ -24,10 +24,10 @@ export default function Dashboard({ user }: DashboardProps) {
       setError('');
       try {
         const [statsRes, classRes, progRes, quizRes] = await Promise.all([
-          fetch('/api/dashboard/stats', { credentials: 'include' }).then(r => r.json()),
-          fetch('/api/dashboard/classement', { credentials: 'include' }).then(r => r.json()),
-          fetch('/api/dashboard/progression', { credentials: 'include' }).then(r => r.json()),
-          fetch('/api/dashboard/quizzes', { credentials: 'include' }).then(r => r.json())
+          fetch('https://universite-quiz-app-production.up.railway.app/api/dashboard/stats', { credentials: 'include' }).then(r => r.json()),
+          fetch('https://universite-quiz-app-production.up.railway.app/api/dashboard/classement', { credentials: 'include' }).then(r => r.json()),
+          fetch('https://universite-quiz-app-production.up.railway.app/api/dashboard/progression', { credentials: 'include' }).then(r => r.json()),
+          fetch('https://universite-quiz-app-production.up.railway.app/api/dashboard/quizzes', { credentials: 'include' }).then(r => r.json())
         ]);
         if (statsRes.error || classRes.error || progRes.error || quizRes.error) {
             throw new Error('Une ou plusieurs requêtes de données ont échoué.');
