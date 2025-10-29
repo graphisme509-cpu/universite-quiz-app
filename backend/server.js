@@ -30,7 +30,10 @@ app.set('trust proxy', 1); // fait confiance au proxy de la plateforme
 
 // Middlewares Sécurité/Scalabilité
 app.use(helmet());
-app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:5173', credentials: true }));
+app.use(cors({
+  origin: ['https://universite-quiz-app.vercel.app'], // 🔒 domaine précis du front
+  credentials: true
+}));
 app.use(express.json({ limit: '100kb' }));
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
@@ -78,13 +81,24 @@ function signRefreshToken(user) { return jwt.sign({ sub: String(user.id) }, proc
 
 function setAuthCookies(res, access, refresh) {
   const isProd = process.env.NODE_ENV === 'production';
-  res.cookie('access_token', access, { httpOnly: true, secure: isProd, sameSite: 'lax', maxAge: ACCESS_TOKEN_TTL_MIN * 60 * 1000 });
-  res.cookie('refresh_token', refresh, { httpOnly: true, secure: isProd, sameSite: 'lax', maxAge: REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000 });
+  res.cookie('access_token', access, { 
+    httpOnly: true, 
+    secure: isProd, 
+    sameSite: isProd ? 'none' : 'lax',  // ⚠️ change ici
+    maxAge: ACCESS_TOKEN_TTL_MIN * 60 * 1000 
+  });
+  res.cookie('refresh_token', refresh, { 
+    httpOnly: true, 
+    secure: isProd, 
+    sameSite: isProd ? 'none' : 'lax',  // ⚠️ change ici
+    maxAge: REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000 
+  });
 }
+
 function clearAuthCookies(res) {
   const isProd = process.env.NODE_ENV === 'production';
-  res.clearCookie('access_token', { httpOnly: true, secure: isProd, sameSite: 'lax' });
-  res.clearCookie('refresh_token', { httpOnly: true, secure: isProd, sameSite: 'lax' });
+  res.clearCookie('access_token', { httpOnly: true, secure: isProd, sameSite: isProd ? 'none' : 'lax' });
+  res.clearCookie('refresh_token', { httpOnly: true, secure: isProd, sameSite: isProd ? 'none' : 'lax' });
 }
 
 // Middleware Auth
