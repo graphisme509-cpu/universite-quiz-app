@@ -23,7 +23,7 @@ export default function Connexion({ setUser }: ConnexionProps) {
     setLoading(true);
     setMessage('');
     try {
-      const res = await fetch('/api/auth/connexion', {
+      const res = await fetch('https://universite-quiz-app-production.up.railway.app/api/auth/connexion', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
