@@ -56,7 +56,7 @@ export default function Quiz({ user }: QuizProps) {
   useEffect(() => {
     if (user) {
       setLoading(true);
-      fetch('/api/dashboard/quizzes', { credentials: 'include' })
+      fetch('https://universite-quiz-app-production.up.railway.app/api/dashboard/quizzes', { credentials: 'include' })
         .then(res => {
           if (!res.ok) throw new Error("Erreur lors de la récupération des quizzes.");
           return res.json();
@@ -107,7 +107,7 @@ export default function Quiz({ user }: QuizProps) {
 
     setResults(prev => ({ ...prev, [quiz.id]: { message: 'Envoi...', type: 'success' } }));
     try {
-        const res = await fetch(`/api/quiz/${quiz.name}`, {
+        const res = await fetch(`https://universite-quiz-app-production.up.railway.app/api/quiz/${quiz.name}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
