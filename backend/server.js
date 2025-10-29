@@ -228,18 +228,19 @@ app.post('/api/contact', async (req, res) => {
   const { nom, email, message } = req.body;
   if (!nom || !email || !message) return res.status(400).json({ success: false, error: 'Champs requis.' });
   try {
-    await transporter.sendMail({
-      from: process.env.EMAIL_FROM,
-      replyTo: email,
-      to: process.env.EMAIL_TO,
-      subject: `Message de ${nom}`,
-      html: `<h3>${nom} (${email})</h3><p>${message.replace(/\n/g, '<br>')}</p>`
-    });
-    res.json({ success: true });
-  } catch (err) {
-    logger.error(err);
-    res.status(500).json({ success: false, error: 'Envoi échoué.' });
-  }
+  await transport.sendMail({
+    from: 'test@example.com',       // n'importe quelle adresse, Mailtrap capture l'email
+    replyTo: email,                 // email de la personne qui remplit le formulaire
+    to: 'inbox@mailtrap.io',        // ton inbox Mailtrap (ou n'importe quelle adresse, Mailtrap capture)
+    subject: `Message de ${nom}`,
+    html: `<h3>${nom} (${email})</h3><p>${message.replace(/\n/g, '<br>')}</p>`
+  });
+
+  res.json({ success: true });
+} catch (error) {
+  console.error('Erreur Mailtrap :', error);
+  res.status(500).json({ success: false, error: error.message });
+    }
 });
 
 // Routes Résultats (avec admin unifié)
