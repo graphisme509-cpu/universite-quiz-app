@@ -55,7 +55,7 @@ export default function DashboardAccueil({ user }: DashboardAccueilProps) {
               <h3 className="text-xl font-bold text-slate-800 mb-2">{quiz.name}</h3>
               <p className="text-gray-600 text-sm mb-4">{quiz.questions_count} questions</p>
             </div>
-            <button onClick={() => navigate('/quiz', { state: { quizId: quiz.id } })} className="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 transition-colors">
+            <button onClick={() => navigate(`/quiz/${quiz.id}`)} className="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 transition-colors">
               Commencer le Quiz
             </button>
           </div>
