@@ -374,9 +374,9 @@ app.get('/api/dashboard/quizzes', requireAuth, async (req, res) => {
 
 
 // Servir le front-end
-app.use(express.static(path.join(__dirname, '../dist')));
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../dist/index.html'));
-});
+// app.use(express.static(path.join(__dirname, '../dist')));
+// app.get('*', (req, res) => {
+//    res.sendFile(path.join(__dirname, '../dist/index.html'));
+// });
 
 app.listen(PORT, () => logger.info(`Serveur unifié sur http://localhost:${PORT}`));
