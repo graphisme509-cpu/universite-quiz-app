@@ -20,7 +20,7 @@ function App() {
     // Tenter de récupérer la session utilisateur au chargement
     const checkSession = async () => {
       try {
-        const res = await fetch('/api/auth/session', { credentials: 'include' });
+        const res = await fetch('https://universite-quiz-app-production.up.railway.app/api/auth/session', { credentials: 'include' });
         if (res.ok) {
           const data = await res.json();
           setUser(data.user);
@@ -36,7 +36,7 @@ function App() {
 
   const handleLogout = async () => {
     try {
-        await fetch('/api/auth/deconnexion', { method: 'POST', credentials: 'include' });
+        await fetch('https://universite-quiz-app-production.up.railway.app/api/auth/deconnexion', { method: 'POST', credentials: 'include' });
     } catch (error) {
         console.error("Logout failed:", error);
     } finally {
