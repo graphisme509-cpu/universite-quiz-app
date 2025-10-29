@@ -275,10 +275,10 @@ app.post('/api/admin/save-notes', async (req, res) => {
   }
 });
 
-// Routes Quiz
+// server.js (correction dans la route /api/quiz/:quizName)
 app.post('/api/quiz/:quizName', requireAuth, quizLimiter, async (req, res) => {
   const { quizName } = req.params;
-  const userAnswers = req.body;
+  const { answers: userAnswers } = req.body;  // Correction : extraire 'answers' du body
   const client = await pool.connect();
   try {
       await client.query('BEGIN');
@@ -289,10 +289,12 @@ app.post('/api/quiz/:quizName', requireAuth, quizLimiter, async (req, res) => {
       let bonnes = 0;
       const total = questionsRes.rowCount;
       for (const q of questionsRes.rows) {
-        const isCorrect = userAnswers[q.key_name] == q.correct_index;
+        const userAnswerIndex = userAnswers[q.key_name] ?? -1;  // Correction : gérer l'absence de réponse (défaut -1)
+        const isCorrect = userAnswerIndex == q.correct_index;
         if (isCorrect) bonnes++;
-        await client.query('INSERT INTO quiz_sessions (user_id, quiz_id, question_id, user_answer, correct, completion_time) VALUES ($1, $2, $3, $4, $5, 10)',
-          [req.user.id, quizId, q.id, userAnswers[q.key_name] || null, isCorrect, 10]);
+        // Correction : ajuster la requête pour 6 paramètres ($1 à $6) et VALUES avec $6 pour completion_time
+        await client.query('INSERT INTO quiz_sessions (user_id, quiz_id, question_id, user_answer, correct, completion_time) VALUES ($1, $2, $3, $4, $5, $6)',
+          [req.user.id, quizId, q.id, String(userAnswerIndex), isCorrect, 10]);
       }
       await client.query('INSERT INTO scores (user_id, quiz_id, score) VALUES ($1, $2, $3)', [req.user.id, quizId, bonnes]);
       await client.query('COMMIT');
