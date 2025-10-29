@@ -9,6 +9,8 @@
     "dev": "nodemon server.js"
   },
   "dependencies": {
+    "nodemailer": "^6.9.3",
+    "mailtrap": "^1.0.5",
     "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
@@ -18,7 +20,6 @@
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "nanoid": "^5.0.7",
-    "nodemailer": "^6.9.13",
     "pino": "^9.3.1",
     "pino-http": "^11.0.0",
     "pg": "^8.12.0",
