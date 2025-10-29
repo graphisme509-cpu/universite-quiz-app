@@ -1,0 +1,5 @@
+{
+  "name": "Université Quiz",
+  "description": "Une application web complète et évolutive pour une université, avec authentification des utilisateurs, quiz, suivi des résultats et un tableau de bord d'administration pour la gestion des notes des étudiants. Conçue avec React, Express et PostgreSQL.",
+  "requestFramePermissions": []
+}
