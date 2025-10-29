@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Line, Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Title, Tooltip, Legend } from 'chart.js';
@@ -25,10 +24,10 @@ export default function Dashboard({ user }: DashboardProps) {
       setError('');
       try {
         const [statsRes, classRes, progRes, quizRes] = await Promise.all([
-          fetch('/api/dashboard/stats', { credentials: 'include' }).then(r => r.json()),
-          fetch('/api/dashboard/classement', { credentials: 'include' }).then(r => r.json()),
-          fetch('/api/dashboard/progression', { credentials: 'include' }).then(r => r.json()),
-          fetch('/api/dashboard/quizzes', { credentials: 'include' }).then(r => r.json())
+          fetch('https://universite-quiz-app-production.up.railway.app/api/dashboard/stats', { credentials: 'include' }).then(r => r.json()),
+          fetch('https://universite-quiz-app-production.up.railway.app/api/dashboard/classement', { credentials: 'include' }).then(r => r.json()),
+          fetch('https://universite-quiz-app-production.up.railway.app/api/dashboard/progression', { credentials: 'include' }).then(r => r.json()),
+          fetch('https://universite-quiz-app-production.up.railway.app/api/dashboard/quizzes', { credentials: 'include' }).then(r => r.json())
         ]);
         if (statsRes.error || classRes.error || progRes.error || quizRes.error) {
             throw new Error('Une des requêtes a échoué.');
