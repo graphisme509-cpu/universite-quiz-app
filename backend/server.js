@@ -40,7 +40,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const transport = Nodemailer.createTransport(
+const transport = nodemailer.createTransport(
   MailtrapTransport({
     token: process.env.MAILTRAP_API_KEY,
   })
