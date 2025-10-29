@@ -21,7 +21,7 @@ function App() {
   useEffect(() => {
   const checkSession = async () => {
     try {
-      let res = await fetch(`${API_BASE_URL}/api/auth/session`, { credentials: 'include' });
+      let res = await fetch(`${API_BASE_URL}/api/auth/session`, { credentials: 'include', cache: 'no-store' });
 
       // Si 401 → token expiré, on tente de rafraîchir
       if (res.status === 401) {
