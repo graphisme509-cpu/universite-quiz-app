@@ -42,7 +42,7 @@ const transporter = nodemailer.createTransport({
 
 const transport = nodemailer.createTransport(
   MailtrapTransport({
-    token: efde678128905b915bc0e6d66054f669,
+    token: 'efde678128905b915bc0e6d66054f669',
   })
 );
 
