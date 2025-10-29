@@ -103,7 +103,7 @@ function App() {
           <Route path="/inscription" element={<Inscription setUser={setUser} />} />
           <Route path="/connexion" element={<Connexion setUser={setUser} />} />
           <Route path="/quiz" element={<Quiz user={user} />} />
-          <Route path="/quiz/:id" element={<QuizDetail />} />
+          <Route path="/quiz/:id" element={<QuizDetail user={user} />} />
           <Route path="/resultats" element={<Resultats user={user} />} />
           <Route path="/dashboard/*" element={<Dashboard user={user} />} />
           <Route path="/admin" element={<Admin />} />
