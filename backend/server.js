@@ -305,6 +305,16 @@ app.post('/api/quiz/:quizName', requireAuth, quizLimiter, async (req, res) => {
 });
 
 // Routes Dashboard
+
+// Middleware anti-cache pour toutes les routes du dashboard
+app.use('/api/dashboard', (req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  res.set('Surrogate-Control', 'no-store');
+  next();
+});
+
 app.get('/api/dashboard/stats', requireAuth, async (req, res) => {
   try {
     const stats = await pool.query(`
