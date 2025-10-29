@@ -13,13 +13,11 @@ interface Question {
   options: Option[];
   correct_index: number;
   explanation?: string;
-  multiple?: boolean; // si plusieurs réponses possibles
 }
 
 interface Quiz {
   id: number;
   name: string;
-  matiere: string;
   questions: Question[];
 }
 
@@ -29,11 +27,104 @@ export default function QuizDetail() {
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [answers, setAnswers] = useState<Record<string, number[]>>({});
+  const [answers, setAnswers] = useState<Record<string, number>>({});
   const [submitted, setSubmitted] = useState(false);
-  const [score, setScore] = useState<number | null>(null);
-  const [feedback, setFeedback] = useState<string>('');
+  const [resultMessage, setResultMessage] = useState('');
 
+  useEffect(() => {
+    if (!id) return;
+    setLoading(true);
+
+    fetch(`${API_BASE_URL}/api/dashboard/quizzes`, { credentials: 'include' })
+      .then(res => res.json())
+      .then((data: Quiz[]) => {
+        const found = data.find(q => q.id === parseInt(id, 10));
+        if (!found) throw new Error("Quiz introuvable.");
+        setQuiz(found);
+      })
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  const handleSelect = (questionKey: string, optionIndex: number) => {
+    if (submitted) return; // pas de modification après soumission
+    setAnswers(prev => ({ ...prev, [questionKey]: optionIndex }));
+  };
+
+  const handleSubmit = async () => {
+    if (!quiz) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/quiz/${quiz.name}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(answers),
+      });
+      const text = await res.text();
+      setResultMessage(text);
+      setSubmitted(true);
+    } catch (err) {
+      setResultMessage('Erreur serveur lors de la soumission.');
+    }
+  };
+
+  if (loading) return <p className="p-8 text-center">Chargement du quiz...</p>;
+  if (error) return <p className="p-8 text-center text-red-600">{error}</p>;
+  if (!quiz) return <p className="p-8 text-center">Aucun quiz trouvé.</p>;
+
+  return (
+    <div className="max-w-3xl mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-6">{quiz.name}</h1>
+
+      {quiz.questions.map((q, i) => (
+        <div key={q.key_name} className="mb-6 p-4 border rounded-lg bg-white shadow-sm">
+          <p className="font-semibold mb-2">{i + 1}. {q.question}</p>
+          <ul className="space-y-2">
+            {q.options.map((opt, j) => {
+              const isSelected = answers[q.key_name] === j;
+              return (
+                <li
+                  key={j}
+                  onClick={() => handleSelect(q.key_name, j)}
+                  className={`p-2 rounded border cursor-pointer hover:bg-gray-100
+                    ${isSelected ? 'bg-blue-200 border-blue-400' : 'bg-gray-50'}`}
+                >
+                  {opt.text}
+                </li>
+              );
+            })}
+          </ul>
+          {submitted && answers[q.key_name] !== q.correct_index && (
+            <p className="mt-2 text-red-600 text-sm">
+              Réponse correcte : {q.options[q.correct_index].text}
+            </p>
+          )}
+          {submitted && answers[q.key_name] === q.correct_index && (
+            <p className="mt-2 text-green-600 text-sm">Bonne réponse !</p>
+          )}
+        </div>
+      ))}
+
+      {resultMessage && <p className="p-4 bg-gray-100 rounded mb-4">{resultMessage}</p>}
+
+      {!submitted && (
+        <button
+          onClick={handleSubmit}
+          className="mt-4 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700"
+        >
+          Soumettre le quiz
+        </button>
+      )}
+
+      <button
+        onClick={() => navigate('/dashboard')}
+        className="mt-4 ml-4 px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+      >
+        Retour au Dashboard
+      </button>
+    </div>
+  );
+}
   useEffect(() => {
     if (!id) return;
     setLoading(true);
