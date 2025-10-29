@@ -18,24 +18,31 @@ function App() {
   const navigate = useNavigate();
   const API_BASE_URL = 'https://universite-quiz-app-production.up.railway.app';
 
-
   useEffect(() => {
-    // Tenter de récupérer la session utilisateur au chargement
-    const checkSession = async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/auth/session`, { credentials: 'include' });
-        if (res.ok) {
-          const data = await res.json();
-          setUser(data.user);
-        }
-      } catch (error) {
-        console.error("Session check failed:", error);
-      } finally {
-        setLoading(false);
+  const checkSession = async () => {
+    try {
+      let res = await fetch(`${API_BASE_URL}/api/auth/session`, { credentials: 'include' });
+
+      // Si 401 → token expiré, on tente de rafraîchir
+      if (res.status === 401) {
+        const refresh = await fetch(`${API_BASE_URL}/api/auth/refresh`, { method: 'POST', credentials: 'include' });
+        if (!refresh.ok) throw new Error('Session expirée, veuillez vous reconnecter.');
+        res = await fetch(`${API_BASE_URL}/api/auth/session`, { credentials: 'include' });
       }
-    };
-    checkSession();
-  }, []);
+
+      if (!res.ok) throw new Error('Impossible de récupérer la session.');
+      const data = await res.json();
+      setUser(data.user);
+    } catch (error: any) {
+      console.error("Session check failed:", error);
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  checkSession();
+}, []);
 
   const handleLogout = async () => {
     try {
