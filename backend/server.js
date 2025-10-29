@@ -179,17 +179,33 @@ app.post('/api/auth/connexion', async (req, res) => {
   try {
     const { email, motdepasse } = loginSchema.parse(req.body);
     const emailNorm = normalizeEmail(email);
-    const q = await pool.query('SELECT * FROM users WHERE LOWER(email) = $1', [emailNorm]);
-    if (q.rowCount === 0 || !await bcrypt.compare(motdepasse, q.rows[0].password_hash) || !q.rows[0].email_verified) {
-      return res.status(401).json({ message: 'Identifiants invalides ou email non vérifié.' });
+
+    const q = await pool.query(
+      'SELECT * FROM users WHERE LOWER(email) = $1',
+      [emailNorm]
+    );
+
+    // On ne vérifie plus l'email_verified
+    if (q.rowCount === 0 || !await bcrypt.compare(motdepasse, q.rows[0].password_hash)) {
+      return res.status(401).json({ message: 'Identifiants invalides.' });
     }
+
     const user = q.rows[0];
     const accessToken = signAccessToken(user);
     const refreshToken = signRefreshToken(user);
     const refreshExp = daysFromNow(Number(process.env.REFRESH_TOKEN_TTL_DAYS));
-    await pool.query('INSERT INTO refresh_tokens (token, user_id, expires_at) VALUES ($1, $2, $3) ON CONFLICT (token) DO NOTHING', [refreshToken, user.id, refreshExp]);
+
+    await pool.query(
+      'INSERT INTO refresh_tokens (token, user_id, expires_at) VALUES ($1, $2, $3) ON CONFLICT (token) DO NOTHING',
+      [refreshToken, user.id, refreshExp]
+    );
+
     setAuthCookies(res, accessToken, refreshToken);
-    res.json({ message: 'Connexion OK.', user: { id: user.id, name: user.name, email: user.email } });
+
+    res.json({
+      message: 'Connexion OK.',
+      user: { id: user.id, name: user.name, email: user.email }
+    });
   } catch (err) {
     logger.error(err);
     res.status(500).json({ message: 'Erreur.' });
