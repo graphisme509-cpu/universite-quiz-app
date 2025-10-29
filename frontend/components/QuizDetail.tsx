@@ -3,12 +3,36 @@ import { useParams, useNavigate } from 'react-router-dom';
 
 const API_BASE_URL = 'https://universite-quiz-app-production.up.railway.app';
 
+interface Option {
+  text: string;
+}
+
+interface Question {
+  key_name: string;
+  question: string;
+  options: Option[];
+  correct_index: number;
+  explanation?: string;
+  multiple?: boolean; // si plusieurs réponses possibles
+}
+
+interface Quiz {
+  id: number;
+  name: string;
+  matiere: string;
+  questions: Question[];
+}
+
 export default function QuizDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [quiz, setQuiz] = useState<any>(null);
+  const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [answers, setAnswers] = useState<Record<string, number[]>>({});
+  const [submitted, setSubmitted] = useState(false);
+  const [score, setScore] = useState<number | null>(null);
+  const [feedback, setFeedback] = useState<string>('');
 
   useEffect(() => {
     if (!id) return;
@@ -16,9 +40,10 @@ export default function QuizDetail() {
 
     fetch(`${API_BASE_URL}/api/dashboard/quizzes`, { credentials: 'include' })
       .then(res => res.json())
-      .then(data => {
-        const found = data.find((q: any) => q.id === parseInt(id));
-        if (!found) throw new Error("Quiz introuvable.");
+      .then((data: Quiz[]) => {
+        const found = data.find(q => q.id === parseInt(id));
+        if (!found) throw new Error('Quiz introuvable.');
+        // par défaut toutes les questions simples sont single
         setQuiz(found);
       })
       .catch(err => setError(err.message))
@@ -29,11 +54,126 @@ export default function QuizDetail() {
   if (error) return <p className="p-8 text-center text-red-600">{error}</p>;
   if (!quiz) return <p className="p-8 text-center">Aucun quiz trouvé.</p>;
 
+  // Gestion des réponses (single ou multiple)
+  const handleSelect = (questionKey: string, optionIndex: number, multiple?: boolean) => {
+    if (submitted) return;
+
+    setAnswers(prev => {
+      const prevAnswers = prev[questionKey] || [];
+      if (multiple) {
+        // toggle
+        if (prevAnswers.includes(optionIndex)) {
+          return { ...prev, [questionKey]: prevAnswers.filter(i => i !== optionIndex) };
+        } else {
+          return { ...prev, [questionKey]: [...prevAnswers, optionIndex] };
+        }
+      } else {
+        return { ...prev, [questionKey]: [optionIndex] };
+      }
+    });
+  };
+
+  // Score live avant soumission
+  const liveScore = () => {
+    if (!quiz) return 0;
+    let count = 0;
+    for (const q of quiz.questions) {
+      const ans = answers[q.key_name] || [];
+      if (!q.multiple && ans[0] === q.correct_index) count++;
+      else if (q.multiple) {
+        // pour multiple, score partiel si toutes correctes et rien de faux
+        const correctSet = [q.correct_index]; // ici à adapter si plusieurs correctes côté serveur
+        if (ans.every(a => correctSet.includes(a)) && correctSet.every(c => ans.includes(c))) count++;
+      }
+    }
+    return count;
+  };
+
+  const handleSubmit = async () => {
+    try {
+      // transformer pour le serveur (single answer attendu)
+      const payload: Record<string, number> = {};
+      Object.keys(answers).forEach(k => {
+        payload[k] = answers[k][0] ?? null; // serveur actuel attend 1 réponse par question
+      });
+
+      const res = await fetch(`${API_BASE_URL}/api/quiz/${quiz.name}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
+      const text = await res.text();
+      setFeedback(text);
+
+      const match = text.match(/(\d+)\/(\d+)/);
+      if (match) setScore(parseInt(match[1]));
+      setSubmitted(true);
+    } catch (err) {
+      console.error(err);
+      setFeedback('Erreur serveur, réessayez.');
+    }
+  };
+
   return (
     <div className="max-w-3xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">{quiz.name}</h1>
 
-      {quiz.questions.map((q: any, i: number) => (
+      <p className="mb-4 text-lg font-semibold">Score live: {liveScore()}/{quiz.questions.length}</p>
+
+      {quiz.questions.map((q, i) => (
+        <div key={i} className="mb-6 p-4 border rounded-lg bg-white shadow-sm">
+          <p className="font-semibold mb-2">{i + 1}. {q.question}</p>
+          <ul className="space-y-2">
+            {q.options.map((opt, j) => {
+              const isSelected = answers[q.key_name]?.includes(j);
+              const correct = submitted && j === q.correct_index;
+              const wrong = submitted && isSelected && j !== q.correct_index;
+
+              return (
+                <li
+                  key={j}
+                  onClick={() => handleSelect(q.key_name, j, q.multiple)}
+                  className={`p-2 rounded border cursor-pointer transition-colors
+                    ${isSelected ? 'bg-blue-200 border-blue-400 scale-105' : 'bg-gray-50 border-gray-200'}
+                    ${correct ? 'bg-green-300 border-green-500 font-bold' : ''}
+                    ${wrong ? 'bg-red-300 border-red-500 font-bold' : ''}
+                    hover:scale-105 hover:bg-gray-100`}
+                  style={{ transition: 'all 0.2s' }}
+                >
+                  {opt.text}
+                </li>
+              );
+            })}
+          </ul>
+          {submitted && q.explanation && (
+            <p className="mt-2 text-sm text-gray-700 italic">💡 {q.explanation}</p>
+          )}
+        </div>
+      ))}
+
+      {!submitted ? (
+        <button
+          onClick={handleSubmit}
+          className="mt-8 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700"
+        >
+          Soumettre
+        </button>
+      ) : (
+        <div className="mt-8">
+          <p className="text-xl font-bold text-center mb-4">Résultat: {score !== null ? `${score}/${quiz.questions.length}` : '-'}</p>
+          <p className="text-center text-gray-700 mb-4">{feedback}</p>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="mt-4 px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 block mx-auto"
+          >
+            Retour au Dashboard
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
         <div key={i} className="mb-6 p-4 border rounded-lg bg-white shadow-sm">
           <p className="font-semibold mb-2">{i + 1}. {q.question}</p>
           <ul className="space-y-2">
