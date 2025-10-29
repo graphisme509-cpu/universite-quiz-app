@@ -285,4 +285,3 @@ export default function QuizDetail() {
       </button>
     </div>
   );
-}
