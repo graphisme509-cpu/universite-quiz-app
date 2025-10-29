@@ -62,7 +62,7 @@ export default function Inscription({ setUser }: InscriptionProps) {
     setLoading(true);
     setMessage('');
     try {
-      const res = await fetch('/api/auth/inscription', {
+      const res = await fetch('https://universite-quiz-app-production.up.railway.app/api/auth/inscription', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
