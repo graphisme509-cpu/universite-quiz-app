@@ -16,6 +16,7 @@ import promClient from 'prom-client';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import bodyParser from 'body-parser';
+import { MailtrapTransport } from "mailtrap";
 
 dotenv.config();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -38,6 +39,12 @@ const transporter = nodemailer.createTransport({
     pass: process.env.SMTP_PASS,
   },
 });
+
+const transport = Nodemailer.createTransport(
+  MailtrapTransport({
+    token: process.env.MAILTRAP_API_KEY,
+  })
+);
 
 app.set('trust proxy', 1); // fait confiance au proxy de la plateforme
 
