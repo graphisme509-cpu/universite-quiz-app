@@ -75,23 +75,34 @@ export default function Accueil() {
           </p>
           <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
             <Link to="/licence" className="block">
-              <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-lg transition-shadow border border-gray-200">
-                <div className="flex items-center justify-center h-12 w-12 rounded-full bg-green-100 text-green-700 mb-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.477 5.273 6.5 4 4.5 5.5c-1.5 1.5-.5 5.5 3.5 9.5s7.5 4 9 2.5c1.5-1.5 2.5-5.5 1-9.5-1.5-1.5-5.477-2.773-7-1.747z" />
-                  </svg>
+              {/* MODIFICATION 1 & 3: Centrage texte + icône apprentissage */}
+              <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-lg transition-shadow border border-gray-200 h-full flex flex-col">
+                <div className="flex justify-center"> {/* Centre l'icône horizontalement */}
+                  <div className="flex items-center justify-center h-12 w-12 rounded-full bg-green-100 text-green-700 mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.477 5.273 6.5 4 4.5 5.5c-1.5 1.5-.5 5.5 3.5 9.5s7.5 4 9 2.5c1.5-1.5 2.5-5.5 1-9.5-1.5-1.5-5.477-2.773-7-1.747z" />
+                    </svg>
+                  </div>
                 </div>
-                <h3 className="text-xl font-semibold mb-2 text-center">Jardinière</h3>
+                <div className="flex-grow flex items-center justify-center"> {/* Centre le texte V+H dans l'espace restant */}
+                  <h3 className="text-xl font-semibold">Jardinière</h3>
+                </div>
               </div>
             </Link>
             <Link to="/master" className="block">
-              <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-lg transition-shadow border border-gray-200">
-                <div className="flex items-center justify-center h-12 w-12 rounded-full bg-green-100 text-green-700 mb-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v18m-3-6l3 3 3-3m-6 3l3-3 3 3" />
-                  </svg>
+              {/* MODIFICATION 2 & 4: Centrage texte + icône apprentissage */}
+              <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-lg transition-shadow border border-gray-200 h-full flex flex-col">
+                <div className="flex justify-center"> {/* Centre l'icône horizontalement */}
+                  <div className="flex items-center justify-center h-12 w-12 rounded-full bg-green-100 text-green-700 mb-4">
+                    {/* Icône changée pour correspondre à "Jardinière" (apprentissage) */}
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.477 5.273 6.5 4 4.5 5.5c-1.5 1.5-.5 5.5 3.5 9.5s7.5 4 9 2.5c1.5-1.5 2.5-5.5 1-9.5-1.5-1.5-5.477-2.773-7-1.747z" />
+                    </svg>
+                  </div>
                 </div>
-                <h3 className="text-xl font-semibold mb-2 text-center">Aide-jardinière</h3>
+                <div className="flex-grow flex items-center justify-center"> {/* Centre le texte V+H dans l'espace restant */}
+                  <h3 className="text-xl font-semibold">Aide-jardinière</h3>
+                </div>
               </div>
             </Link>
           </div>
@@ -103,8 +114,9 @@ export default function Accueil() {
           <div className="grid gap-8 max-w-5xl mx-auto">
             <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-lg transition-shadow border border-gray-200">
               <div className="flex items-center justify-center h-12 w-12 rounded-full bg-green-100 text-green-700 mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                {/* MODIFICATION 5: Icône changée pour "Actualités/News" (journal) */}
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 12h6M7 8h6" />
                 </svg>
               </div>
               <h3 className="text-xl font-semibold mb-2 text-center">Création de notre nouveau site web</h3>
