@@ -269,7 +269,7 @@ export default function Accueil() {
               </FeatureCard>
           </div>
         </section>
-      }
+      </div>
 
       {/* 9. Pied de page (footer) */}
       <footer className="bg-slate-800 text-white py-12 mt-16">
@@ -315,4 +315,4 @@ export default function Accueil() {
       </footer>
     </div>
   );
-}
+                }
