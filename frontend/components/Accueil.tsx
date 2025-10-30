@@ -21,48 +21,6 @@ const FeatureCard = ({ icon, title, children }: FeatureCardProps) => (
 export default function Accueil() {
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* 1. Barre de navigation (header) */}
-      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            {/* Logo officiel */}
-            <div className="flex-shrink-0">
-              <Link to="/" className="text-2xl font-bold text-green-600">
-                UniQuiz
-              </Link>
-            </div>
-            {/* Menu principal */}
-            <div className="hidden md:flex space-x-8">
-              <Link to="/" className="text-gray-700 hover:text-green-600 font-medium">Accueil</Link>
-              <Link to="/programmes" className="text-gray-700 hover:text-green-600 font-medium">Programmes</Link>
-              <Link to="/admission" className="text-gray-700 hover:text-green-600 font-medium">Admission</Link>
-              <Link to="/vie-etudiante" className="text-gray-700 hover:text-green-600 font-medium">Vie étudiante</Link>
-              <Link to="/recherche" className="text-gray-700 hover:text-green-600 font-medium">Recherche</Link>
-              <Link to="/apropos" className="text-gray-700 hover:text-green-600 font-medium">À propos</Link>
-              <Link to="/contact" className="text-gray-700 hover:text-green-600 font-medium">Contact</Link>
-            </div>
-            {/* Langue, connexion et icônes */}
-            <div className="flex items-center space-x-4">
-              {/* Sélecteur de langue */}
-              <select className="text-sm border border-gray-300 rounded-md px-2 py-1">
-                <option>FR</option>
-                <option>EN</option>
-              </select>
-              {/* Bouton Connexion */}
-              <Link to="/connexion" className="bg-green-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-green-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
-                Connexion
-              </Link>
-              {/* Icône recherche */}
-              <button className="text-gray-500 hover:text-gray-700">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </nav>
-      </header>
-
       <div className="space-y-16 md:space-y-24">
         {/* 2. Bannière principale (hero section) */}
         <section className="relative bg-gradient-to-r from-green-50 to-blue-50 pt-8 pb-12 overflow-hidden">
@@ -76,11 +34,8 @@ export default function Accueil() {
               Notre plateforme universitaire de quiz interactifs est conçue pour vous aider à exceller dans vos études. Testez-vous, progressez et atteignez vos objectifs académiques au sein d'une communauté d'excellence.
             </p>
             <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
-              <Link to="/quiz" className="bg-green-600 text-white font-bold px-8 py-3 rounded-lg hover:bg-green-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
-                Commencer un Quiz
-              </Link>
-              <Link to="/programmes" className="bg-white text-gray-700 font-bold px-8 py-3 rounded-lg hover:bg-gray-100 transition-all shadow-md hover:shadow-lg border">
-                Découvrir les programmes
+              <Link to="/historique" className="bg-green-600 text-white font-bold px-8 py-3 rounded-lg hover:bg-green-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                Historique
               </Link>
             </div>
           </div>
@@ -115,6 +70,28 @@ export default function Accueil() {
           </div>
         </section>
 
+        {/* Nouvelle section marketing sur les 10 ans d'existence */}
+        <section className="px-4 bg-white py-12">
+          <div className="max-w-7xl mx-auto text-center">
+            <h2 className="text-3xl font-bold text-slate-800 mb-4">10 ans d'excellence universitaire</h2>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto mb-8">
+              Depuis une décennie, notre université s'impose comme un pilier de l'éducation supérieure, formant des leaders innovants et passionnés. Célébrons ensemble 10 ans de réussites, d'innovations et de transformations qui ont marqué des milliers de vies.
+            </p>
+            <div className="bg-green-50 p-8 rounded-lg max-w-4xl mx-auto">
+              <h3 className="text-2xl font-semibold text-green-700 mb-4">Pourquoi choisir notre université après 10 ans ?</h3>
+              <ul className="text-left space-y-2 text-gray-700">
+                <li>• Une expertise éprouvée en formation de qualité, reconnue internationalement.</li>
+                <li>• Des infrastructures modernes et un corps enseignant d'élite, affinés au fil des ans.</li>
+                <li>• Un réseau d'anciens élèves influents, fruit de nos 10 années de partenariats solides.</li>
+                <li>• Des programmes évolutifs, adaptés aux défis du monde d'aujourd'hui et de demain.</li>
+              </ul>
+            </div>
+            <Link to="/historique" className="mt-6 inline-block bg-green-600 text-white font-bold px-6 py-3 rounded-lg hover:bg-green-700 transition-all">
+              Découvrez notre parcours
+            </Link>
+          </div>
+        </section>
+
         {/* 4. Programmes d’études (adapté aux quiz/matières) */}
         <section id="programmes" className="px-4 bg-white py-12">
           <div className="max-w-7xl mx-auto">
@@ -122,22 +99,12 @@ export default function Accueil() {
             <p className="text-center text-gray-600 mb-12 max-w-3xl mx-auto">
               Explorez nos niveaux de formation avec des quiz adaptés à chaque domaine.
             </p>
-            <div className="grid md:grid-cols-4 gap-6">
+            <div className="grid md:grid-cols-2 gap-6">
               <Link to="/licence" className="bg-green-50 p-6 rounded-lg text-center hover:bg-green-100 transition-all">
-                <h3 className="font-semibold mb-2">Licence</h3>
-                <p className="text-sm text-gray-600">Fondamentaux universitaires</p>
+                <h3 className="font-semibold mb-2">Jardinière</h3>
               </Link>
               <Link to="/master" className="bg-green-50 p-6 rounded-lg text-center hover:bg-green-100 transition-all">
-                <h3 className="font-semibold mb-2">Master</h3>
-                <p className="text-sm text-gray-600">Spécialisations avancées</p>
-              </Link>
-              <Link to="/doctorat" className="bg-green-50 p-6 rounded-lg text-center hover:bg-green-100 transition-all">
-                <h3 className="font-semibold mb-2">Doctorat</h3>
-                <p className="text-sm text-gray-600">Recherche et innovation</p>
-              </Link>
-              <Link to="/formation-continue" className="bg-green-50 p-6 rounded-lg text-center hover:bg-green-100 transition-all">
-                <h3 className="font-semibold mb-2">Formation continue</h3>
-                <p className="text-sm text-gray-600">Perfectionnement professionnel</p>
+                <h3 className="font-semibold mb-2">Aide-jardinière</h3>
               </Link>
             </div>
           </div>
@@ -148,19 +115,9 @@ export default function Accueil() {
           <h2 className="text-3xl font-bold text-center mb-10 text-slate-800">Actualités et événements</h2>
           <div className="grid md:grid-cols-3 gap-8">
             <article className="bg-white p-6 rounded-lg shadow-sm">
-              <h3 className="font-semibold mb-2">Conférence sur l'IA en éducation</h3>
-              <p className="text-gray-600 mb-4">Rejoignez-nous le 15 novembre pour explorer les avancées.</p>
+              <h3 className="font-semibold mb-2">Création de notre nouveau site web</h3>
+              <p className="text-gray-600 mb-4">Rejoignez-nous le 15 novembre pour découvrir la nouvelle plateforme.</p>
               <Link to="/evenements/ia" className="text-green-600 hover:underline">En savoir plus</Link>
-            </article>
-            <article className="bg-white p-6 rounded-lg shadow-sm">
-              <h3 className="font-semibold mb-2">Ouverture des inscriptions</h3>
-              <p className="text-gray-600 mb-4">Les candidatures pour la rentrée 2026 sont ouvertes.</p>
-              <Link to="/admission" className="text-green-600 hover:underline">Postuler</Link>
-            </article>
-            <article className="bg-white p-6 rounded-lg shadow-sm">
-              <h3 className="font-semibold mb-2">Partenariat avec TechCorp</h3>
-              <p className="text-gray-600 mb-4">Nouveau programme de stages internationaux.</p>
-              <Link to="/partenariats" className="text-green-600 hover:underline">Détails</Link>
             </article>
           </div>
         </section>
@@ -209,54 +166,9 @@ export default function Accueil() {
           </div>
         </section>
 
-        {/* 7. Recherche et innovation */}
-        <section id="recherche" className="px-4 max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-10 text-slate-800">Recherche et innovation</h2>
-          <div className="grid md:grid-cols-2 gap-8">
-            <div>
-              <h3 className="font-semibold mb-4">Nos laboratoires d'excellence</h3>
-              <p className="text-gray-600 mb-4">Plus de 50 laboratoires dédiés à la recherche en sciences, humanités et technologies.</p>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li>• Publications internationales annuelles</li>
-                <li>• Collaborations avec des institutions mondiales</li>
-                <li>• Projets financés par l'UE et le CNRS</li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4">Projets phares</h3>
-              <p className="text-gray-600">Découvrez nos initiatives récentes en IA appliquée à l'éducation.</p>
-              <Link to="/recherche/projets" className="text-green-600 hover:underline mt-4 inline-block">En savoir plus</Link>
-            </div>
-          </div>
-        </section>
-
-        {/* 8. Partenariats et international */}
-        <section id="international" className="px-4 bg-white py-12">
-          <div className="max-w-7xl mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-10 text-slate-800">Partenariats et mobilité internationale</h2>
-            <p className="text-gray-600 mb-8 max-w-3xl mx-auto">
-              Plus de 200 universités partenaires dans 50 pays. Profitez d'échanges, stages et doubles diplômes.
-            </p>
-            <div className="grid md:grid-cols-3 gap-6">
-              <div className="bg-green-50 p-4 rounded-lg">
-                <h3 className="font-semibold">Erasmus+</h3>
-                <p className="text-sm text-gray-600">Mobilité européenne</p>
-              </div>
-              <div className="bg-green-50 p-4 rounded-lg">
-                <h3 className="font-semibold">Stages abroad</h3>
-                <p className="text-sm text-gray-600">Expériences internationales</p>
-              </div>
-              <div className="bg-green-50 p-4 rounded-lg">
-                <h3 className="font-semibold">Réseau alumni</h3>
-                <p className="text-sm text-gray-600">Connexions globales</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* Features Section (intégrée comme section supplémentaire pour les quiz, gardée pour cohérence) */}
         <section id="features" className="px-4">
-          <h2 className="text-3xl font-bold text-center mb-10">Une plateforme tout-en-un</h2>
+          <h2 className="text-3xl font-bold text-center mb-10">Connectez-vous pour accéder à votre espace étudiant</h2>
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
               <FeatureCard title="Quiz Interactifs" icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>}>
                   Accédez à des dizaines de quiz dans toutes les matières pour évaluer et renforcer vos connaissances.
@@ -270,49 +182,6 @@ export default function Accueil() {
           </div>
         </section>
       </div>
-
-      {/* 9. Pied de page (footer) */}
-      <footer className="bg-slate-800 text-white py-12 mt-16">
-        <div className="max-w-7xl mx-auto px-4 grid md:grid-cols-4 gap-8">
-          {/* Coordonnées */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4">UniQuiz Université</h3>
-            <p className="text-gray-300 mb-4">123 Rue de l'Université<br />75000 Paris, France</p>
-            <p className="text-gray-300">Tél: +33 1 23 45 67 89<br />Email: contact@uni-quiz.fr</p>
-          </div>
-          {/* Liens rapides */}
-          <div>
-            <h4 className="font-semibold mb-4">Liens rapides</h4>
-            <ul className="space-y-2 text-sm text-gray-300">
-              <li><Link to="/mentions-legales" className="hover:text-white">Mentions légales</Link></li>
-              <li><Link to="/politique-confidentialite" className="hover:text-white">Politique de confidentialité</Link></li>
-              <li><Link to="/plan-site" className="hover:text-white">Plan du site</Link></li>
-            </ul>
-          </div>
-          {/* Réseaux sociaux */}
-          <div>
-            <h4 className="font-semibold mb-4">Suivez-nous</h4>
-            <div className="flex space-x-4">
-              <a href="https://facebook.com" className="text-gray-300 hover:text-white">Facebook</a>
-              <a href="https://linkedin.com" className="text-gray-300 hover:text-white">LinkedIn</a>
-              <a href="https://instagram.com" className="text-gray-300 hover:text-white">Instagram</a>
-              <a href="https://youtube.com" className="text-gray-300 hover:text-white">YouTube</a>
-            </div>
-          </div>
-          {/* Portails */}
-          <div>
-            <h4 className="font-semibold mb-4">Portails</h4>
-            <ul className="space-y-2 text-sm text-gray-300">
-              <li><Link to="/espace-etudiant" className="hover:text-white">Espace étudiant</Link></li>
-              <li><Link to="/espace-professeur" className="hover:text-white">Espace professeur</Link></li>
-              <li><Link to="/alumni" className="hover:text-white">Alumni</Link></li>
-            </ul>
-          </div>
-        </div>
-        <div className="border-t border-gray-700 mt-8 pt-8 text-center text-gray-300">
-          <p>&copy; 2025 UniQuiz Université. Tous droits réservés.</p>
-        </div>
-      </footer>
     </div>
   );
-                }
+        }
