@@ -81,14 +81,9 @@ export default function Accueil() {
               <h3 className="text-2xl font-semibold text-green-700 mb-4">Pourquoi choisir notre université après 10 ans ?</h3>
               <ul className="text-left space-y-2 text-gray-700">
                 <li>• Une expertise éprouvée en formation de qualité, reconnue internationalement.</li>
-                <li>• Des infrastructures modernes et un corps enseignant d'élite, affinés au fil des ans.</li>
                 <li>• Un réseau d'anciens élèves influents, fruit de nos 10 années de partenariats solides.</li>
-                <li>• Des programmes évolutifs, adaptés aux défis du monde d'aujourd'hui et de demain.</li>
               </ul>
             </div>
-            <Link to="/historique" className="mt-6 inline-block bg-green-600 text-white font-bold px-6 py-3 rounded-lg hover:bg-green-700 transition-all">
-              Découvrez notre parcours
-            </Link>
           </div>
         </section>
 
@@ -122,40 +117,10 @@ export default function Accueil() {
           </div>
         </section>
 
-        {/* 6. Vie étudiante et services */}
+        {/* 6. Témoignages */}
         <section id="vie-etudiante" className="px-4 bg-white py-12">
           <div className="max-w-7xl mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-10 text-slate-800">Vie étudiante</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-              <div className="text-center">
-                <svg className="mx-auto h-12 w-12 text-green-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-                <h3 className="font-semibold mb-2">Logement</h3>
-                <p className="text-gray-600">Résidences modernes et sécurisées</p>
-              </div>
-              <div className="text-center">
-                <svg className="mx-auto h-12 w-12 text-green-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-                <h3 className="font-semibold mb-2">Restauration</h3>
-                <p className="text-gray-600">Options saines et variées</p>
-              </div>
-              <div className="text-center">
-                <svg className="mx-auto h-12 w-12 text-green-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                <h3 className="font-semibold mb-2">Clubs</h3>
-                <p className="text-gray-600">Activités sportives et culturelles</p>
-              </div>
-              <div className="text-center">
-                <svg className="mx-auto h-12 w-12 text-green-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                </svg>
-                <h3 className="font-semibold mb-2">Bourses</h3>
-                <p className="text-gray-600">Aides financières accessibles</p>
-              </div>
-            </div>
+            <h2 className="text-3xl font-bold text-center mb-10 text-slate-800">Témoignages</h2>
             {/* Témoignage exemple */}
             <div className="mt-12 text-center">
               <blockquote className="text-gray-600 italic max-w-2xl mx-auto">
@@ -184,4 +149,4 @@ export default function Accueil() {
       </div>
     </div>
   );
-        }
+                                                                                                                                                                                  }
