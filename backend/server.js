@@ -83,24 +83,24 @@ function setAuthCookies(res, access, refresh) {
   const isProd = process.env.NODE_ENV === 'production';
   res.cookie('access_token', access, { 
     httpOnly: true, 
-    secure: isProd,
+    secure: true,
     path: '/',
-    sameSite: isProd ? 'none' : 'lax',  // ⚠️ change ici
+    sameSite: 'none',  // ⚠️ change ici
     maxAge: ACCESS_TOKEN_TTL_MIN * 60 * 1000 
   });
   res.cookie('refresh_token', refresh, { 
     httpOnly: true, 
-    secure: isProd,
+    secure: true,
     path: '/',
-    sameSite: isProd ? 'none' : 'lax',  // ⚠️ change ici
+    sameSite: 'none',  // ⚠️ change ici
     maxAge: REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000 
   });
 }
 
 function clearAuthCookies(res) {
   const isProd = process.env.NODE_ENV === 'production';
-  res.clearCookie('access_token', { httpOnly: true, path: '/', secure: isProd, sameSite: isProd ? 'none' : 'lax' });
-  res.clearCookie('refresh_token', { httpOnly: true, path: '/', secure: isProd, sameSite: isProd ? 'none' : 'lax' });
+  res.clearCookie('access_token', { httpOnly: true, path: '/', secure: true, sameSite: 'none' });
+  res.clearCookie('refresh_token', { httpOnly: true, path: '/', secure: true, sameSite: 'none' });
 }
 
 // Middleware Auth
