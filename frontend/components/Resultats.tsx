@@ -64,14 +64,26 @@ export default function Resultats({ user }: ResultatsProps) {
       {notes && (
         <div className="mt-8 pt-6 border-t border-gray-200">
             <h3 className="text-2xl font-semibold mb-4 text-center">Vos notes pour le code : <span className="font-mono text-green-700 bg-green-50 px-2 py-1 rounded">{code}</span></h3>
+            // Dans resultats.tsx
+
+// ...
             <ul className="space-y-3">
-            {Object.entries(notes).map(([matiere, note]) => (
-                <li key={matiere} className="flex justify-between items-center p-4 bg-gray-50 rounded-lg border">
-                    <span className="font-medium text-gray-700">{matiere}</span>
-                    <span className={`font-bold text-lg ${(note as number) >= 10 ? 'text-green-600' : 'text-red-600'}`}>{(note as number).toFixed(2)} / 20</span>
-                </li>
-            ))}
+            {Object.entries(notes).map(([matiere, note]) => {
+                // VRAIE CORRECTION : Gérer les notes null/undefined
+                const validNote = typeof note === 'number' ? note : 0; 
+                
+                return (
+                    <li key={matiere} className="flex justify-between items-center p-4 bg-gray-50 rounded-lg border">
+                        <span className="font-medium text-gray-700 capitalize">{matiere}</span> {/* Ajout de capitalize pour l'esthétique */}
+                        <span className={`font-bold text-lg ${validNote >= 10 ? 'text-green-600' : 'text-red-600'}`}>
+                            {validNote.toFixed(2)} / 20
+                        </span>
+                    </li>
+                );
+            })}
             </ul>
+// ...
+
         </div>
       )}
     </section>
