@@ -24,7 +24,7 @@ function App() {
     try {
       let res = await fetch(`${API_BASE_URL}/api/auth/session`, { credentials: 'include', cache: 'no-store' });
 
-      // Si 401 → token expiré, on tente de rafraîchir
+      // Si 401 to token expiré, on tente de rafraîchir
       if (res.status === 401) {
         const refresh = await fetch(`${API_BASE_URL}/api/auth/refresh`, { method: 'POST', credentials: 'include' });
         if (!refresh.ok) throw new Error('Session expirée, veuillez vous reconnecter.');
@@ -68,9 +68,12 @@ function App() {
     <div className="app min-h-screen flex flex-col bg-gray-50 text-slate-800">
       <header className="bg-white text-slate-800 shadow-sm sticky top-0 z-50 border-b">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-          <Link to="/" className="text-2xl font-bold text-green-700 hover:text-green-800 transition-colors">
-            ENIJE
-          </Link>
+          <div className="flex flex-col">
+            <Link to="/" className="text-2xl font-bold text-green-700 hover:text-green-800 transition-colors">
+              ENIJE
+            </Link>
+            <span className="text-xs text-gray-600 -mt-1">École normale d'instituteurs et de jardinières d'enfants</span>
+          </div>
           <nav className="hidden md:flex items-center space-x-6 text-base">
             <Link className="hover:text-green-600 transition-colors" to="/">Accueil</Link>
             <Link className="hover:text-green-600 transition-colors" to="/quiz">Quiz</Link>
