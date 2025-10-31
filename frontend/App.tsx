@@ -69,7 +69,7 @@ function App() {
       <header className="bg-white text-slate-800 shadow-sm sticky top-0 z-50 border-b">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
           <Link to="/" className="text-2xl font-bold text-green-700 hover:text-green-800 transition-colors">
-            Université Quiz
+            ENIJE
           </Link>
           <nav className="hidden md:flex items-center space-x-6 text-base">
             <Link className="hover:text-green-600 transition-colors" to="/">Accueil</Link>
@@ -90,8 +90,7 @@ function App() {
                </div>
             ) : (
               <>
-                <Link to="/connexion" className="text-gray-600 hover:text-green-600 transition-colors px-4 py-2 rounded-md">Connexion</Link>
-                <Link to="/inscription" className="bg-green-600 text-white font-bold px-4 py-2 rounded-md hover:bg-green-700 transition-shadow shadow-sm hover:shadow-md">Inscription</Link>
+                <Link to="/connexion" className="bg-green-600 text-white font-bold px-4 py-2 rounded-md hover:bg-green-700 transition-shadow shadow-sm hover:shadow-md">Inscription</Link>
               </>
             )}
           </div>
