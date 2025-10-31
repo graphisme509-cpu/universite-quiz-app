@@ -72,7 +72,7 @@ function App() {
             <Link to="/" className="text-2xl font-bold text-green-700 hover:text-green-800 transition-colors">
               ENIJE
             </Link>
-            <span className="text-xs text-gray-600 -mt-1">École normale d'instituteurs et de jardinières d'enfants</span>
+            <span className="text-xs text-gray-600 -mt-1">École Normale d'Instituteurs et de Jardinières d'Enfants</span>
           </div>
           <nav className="hidden md:flex items-center space-x-6 text-base">
             <Link className="hover:text-green-600 transition-colors" to="/">Accueil</Link>
