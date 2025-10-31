@@ -205,19 +205,28 @@ app.post('/api/contact', async (req, res) => {
 
 // Routes Résultats 
 // Pour un code étudiant spécifique (ex: recherche publique)
+// Pour un code étudiant spécifique (ex: recherche publique)
 app.post('/api/resultats', requireAuth, async (req, res) => {
   const { code } = req.body;
   if (!code) return res.status(400).json({ success: false, message: 'Code manquant.' });
   try {
     const q = await pool.query('SELECT math, physique, info, moyenne FROM resultats WHERE code_etudiant = $1', [code]);
     if (q.rowCount === 0) return res.status(404).json({ success: false, message: 'Code introuvable.' });
-    res.json({ success: true, notes: q.rows[0] });
+    
+    // ← Fix : Parse strings → numbers pour JSON (comme dans GET)
+    const notes = {
+      math: parseFloat(q.rows[0].math),
+      physique: parseFloat(q.rows[0].physique),
+      info: parseFloat(q.rows[0].info),
+      moyenne: parseFloat(q.rows[0].moyenne)
+    };
+    
+    res.json({ success: true, notes });
   } catch (err) {
     logger.error(err);
     res.status(500).json({ success: false, message: 'Erreur DB.' });
   }
 });
-
 // Pour l'utilisateur connecté
 // Remplace la route existante par ça :
 app.get('/api/resultats', requireAuth, async (req, res) => {
