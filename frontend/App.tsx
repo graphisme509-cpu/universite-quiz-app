@@ -90,7 +90,7 @@ function App() {
                </div>
             ) : (
               <>
-                <Link to="/connexion" className="bg-green-600 text-white font-bold px-4 py-2 rounded-md hover:bg-green-700 transition-shadow shadow-sm hover:shadow-md">Inscription</Link>
+                <Link to="/connexion" className="bg-green-600 text-white font-bold px-4 py-2 rounded-md hover:bg-green-700 transition-shadow shadow-sm hover:shadow-md">Connexion</Link>
               </>
             )}
           </div>
