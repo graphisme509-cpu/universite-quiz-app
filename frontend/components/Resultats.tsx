@@ -64,12 +64,8 @@ export default function Resultats({ user }: ResultatsProps) {
       {notes && (
         <div className="mt-8 pt-6 border-t border-gray-200">
             <h3 className="text-2xl font-semibold mb-4 text-center">Vos notes pour le code : <span className="font-mono text-green-700 bg-green-50 px-2 py-1 rounded">{code}</span></h3>
-            // Dans resultats.tsx
-
-// ...
             <ul className="space-y-3">
             {Object.entries(notes).map(([matiere, note]) => {
-                // VRAIE CORRECTION : Gérer les notes null/undefined
                 const validNote = typeof note === 'number' ? note : 0; 
                 
                 return (
@@ -82,7 +78,6 @@ export default function Resultats({ user }: ResultatsProps) {
                 );
             })}
             </ul>
-// ...
 
         </div>
       )}
