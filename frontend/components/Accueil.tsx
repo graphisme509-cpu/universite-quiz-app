@@ -77,7 +77,7 @@ export default function Accueil() {
  </p>
  <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
  <div className="block">
- <div className="bg-white p-6 rounded-lg shadow-sm transition-shadow border border-gray-200 h-full flex flex-col">
+<div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-lg transition-shadow border border-gray-200 h-full flex flex-col">
  <div className="flex justify-center">
  <div className="flex items-center justify-center h-12 w-12 rounded-full bg-green-100 text-green-700 mb-4">
  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
