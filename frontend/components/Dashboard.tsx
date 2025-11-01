@@ -62,7 +62,7 @@ export default function Dashboard({ user }: DashboardProps) {
                 <Route index element={<DashboardAccueil user={user}/>} />
                 <Route path="progression" element={<DashboardProgression user={user}/>} />
                 <Route path="resultats" element={<DashboardResultats user={user}/>} />
-<Route path="classement" element={<div className="p-8 text-center">🧪 TEST CLASSMENT - Routing OK !</div>} />
+<Route path="classement" element={<DashboardClassement user={user}/>} />
             </Routes>
         </main>
     </div>
