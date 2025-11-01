@@ -12,7 +12,7 @@ export default function DashboardAccueil({ user }: DashboardAccueilProps) {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [startingQuiz, setStartingQuiz] = useState<number | null>(null); // ID du quiz en cours de démarrage
+  const [startingQuiz, setStartingQuiz] = useState<number | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -50,10 +50,9 @@ export default function DashboardAccueil({ user }: DashboardAccueilProps) {
 
   return (
     <section className="space-y-6">
-      <header>
-        <h1 className="text-4xl font-bold text-slate-800">Bienvenue sur votre espace {user.name}</h1>
-        <p className="mt-6 text-lg text-gray-500">Choisissez un quiz pour commencer à apprendre.</p>
-      </header>
+      {/* BARRE SUPPRIMÉE : <header> retiré */}
+      <h1 className="text-4xl font-bold text-slate-800">Bienvenue sur votre espace {user.name}</h1>
+      <p className="mt-6 text-lg text-gray-500">Choisissez un quiz pour commencer à apprendre.</p>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {quizzes.length > 0 ? quizzes.map(quiz => (
