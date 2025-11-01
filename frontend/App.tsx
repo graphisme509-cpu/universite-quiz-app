@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 import Accueil from './components/Accueil';
 import AccueilConnecte from './components/AccueilConnecte';
 import Connexion from './components/Connexion';
@@ -16,7 +16,9 @@ import QuizDetail from './components/QuizDetail';
 function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const API_BASE_URL = 'https://universite-quiz-app-production.up.railway.app';
 
   useEffect(() => {
@@ -56,6 +58,8 @@ function App() {
     }
   };
 
+  const isDashboardPath = location.pathname.startsWith('/dashboard') || location.pathname === '/resultats';
+
   if (loading) {
     return (
         <div className="min-h-screen flex items-center justify-center">
@@ -69,7 +73,10 @@ function App() {
       <header className="bg-white text-slate-800 shadow-sm sticky top-0 z-50 border-b">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex flex-col">
-            <Link to="/" className="text-2xl font-bold text-green-700 hover:text-green-800 transition-colors">
+            <Link 
+              to={user ? "/dashboard" : "/"} 
+              className="text-2xl font-bold text-green-700 hover:text-green-800 transition-colors"
+            >
               ENIJE
             </Link>
             <span className="text-xs text-gray-600 -mt-1">École Normale d'Instituteurs et de Jardinières d'Enfants</span>
@@ -82,17 +89,47 @@ function App() {
           <div className="flex items-center space-x-2">
             {user ? (
                <div className="relative group">
-                    <button className="flex items-center space-x-2 px-4 py-2 bg-gray-100 rounded-lg">
+                    <button 
+                      onClick={() => setMenuOpen(!menuOpen)}
+                      className="flex items-center space-x-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                    >
                         <span>{user.name}</span>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                        <svg className={`w-4 h-4 transform transition-transform ${menuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
                     </button>
-                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg py-1 z-20 hidden group-hover:block">                       
-                        <Link to="/dashboard/" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Quiz</Link>
-                        <Link to="/dashboard/progression" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Progression</Link>
-                        <Link to="/resultats" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Résultats</Link>
-                        <Link to="/dashboard/classement" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Classement</Link>
+                    <div className={`absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl py-2 z-20 border border-gray-100 ${menuOpen ? 'block' : 'hidden'} group-hover:block`}>
+                        <Link 
+                          to="/dashboard/" 
+                          className={`block px-4 py-2.5 text-sm font-medium transition-colors ${location.pathname === '/dashboard/' ? 'text-green-700 bg-green-50' : 'text-gray-700 hover:bg-gray-100'}`}
+                        >
+                          Quiz
+                        </Link>
+                        <Link 
+                          to="/dashboard/progression" 
+                          className={`block px-4 py-2.5 text-sm font-medium transition-colors ${location.pathname === '/dashboard/progression' ? 'text-green-700 bg-green-50' : 'text-gray-700 hover:bg-gray-100'}`}
+                        >
+                          Progression
+                        </Link>
+                        <Link 
+                          to="/resultats" 
+                          className={`block px-4 py-2.5 text-sm font-medium transition-colors ${location.pathname === '/resultats' ? 'text-green-700 bg-green-50' : 'text-gray-700 hover:bg-gray-100'}`}
+                        >
+                          Résultats
+                        </Link>
+                        <Link 
+                          to="/dashboard/classement" 
+                          className={`block px-4 py-2.5 text-sm font-medium transition-colors ${location.pathname === '/dashboard/classement' ? 'text-green-700 bg-green-50' : 'text-gray-700 hover:bg-gray-100'}`}
+                        >
+                          Classement
+                        </Link>
                         <hr className="my-1 border-gray-200" />
-                        <button onClick={handleLogout} className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Déconnexion</button>
+                        <button 
+                          onClick={handleLogout} 
+                          className="w-full text-left block px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 font-medium transition-colors"
+                        >
+                          Déconnexion
+                        </button>
                     </div>
                </div>
             ) : (
