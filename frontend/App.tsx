@@ -88,7 +88,7 @@ function App() {
           </nav>
           <div className="flex items-center space-x-2">
             {user ? (
-               <div className="relative group">
+               <div className="relative">
                     <button 
                       onClick={() => setMenuOpen(!menuOpen)}
                       className="flex items-center space-x-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
@@ -98,7 +98,7 @@ function App() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
                         </svg>
                     </button>
-                    <div className={`absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl py-2 z-20 border border-gray-100 ${menuOpen ? 'block' : 'hidden'} group-hover:block`}>
+                    <div className={`absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl py-2 z-20 border border-gray-100 ${menuOpen ? 'block' : 'hidden'}`}>
                         <Link 
                           to="/dashboard/" 
                           className={`block px-4 py-2.5 text-sm font-medium transition-colors ${location.pathname === '/dashboard/' ? 'text-green-700 bg-green-50' : 'text-gray-700 hover:bg-gray-100'}`}
