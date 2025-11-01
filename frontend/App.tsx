@@ -103,25 +103,25 @@ function App() {
                     <div className={`absolute right-0 mt-2 w-64 bg-white rounded-xl py-2 z-20 border border-gray-100 ${menuOpen ? 'block' : 'hidden'}`}>
                         <Link 
                           to="/dashboard/" 
-                          className={`block px-4 py-2.5 text-sm font-medium transition-colors ${location.pathname === '/dashboard/' ? 'text-green-700 bg-green-50' : 'text-gray-700 hover:bg-gray-100'}`}
+                          className={`block px-4 py-2.5 text-sm font-medium transition-colors ${location.pathname === '/dashboard/' ? 'text-green-700 bg-white' : 'text-gray-700 hover:bg-white'}`}
                         >
                           Quiz
                         </Link>
                         <Link 
                           to="/dashboard/progression" 
-                          className={`block px-4 py-2.5 text-sm font-medium transition-colors ${location.pathname === '/dashboard/progression' ? 'text-green-700 bg-green-50' : 'text-gray-700 hover:bg-gray-100'}`}
+                          className={`block px-4 py-2.5 text-sm font-medium transition-colors ${location.pathname === '/dashboard/progression' ? 'text-green-700 bg-white' : 'text-gray-700 hover:bg-white'}`}
                         >
                           Progression
                         </Link>
                         <Link 
                           to="/resultats" 
-                          className={`block px-4 py-2.5 text-sm font-medium transition-colors ${location.pathname === '/resultats' ? 'text-green-700 bg-green-50' : 'text-gray-700 hover:bg-gray-100'}`}
+                          className={`block px-4 py-2.5 text-sm font-medium transition-colors ${location.pathname === '/resultats' ? 'text-green-700 bg-white' : 'text-gray-700 hover:bg-white'}`}
                         >
                           Résultats
                         </Link>
                         <Link 
                           to="/dashboard/classement" 
-                          className={`block px-4 py-2.5 text-sm font-medium transition-colors ${location.pathname === '/dashboard/classement' ? 'text-green-700 bg-green-50' : 'text-gray-700 hover:bg-gray-100'}`}
+                          className={`block px-4 py-2.5 text-sm font-medium transition-colors ${location.pathname === '/dashboard/classement' ? 'text-green-700 bg-white' : 'text-gray-700 hover:bg-white'}`}
                         >
                           Classement
                         </Link>
