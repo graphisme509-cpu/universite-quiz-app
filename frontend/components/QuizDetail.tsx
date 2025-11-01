@@ -155,17 +155,24 @@ export default function QuizDetail() {
       )}
 
       {!submitted && (
-        <button
-          onClick={handleSubmit}
-          disabled={!allAnswered}
-          className={`mt-4 px-6 py-3 rounded-lg text-white font-medium transition
-            ${allAnswered 
-              ? 'bg-green-600 hover:bg-green-700 cursor-pointer' 
-              : 'bg-gray-400 cursor-not-allowed'
-            }`}
-        >
-          Soumettre le quiz
-        </button>
+        <>
+          <button
+            onClick={handleSubmit}
+            disabled={!allAnswered}
+            className={`mt-4 px-6 py-3 rounded-lg text-white font-medium transition
+              ${allAnswered 
+                ? 'bg-green-600 hover:bg-green-700 cursor-pointer' 
+                : 'bg-gray-400 cursor-not-allowed'
+              }`}
+          >
+            Soumettre le quiz
+          </button>
+          {!allAnswered && (
+            <p className="mt-2 text-sm text-red-600 text-center">
+              Répondez à toutes les questions pour pouvoir soumettre le quiz.
+            </p>
+          )}
+        </>
       )}
 
       <button
@@ -176,4 +183,4 @@ export default function QuizDetail() {
       </button>
     </div>
   );
-                      }
+}
