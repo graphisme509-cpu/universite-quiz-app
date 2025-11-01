@@ -86,8 +86,13 @@ function App() {
                         <span>{user.name}</span>
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                     </button>
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20 hidden group-hover:block">
+                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg py-1 z-20 hidden group-hover:block">
                         <Link to="/dashboard" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Mon Dashboard</Link>
+                        <Link to="/dashboard/" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Accueil Quiz</Link>
+                        <Link to="/dashboard/progression" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Ma Progression</Link>
+                        <Link to="/resultats" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Mes Notes</Link>
+                        <Link to="/dashboard/classement" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Classement</Link>
+                        <hr className="my-1 border-gray-200" />
                         <button onClick={handleLogout} className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Déconnexion</button>
                     </div>
                </div>
