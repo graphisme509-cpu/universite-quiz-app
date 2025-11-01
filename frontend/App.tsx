@@ -100,7 +100,7 @@ function App() {
                           </svg>
                         </span>
                     </button>
-                    <div className={`absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl py-2 z-20 border border-gray-100 ${menuOpen ? 'block' : 'hidden'}`}>
+                    <div className={`absolute right-0 mt-2 w-64 bg-white rounded-xl py-2 z-20 border border-gray-100 ${menuOpen ? 'block' : 'hidden'}`}>
                         <Link 
                           to="/dashboard/" 
                           className={`block px-4 py-2.5 text-sm font-medium transition-colors ${location.pathname === '/dashboard/' ? 'text-green-700 bg-green-50' : 'text-gray-700 hover:bg-gray-100'}`}
