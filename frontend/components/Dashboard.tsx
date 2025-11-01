@@ -52,7 +52,7 @@ export default function Dashboard({ user }: DashboardProps) {
                 <nav className="space-y-2">
                     <NavLink to="/dashboard/" icon={<HomeIcon />} >Accueil Quiz</NavLink>
                     <NavLink to="/dashboard/progression" icon={<ChartBarIcon />}>Ma Progression</NavLink>
-                    <NavLink to="/dashboard/resultats" icon={<DocumentTextIcon />}>Mes Notes</NavLink>
+                    <NavLink to="/resultats" icon={<DocumentTextIcon />}>Mes Notes</NavLink>
                     <NavLink to="/dashboard/classement" icon={<TrophyIcon />}>Classement</NavLink>
                 </nav>
             </div>
