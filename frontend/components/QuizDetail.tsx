@@ -69,9 +69,12 @@ export default function QuizDetail() {
     setAnswers(prev => ({ ...prev, [questionKey]: optionIndex }));
   };
 
+  // Vérifie si toutes les questions ont une réponse
+  const allAnswered = quiz && quiz.questions.every(q => answers.hasOwnProperty(q.key_name));
+
   // Soumission et calcul du score
   const handleSubmit = async () => {
-    if (!quiz) return;
+    if (!quiz || !allAnswered) return;
 
     // Calcul local du score
     let points = 0;
@@ -139,7 +142,7 @@ export default function QuizDetail() {
 
           {submitted && q.explanation && (
             <p className="mt-2 text-sm text-gray-700 italic">
-              💡 {q.explanation}
+              Explication : {q.explanation}
             </p>
           )}
         </div>
@@ -154,7 +157,12 @@ export default function QuizDetail() {
       {!submitted && (
         <button
           onClick={handleSubmit}
-          className="mt-4 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700"
+          disabled={!allAnswered}
+          className={`mt-4 px-6 py-3 rounded-lg text-white font-medium transition
+            ${allAnswered 
+              ? 'bg-green-600 hover:bg-green-700 cursor-pointer' 
+              : 'bg-gray-400 cursor-not-allowed'
+            }`}
         >
           Soumettre le quiz
         </button>
@@ -168,4 +176,4 @@ export default function QuizDetail() {
       </button>
     </div>
   );
-    }
+                      }
