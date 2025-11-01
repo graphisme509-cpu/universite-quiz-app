@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { User } from '../types';
 
 interface ConnexionProps {
@@ -68,9 +68,6 @@ export default function Connexion({ setUser }: ConnexionProps) {
             </button>
         </form>
         {message && <p className="mt-4 p-3 rounded-lg text-center bg-red-100 text-red-800">{message}</p>}
-        <p className="mt-6 text-center text-gray-600">
-            Pas encore de compte ? <Link to="/inscription" className="text-green-600 hover:underline font-medium">Inscrivez-vous</Link>
-        </p>
         </section>
     </div>
   );
