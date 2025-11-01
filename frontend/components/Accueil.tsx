@@ -76,8 +76,8 @@ export default function Accueil() {
  Explorez nos niveaux de formation avec des quiz adaptés à chaque domaine.
  </p>
  <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
- <Link to="/licence" className="block">
- <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-lg transition-shadow border border-gray-200 h-full flex flex-col">
+ <div className="block">
+ <div className="bg-white p-6 rounded-lg shadow-sm transition-shadow border border-gray-200 h-full flex flex-col">
  <div className="flex justify-center">
  <div className="flex items-center justify-center h-12 w-12 rounded-full bg-green-100 text-green-700 mb-4">
  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -90,10 +90,13 @@ export default function Accueil() {
  <div className="flex-grow flex items-center justify-center">
  <h3 className="text-xl font-semibold">Jardinière</h3>
  </div>
+ <div className="mt-4 text-center">
+ <Link to="/programmes/jardiniere" className="text-green-600 hover:underline">En savoir plus</Link>
  </div>
- </Link>
- <Link to="/master" className="block">
- <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-lg transition-shadow border border-gray-200 h-full flex flex-col">
+ </div>
+ </div>
+ <div className="block">
+ <div className="bg-white p-6 rounded-lg shadow-sm transition-shadow border border-gray-200 h-full flex flex-col">
  <div className="flex justify-center">
  <div className="flex items-center justify-center h-12 w-12 rounded-full bg-green-100 text-green-700 mb-4">
  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -106,8 +109,11 @@ export default function Accueil() {
  <div className="flex-grow flex items-center justify-center">
  <h3 className="text-xl font-semibold">Aide-jardinière</h3>
  </div>
+ <div className="mt-4 text-center">
+ <Link to="/programmes/aide-jardiniere" className="text-green-600 hover:underline">En savoir plus</Link>
  </div>
- </Link>
+ </div>
+ </div>
  </div>
  </section>
 
@@ -145,7 +151,7 @@ export default function Accueil() {
  <span className="italic">"Grâce à cette plateforme, j'ai pu progresser rapidement dans mes études."</span>
  </FeatureCard>
  <FeatureCard title="Sophie M., Étudiante en Aide-jardinière" icon={
- <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 21l 1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+ <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 21l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
  }>
  <span className="italic">"L'environnement est motivant et les ressources sont excellentes."</span>
  </FeatureCard>
@@ -178,4 +184,4 @@ export default function Accueil() {
  </div>
  </div>
  );
-}
+  }
