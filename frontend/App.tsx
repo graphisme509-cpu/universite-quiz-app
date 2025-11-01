@@ -91,7 +91,7 @@ function App() {
                <div className="relative">
                     <button 
                       onClick={() => setMenuOpen(!menuOpen)}
-                      className="flex items-center space-x-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                      className="flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors"
                     >
                         <span>{user.name}</span>
                         <span className="flex items-center justify-center w-6 h-6 bg-green-600 rounded-full">
@@ -100,28 +100,28 @@ function App() {
                           </svg>
                         </span>
                     </button>
-                    <div className={`absolute right-0 mt-2 w-64 bg-white rounded-xl py-2 z-20 border border-gray-100 ${menuOpen ? 'block' : 'hidden'}`}>
+                    <div className={`absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl py-2 z-20 border border-gray-100 ${menuOpen ? 'block' : 'hidden'}`}>
                         <Link 
                           to="/dashboard/" 
-                          className={`block px-4 py-2.5 text-sm font-medium transition-colors ${location.pathname === '/dashboard/' ? 'text-green-700 bg-white' : 'text-gray-700 hover:bg-white'}`}
+                          className={`block px-4 py-2.5 text-sm font-medium transition-colors ${location.pathname === '/dashboard/' ? 'text-green-700 bg-green-50' : 'text-gray-700 hover:bg-gray-100'}`}
                         >
                           Quiz
                         </Link>
                         <Link 
                           to="/dashboard/progression" 
-                          className={`block px-4 py-2.5 text-sm font-medium transition-colors ${location.pathname === '/dashboard/progression' ? 'text-green-700 bg-white' : 'text-gray-700 hover:bg-white'}`}
+                          className={`block px-4 py-2.5 text-sm font-medium transition-colors ${location.pathname === '/dashboard/progression' ? 'text-green-700 bg-green-50' : 'text-gray-700 hover:bg-gray-100'}`}
                         >
                           Progression
                         </Link>
                         <Link 
                           to="/resultats" 
-                          className={`block px-4 py-2.5 text-sm font-medium transition-colors ${location.pathname === '/resultats' ? 'text-green-700 bg-white' : 'text-gray-700 hover:bg-white'}`}
+                          className={`block px-4 py-2.5 text-sm font-medium transition-colors ${location.pathname === '/resultats' ? 'text-green-700 bg-green-50' : 'text-gray-700 hover:bg-gray-100'}`}
                         >
                           Résultats
                         </Link>
                         <Link 
                           to="/dashboard/classement" 
-                          className={`block px-4 py-2.5 text-sm font-medium transition-colors ${location.pathname === '/dashboard/classement' ? 'text-green-700 bg-white' : 'text-gray-700 hover:bg-white'}`}
+                          className={`block px-4 py-2.5 text-sm font-medium transition-colors ${location.pathname === '/dashboard/classement' ? 'text-green-700 bg-green-50' : 'text-gray-700 hover:bg-gray-100'}`}
                         >
                           Classement
                         </Link>
