@@ -44,13 +44,7 @@ export default function Dashboard({ user }: DashboardProps) {
 
   return (
     <div className="flex flex-col md:flex-row gap-8">
-        {/* MENU DE LA PAGE SUPPRIMÉ (pas le header sidebar) */}
-        <aside className="md:w-64 flex-shrink-0">
-            <div className="p-4 bg-white rounded-xl shadow-lg border border-gray-200 sticky top-24">
-                {/* Vide */}
-            </div>
-        </aside>
-
+        {/* ASIDE SUPPRIMÉ : plus de barre latérale vide */}
         <main className="flex-grow">
             <Routes>
                 <Route index element={<DashboardAccueil user={user}/>} />
