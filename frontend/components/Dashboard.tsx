@@ -47,16 +47,16 @@ export default function Dashboard({ user }: DashboardProps) {
         {/* MENU DE LA PAGE SUPPRIMÉ (pas le header sidebar) */}
         <aside className="md:w-64 flex-shrink-0">
             <div className="p-4 bg-white rounded-xl shadow-lg border border-gray-200 sticky top-24">
-                {/* Tout le contenu du menu a été retiré */}
+                {/* Vide */}
             </div>
         </aside>
 
         <main className="flex-grow">
             <Routes>
-                <Route index element={<DashboardAccueil user={user} />} />
-                <Route path="progression" element={<DashboardProgression user={user} />} />
-                <Route path="resultats" element={<DashboardResultats user={user} />} />
-                <Route path="classement" element={<DashboardClassement user={user} />} />
+                <Route index element={<DashboardAccueil user={user}/>} />
+                <Route path="progression" element={<DashboardProgression user={user}/>} />
+                <Route path="resultats" element={<DashboardResultats user={user}/>} />
+                <Route path="classement" element={<DashboardClassement user={user}/>} />
             </Routes>
         </main>
     </div>
