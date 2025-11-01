@@ -31,6 +31,8 @@ export default function QuizDetail() {
   const [submitted, setSubmitted] = useState(false);
   const [resultMessage, setResultMessage] = useState('');
   const [score, setScore] = useState<number | null>(null);
+  const [submitting, setSubmitting] = useState(false); // Pour spinner soumission
+  const [navigating, setNavigating] = useState(false); // Pour spinner retour
 
   // Charger le quiz
   useEffect(() => {
@@ -74,7 +76,9 @@ export default function QuizDetail() {
 
   // Soumission et calcul du score
   const handleSubmit = async () => {
-    if (!quiz || !allAnswered) return;
+    if (!quiz || !allAnswered || submitting) return;
+
+    setSubmitting(true);
 
     // Calcul local du score
     let points = 0;
@@ -99,7 +103,16 @@ export default function QuizDetail() {
       setSubmitted(true);
     } catch {
       setResultMessage('Erreur serveur lors de la soumission.');
+    } finally {
+      setSubmitting(false);
     }
+  };
+
+  // Retour au dashboard avec spinner
+  const handleBackToDashboard = () => {
+    if (navigating) return;
+    setNavigating(true);
+    navigate('/dashboard');
   };
 
   // États d’attente
@@ -154,33 +167,49 @@ export default function QuizDetail() {
         </div>
       )}
 
-      {!submitted && (
-        <>
+      <div className="flex justify-center gap-4 mt-6">
+        {!submitted && (
           <button
             onClick={handleSubmit}
-            disabled={!allAnswered}
-            className={`mt-4 px-6 py-3 rounded-lg text-white font-medium transition
-              ${allAnswered 
-                ? 'bg-green-600 hover:bg-green-700 cursor-pointer' 
+            disabled={!allAnswered || submitting}
+            className={`h-12 w-48 rounded-lg text-white font-medium transition flex items-center justify-center
+              ${allAnswered && !submitting
+                ? 'bg-green-600 hover:bg-green-700 cursor-pointer'
                 : 'bg-gray-400 cursor-not-allowed'
               }`}
           >
-            Soumettre le quiz
+            {submitting ? (
+              <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            ) : (
+              'Soumettre le quiz'
+            )}
           </button>
-          {!allAnswered && (
-            <p className="mt-2 text-sm text-red-600 text-center">
-              Répondez à toutes les questions pour pouvoir soumettre le quiz.
-            </p>
-          )}
-        </>
-      )}
+        )}
 
-      <button
-        onClick={() => navigate('/dashboard')}
-        className="mt-4 ml-4 px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
-      >
-        Retour au Dashboard
-      </button>
+        <button
+          onClick={handleBackToDashboard}
+          disabled={navigating}
+          className={`h-12 w-48 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition flex items-center justify-center`}
+        >
+          {navigating ? (
+            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          ) : (
+            'Retour au Dashboard'
+          )}
+        </button>
+      </div>
+
+      {!submitted && !allAnswered && (
+        <p className="mt-2 text-sm text-red-600 text-center">
+          Répondez à toutes les questions pour pouvoir soumettre le quiz.
+        </p>
+      )}
     </div>
   );
 }
