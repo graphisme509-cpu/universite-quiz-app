@@ -193,4 +193,4 @@ export default function Resultats({ user }: ResultatsProps) {
       )}
     </section>
   );
-              }
+                                                      }
