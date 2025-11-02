@@ -86,7 +86,7 @@ function setAuthCookies(res, access, refresh) {
     secure: true,
     path: '/',
     sameSite: 'none',  // ⚠️ change ici
-    maxAge: ACCESS_TOKEN_TTL_MIN * 60 * 1000 
+    maxAge: ACCESS_TOKEN_TTL_MIN * 600 * 1000 
   });
   res.cookie('refresh_token', refresh, { 
     httpOnly: true, 
