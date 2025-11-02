@@ -125,8 +125,72 @@ export default function Resultats({ user }: ResultatsProps) {
               );
             })}
           </div>
+
+          {results.periods.length === 3 && (
+            <div className="bg-blue-50 p-6 rounded-lg shadow border border-blue-200">
+              <h4 className="text-xl font-bold mb-4 text-center text-blue-800">Liste de décision</h4>
+              <table className="w-full table-auto border-collapse border border-blue-300">
+                <tbody className="divide-y divide-blue-200">
+                  <tr className="bg-blue-100">
+                    <td className="px-4 py-2 font-medium text-left">Code de l'étudiante</td>
+                    <td className="px-4 py-2">{displayedCode}</td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-2 font-medium text-left">Option</td>
+                    <td className="px-4 py-2">{results.option}</td>
+                  </tr>
+                  <tr className="bg-blue-100">
+                    <td className="px-4 py-2 font-medium text-left">1ère période</td>
+                    <td className="px-4 py-2">{results.periods[0].moyenne.toFixed(2)} / 20</td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-2 font-medium text-left">2ème période</td>
+                    <td className="px-4 py-2">{results.periods[1].moyenne.toFixed(2)} / 20</td>
+                  </tr>
+                  <tr className="bg-blue-100">
+                    <td className="px-4 py-2 font-medium text-left">3ème période</td>
+                    <td className="px-4 py-2">{results.periods[2].moyenne.toFixed(2)} / 20</td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-2 font-medium text-left">Moyenne générale</td>
+                    <td className="px-4 py-2 font-bold">
+                      {((results.periods[0].moyenne + results.periods[1].moyenne + results.periods[2].moyenne) / 3).toFixed(2)} / 20
+                    </td>
+                  </tr>
+                  <tr className="bg-green-100">
+                    <td className="px-4 py-2 font-medium text-left">Décision</td>
+                    <td className="px-4 py-2 font-bold text-green-700">
+                      {(() => {
+                        const avg = (results.periods[0].moyenne + results.periods[1].moyenne + results.periods[2].moyenne) / 3 * 5;
+                        if (avg >= 60) return 'Admise';
+                        if (avg >= 50) return 'Reprise';
+                        return 'Non admise';
+                      })()}
+                    </td>
+                  </tr>
+                  {(() => {
+                    const avg = (results.periods[0].moyenne + results.periods[1].moyenne + results.periods[2].moyenne) / 3 * 5;
+                    const decision = avg >= 60 ? 'Admise' : avg >= 50 ? 'Reprise' : 'Non admise';
+                    if (decision === 'Admise') {
+                      let mention = '';
+                      if (avg < 75) mention = 'Bien';
+                      else if (avg < 90) mention = 'Très bien';
+                      else mention = 'Excellent';
+                      return (
+                        <tr className="bg-yellow-100">
+                          <td className="px-4 py-2 font-medium text-left">Mention</td>
+                          <td className="px-4 py-2 font-bold text-yellow-700">{mention}</td>
+                        </tr>
+                      );
+                    }
+                    return null;
+                  })()}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
     </section>
   );
-}
+              }
