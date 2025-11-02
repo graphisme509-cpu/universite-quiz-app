@@ -89,7 +89,7 @@ export default function Resultats({ user }: ResultatsProps) {
       {results && (
         <div className="space-y-6">
           <h3 className="text-2xl font-semibold mb-4 text-center">
-            Résultats de <span className="font-mono text-green-700 bg-green-50 px-2 py-1 rounded">{displayedCode}</span>
+            <span className="font-mono text-green-700 bg-green-50 px-2 py-1 rounded">{displayedCode}</span>
           </h3>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {results.periods.map((period) => (
