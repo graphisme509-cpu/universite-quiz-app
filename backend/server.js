@@ -206,49 +206,101 @@ app.post('/api/contact', async (req, res) => {
 // Routes Résultats 
 // Pour un code étudiant spécifique (ex: recherche publique)
 // Pour un code étudiant spécifique (ex: recherche publique)
+// Route POST /api/resultats : Recherche par code étudiant (publique, mais auth required)
 app.post('/api/resultats', requireAuth, async (req, res) => {
   const { code } = req.body;
   if (!code) return res.status(400).json({ success: false, message: 'Code manquant.' });
   try {
-    const q = await pool.query('SELECT math, physique, info, moyenne FROM resultats WHERE code_etudiant = $1', [code]);
-    if (q.rowCount === 0) return res.status(404).json({ success: false, message: 'Code introuvable.' });
-    
-    // ← Fix : Parse strings → numbers pour JSON (comme dans GET)
-    const notes = {
-      math: parseFloat(q.rows[0].math),
-      physique: parseFloat(q.rows[0].physique),
-      info: parseFloat(q.rows[0].info),
-      moyenne: parseFloat(q.rows[0].moyenne)
-    };
-    
-    res.json({ success: true, notes });
+    let annee = null;
+    let periods = [];
+    const periodNames = { 1: '1ère période', 2: '2ème période', 3: '3ème période' };
+    const anneeNames = { 1: '1ère année', 2: '2ème année', 3: '3ème année' };
+
+    // Interroger toutes les 9 tables
+    for (let a = 1; a <= 3; a++) {
+      for (let p = 1; p <= 3; p++) {
+        const table = `resultats_${a}_${p}`;
+        const q = await pool.query(`SELECT notes, moyenne FROM ${table} WHERE code_etudiant = $1`, [code]);
+        if (q.rowCount > 0) {
+          const row = q.rows[0];
+          const notesObj = row.notes || {};
+          if (Object.keys(notesObj).length > 0) {
+            if (annee && annee !== a) {
+              // Assume un seul année par code ; sinon, ignorer ou logger
+              logger.warn(`Code ${code} trouvé dans plusieurs années.`);
+              continue;
+            }
+            annee = a;
+            periods.push({
+              periode: p,
+              title: periodNames[p],
+              notes: notesObj, // JSONB déjà objet
+              moyenne: parseFloat(row.moyenne)
+            });
+          }
+        }
+      }
+    }
+
+    if (periods.length === 0) return res.status(404).json({ success: false, message: 'Aucune période avec notes trouvée pour ce code.' });
+
+    periods.sort((a, b) => a.periode - b.periode);
+
+    const anneeName = anneeNames[annee];
+    res.json({ success: true, results: { annee: anneeName, periods } });
   } catch (err) {
     logger.error(err);
     res.status(500).json({ success: false, message: 'Erreur DB.' });
   }
 });
-// Pour l'utilisateur connecté
-// Remplace la route existante par ça :
-app.get('/api/resultats', requireAuth, async (req, res) => {
-    try {
-        const q = await pool.query('SELECT math, physique, info, moyenne FROM resultats WHERE user_id = $1', [req.user.id]);
-        if (q.rowCount === 0) return res.status(404).json({ success: false, message: "Aucun résultat trouvé pour votre compte." });
-        
-        // ← Fix : Parse strings → numbers pour JSON
-        const notes = {
-            math: parseFloat(q.rows[0].math),
-            physique: parseFloat(q.rows[0].physique),
-            info: parseFloat(q.rows[0].info),
-            moyenne: parseFloat(q.rows[0].moyenne)
-        };
-        
-        res.json({ success: true, notes });
-    } catch (err) {
-        logger.error(err);
-        res.status(500).json({ success: false, message: 'Erreur DB.' });
-    }
-});
 
+// Route GET /api/resultats : Pour l'utilisateur connecté (basé sur son année)
+app.get('/api/resultats', requireAuth, async (req, res) => {
+  try {
+    // Récupérer l'année de l'utilisateur
+    const userQ = await pool.query('SELECT annee FROM users WHERE id = $1', [req.user.id]);
+    if (userQ.rowCount === 0 || !userQ.rows[0].annee) {
+      return res.status(404).json({ success: false, message: "Aucune année associée à votre compte." });
+    }
+    const a = parseInt(userQ.rows[0].annee);
+    if (isNaN(a) || a < 1 || a > 3) {
+      return res.status(400).json({ success: false, message: 'Année invalide.' });
+    }
+
+    let periods = [];
+    const periodNames = { 1: '1ère période', 2: '2ème période', 3: '3ème période' };
+    const anneeNames = { 1: '1ère année', 2: '2ème année', 3: '3ème année' };
+
+    // Interroger les 3 tables de cette année
+    for (let p = 1; p <= 3; p++) {
+      const table = `resultats_${a}_${p}`;
+      const q = await pool.query(`SELECT notes, moyenne FROM ${table} WHERE user_id = $1`, [req.user.id]);
+      if (q.rowCount > 0) {
+        const row = q.rows[0];
+        const notesObj = row.notes || {};
+        if (Object.keys(notesObj).length > 0) {
+          periods.push({
+            periode: p,
+            title: periodNames[p],
+            notes: notesObj,
+            moyenne: parseFloat(row.moyenne)
+          });
+        }
+      }
+    }
+
+    if (periods.length === 0) {
+      return res.status(404).json({ success: false, message: "Aucune période avec notes trouvée pour votre année." });
+    }
+
+    periods.sort((a, b) => a.periode - b.periode);
+    const anneeName = anneeNames[a];
+    res.json({ success: true, results: { annee: anneeName, periods } });
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ success: false, message: 'Erreur DB.' });
+  }
+});
 
 // Admin Notes
 const ADMIN_CODE = process.env.ADMIN_CODE;
