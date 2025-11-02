@@ -89,7 +89,7 @@ export default function Resultats({ user }: ResultatsProps) {
       {results && (
         <div className="space-y-6">
           <div className="text-center">
-            <h3 className="text-2xl perc-semibold mb-2">
+            <h3 className="text-2xl font-semibold mb-2">
               <span className="font-mono text-green-700 bg-green-50 px-2 py-1 rounded">{displayedCode}</span>
             </h3>
             <p className="text-lg font-medium text-gray-700">Option: <span className="text-green-700">{results.option}</span></p>
@@ -101,7 +101,7 @@ export default function Resultats({ user }: ResultatsProps) {
 
             return (
               <>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 justify-center">
                   {results.periods.map((period) => {
                     const noteValues = Object.values(period.notes).map(n => typeof n === 'number' ? n : 0);
                     const total = noteValues.reduce((acc, n) => acc + n, 0);
@@ -205,4 +205,4 @@ export default function Resultats({ user }: ResultatsProps) {
       )}
     </section>
   );
-                          }
+  }
