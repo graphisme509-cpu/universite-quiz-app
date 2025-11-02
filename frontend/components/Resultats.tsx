@@ -115,7 +115,7 @@ export default function Resultats({ user }: ResultatsProps) {
                             return (
                               <li key={matiere} className="flex justify-between items-center p-3 bg-white rounded border">
                                 <span className="font-medium text-gray-700 capitalize">{matiere}</span>
-                                <span className={`font-bold text-lg ${validNote >= passingNote ? 'text-green-600' : 'text-red-600'}`}>
+                                <span className={`font-bold ${validNote >= passingNote ? 'text-green-600' : 'text-red-600'}`}>
                                   {validNote.toFixed(2)} / {maxPerSubject.toFixed(0)}
                                 </span>
                               </li>
@@ -205,4 +205,4 @@ export default function Resultats({ user }: ResultatsProps) {
       )}
     </section>
   );
-                                                                                            }
+                          }
