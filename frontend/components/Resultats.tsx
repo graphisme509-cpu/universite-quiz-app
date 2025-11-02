@@ -18,7 +18,7 @@ interface Period {
 }
 
 interface Results {
-  annee: string;
+  option: string;
   periods: Period[];
 }
 
@@ -88,34 +88,45 @@ export default function Resultats({ user }: ResultatsProps) {
 
       {results && (
         <div className="space-y-6">
-          <h3 className="text-2xl font-semibold mb-4 text-center">
-            <span className="font-mono text-green-700 bg-green-50 px-2 py-1 rounded">{displayedCode}</span>
-          </h3>
+          <div className="text-center">
+            <h3 className="text-2xl font-semibold mb-2">
+              <span className="font-mono text-green-700 bg-green-50 px-2 py-1 rounded">{displayedCode}</span>
+            </h3>
+            <p className="text-lg font-medium text-gray-700">Option: <span className="text-green-700">{results.option}</span></p>
+          </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {results.periods.map((period) => (
-              <div key={period.periode} className="bg-gray-50 p-6 rounded-lg shadow border border-gray-200">
-                <h4 className="text-xl font-bold mb-4 text-center text-slate-800">{period.title}</h4>
-                <ul className="space-y-3 mb-4">
-                  {Object.entries(period.notes).map(([matiere, note]) => {
-                    const validNote = typeof note === 'number' ? note : 0;
-                    return (
-                      <li key={matiere} className="flex justify-between items-center p-3 bg-white rounded border">
-                        <span className="font-medium text-gray-700 capitalize">{matiere}</span>
-                        <span className={`font-bold text-lg ${validNote >= 10 ? 'text-green-600' : 'text-red-600'}`}>
-                          {validNote.toFixed(2)} / 20
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
-                <div className={`text-center font-bold text-xl py-2 rounded ${period.moyenne >= 10 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                  Moyenne: {period.moyenne.toFixed(2)} / 20
+            {results.periods.map((period) => {
+              const noteValues = Object.values(period.notes).map(n => typeof n === 'number' ? n : 0);
+              const total = noteValues.reduce((acc, n) => acc + n, 0);
+              const maxTotal = noteValues.length * 20;
+              return (
+                <div key={period.periode} className="bg-gray-50 p-6 rounded-lg shadow border border-gray-200">
+                  <h4 className="text-xl font-bold mb-4 text-center text-slate-800">{period.title}</h4>
+                  <ul className="space-y-3 mb-4">
+                    {Object.entries(period.notes).map(([matiere, note]) => {
+                      const validNote = typeof note === 'number' ? note : 0;
+                      return (
+                        <li key={matiere} className="flex justify-between items-center p-3 bg-white rounded border">
+                          <span className="font-medium text-gray-700 capitalize">{matiere}</span>
+                          <span className={`font-bold text-lg ${validNote >= 10 ? 'text-green-600' : 'text-red-600'}`}>
+                            {validNote.toFixed(2)} / 20
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  <div className="text-center font-medium py-1 mb-2">
+                    Total: {total.toFixed(2)} / {maxTotal}
+                  </div>
+                  <div className={`text-center font-bold text-xl py-2 rounded ${period.moyenne >= 10 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                    Moyenne: {period.moyenne.toFixed(2)} / 20
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
     </section>
   );
-                                                                              }
+}
