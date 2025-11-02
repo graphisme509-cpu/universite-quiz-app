@@ -109,7 +109,7 @@ export default function Resultats({ user }: ResultatsProps) {
                     return (
                       <div key={period.periode} className="bg-gray-50 p-8 rounded-lg shadow border border-gray-200">
                         <h4 className="text-xl font-bold mb-4 text-center text-slate-800">{period.title}</h4>
-                        <ul className="space-y-4 mb-4">
+                        <ul className="space-y-7 mb-4">
                           {Object.entries(period.notes).map(([matiere, note]) => {
                             const validNote = typeof note === 'number' ? note : 0;
                             return (
@@ -205,4 +205,4 @@ export default function Resultats({ user }: ResultatsProps) {
       )}
     </section>
   );
-          }
+                        }
