@@ -89,7 +89,7 @@ export default function Resultats({ user }: ResultatsProps) {
       {results && (
         <div className="space-y-6">
           <div className="text-center">
-            <h3 className="text-2xl font-semibold mb-2">
+            <h3 className="text-2xl perc-semibold mb-2">
               <span className="font-mono text-green-700 bg-green-50 px-2 py-1 rounded">{displayedCode}</span>
             </h3>
             <p className="text-lg font-medium text-gray-700">Option: <span className="text-green-700">{results.option}</span></p>
@@ -140,11 +140,11 @@ export default function Resultats({ user }: ResultatsProps) {
                       <tbody className="divide-y divide-blue-200">
                         <tr className="bg-blue-100">
                           <td className="px-4 py-2 font-medium text-left text-sm">Code de l'étudiante</td>
-                          <td className="px-4 py-2 text-sm">{displayedCode}</td>
+                          <td className="px-4 py-2 text-sm text-right">{displayedCode}</td>
                         </tr>
                         <tr>
                           <td className="px-4 py-2 font-medium text-left text-sm">Option</td>
-                          <td className="px-4 py-2 text-sm">{results.option}</td>
+                          <td className="px-4 py-2 text-sm text-right">{results.option}</td>
                         </tr>
                         <tr className="bg-blue-100">
                           <td className="px-4 py-2 font-medium text-left text-sm">1ère période</td>
@@ -166,7 +166,7 @@ export default function Resultats({ user }: ResultatsProps) {
                         </tr>
                         <tr className="bg-green-100">
                           <td className="px-4 py-2 font-medium text-left text-sm">Décision</td>
-                          <td className="px-4 py-2 font-bold text-green-700 text-sm">
+                          <td className="px-4 py-2 font-bold text-green-700 text-sm text-right">
                             {(() => {
                               const genMoy = (results.periods[0].moyenne + results.periods[1].moyenne + results.periods[2].moyenne) / 3;
                               const avgPercent = (genMoy / maxPerSubject) * 100;
@@ -188,7 +188,7 @@ export default function Resultats({ user }: ResultatsProps) {
                             return (
                               <tr className="bg-yellow-100">
                                 <td className="px-4 py-2 font-medium text-left text-sm">Mention</td>
-                                <td className="px-4 py-2 font-bold text-yellow-700 text-sm">{mention}</td>
+                                <td className="px-4 py-2 font-bold text-yellow-700 text-sm text-right">{mention}</td>
                               </tr>
                             );
                           }
@@ -205,4 +205,4 @@ export default function Resultats({ user }: ResultatsProps) {
       )}
     </section>
   );
-                      }
+                          }
