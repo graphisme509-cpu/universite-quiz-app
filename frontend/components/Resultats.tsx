@@ -26,6 +26,7 @@ const API_BASE_URL = 'https://universite-quiz-app-production.up.railway.app';
 
 export default function Resultats({ user }: ResultatsProps) {
   const [code, setCode] = useState('');
+  const [displayedCode, setDisplayedCode] = useState(''); // ← Nouveau état
   const [results, setResults] = useState<Results | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -45,6 +46,7 @@ export default function Resultats({ user }: ResultatsProps) {
       const data = await res.json();
       if (data.success) {
         setResults(data.results);
+        setDisplayedCode(code); // ← On conserve le code soumis
       } else {
         setMessage(data.message || 'Une erreur est survenue.');
       }
@@ -87,7 +89,7 @@ export default function Resultats({ user }: ResultatsProps) {
       {results && (
         <div className="space-y-6">
           <h3 className="text-2xl font-semibold mb-4 text-center">
-            Résultats pour <span className="font-mono text-green-700 bg-green-50 px-2 py-1 rounded">{results.annee}</span> - Code: <span className="font-mono">{code}</span>
+            Résultats pour <span className="font-mono text-green-700 bg-green-50 px-2 py-1 rounded">{results.annee}</span> - Code: <span className="font-mono">{displayedCode}</span>
           </h3>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {results.periods.map((period) => (
