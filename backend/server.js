@@ -210,6 +210,7 @@ app.post('/api/contact', async (req, res) => {
 // Route POST /api/resultats : Recherche par code étudiant (publique, mais auth required)
 // Route POST /api/resultats : Recherche par code étudiant (publique, mais auth required)
 // Route POST /api/resultats : Recherche par code étudiant (publique, mais auth required)
+// Route POST /api/resultats : Recherche par code étudiant (publique, mais auth required)
 app.post('/api/resultats', requireAuth, async (req, res) => {
   const { code } = req.body;
   if (!code) return res.status(400).json({ success: false, message: 'Code manquant.' });
