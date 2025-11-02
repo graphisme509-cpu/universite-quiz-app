@@ -207,30 +207,26 @@ app.post('/api/contact', async (req, res) => {
 // Pour un code étudiant spécifique (ex: recherche publique)
 // Pour un code étudiant spécifique (ex: recherche publique)
 // Route POST /api/resultats : Recherche par code étudiant (publique, mais auth required)
+// Route POST /api/resultats : Recherche par code étudiant (publique, mais auth required)
 app.post('/api/resultats', requireAuth, async (req, res) => {
   const { code } = req.body;
   if (!code) return res.status(400).json({ success: false, message: 'Code manquant.' });
   try {
-    let annee = null;
     let periods = [];
+    let option = '';
     const periodNames = { 1: '1ère période', 2: '2ème période', 3: '3ème période' };
-    const anneeNames = { 1: '1ère année', 2: '2ème année', 3: '3ème année' };
+    let userId = null; // Pour récupérer l'option une seule fois
 
     // Interroger toutes les 9 tables
     for (let a = 1; a <= 3; a++) {
       for (let p = 1; p <= 3; p++) {
         const table = `resultats_${a}_${p}`;
-        const q = await pool.query(`SELECT notes, moyenne FROM ${table} WHERE code_etudiant = $1`, [code]);
+        const q = await pool.query(`SELECT notes, moyenne, user_id FROM ${table} WHERE code_etudiant = $1`, [code]);
         if (q.rowCount > 0) {
           const row = q.rows[0];
           const notesObj = row.notes || {};
           if (Object.keys(notesObj).length > 0) {
-            if (annee && annee !== a) {
-              // Assume un seul année par code ; sinon, ignorer ou logger
-              logger.warn(`Code ${code} trouvé dans plusieurs années.`);
-              continue;
-            }
-            annee = a;
+            if (!userId) userId = row.user_id; // Prendre le premier user_id
             periods.push({
               periode: p,
               title: periodNames[p],
@@ -244,10 +240,15 @@ app.post('/api/resultats', requireAuth, async (req, res) => {
 
     if (periods.length === 0) return res.status(404).json({ success: false, message: 'Aucune période avec notes trouvée pour ce code.' });
 
+    // Récupérer l'option si user_id trouvé
+    if (userId) {
+      const optionQ = await pool.query('SELECT option FROM users WHERE id = $1', [userId]);
+      option = optionQ.rows[0]?.option || '';
+    }
+
     periods.sort((a, b) => a.periode - b.periode);
 
-    const anneeName = anneeNames[annee];
-    res.json({ success: true, results: { annee: anneeName, periods } });
+    res.json({ success: true, results: { option, periods } });
   } catch (err) {
     logger.error(err);
     res.status(500).json({ success: false, message: 'Erreur DB.' });
@@ -257,19 +258,19 @@ app.post('/api/resultats', requireAuth, async (req, res) => {
 // Route GET /api/resultats : Pour l'utilisateur connecté (basé sur son année)
 app.get('/api/resultats', requireAuth, async (req, res) => {
   try {
-    // Récupérer l'année de l'utilisateur
-    const userQ = await pool.query('SELECT annee FROM users WHERE id = $1', [req.user.id]);
+    // Récupérer l'année et l'option de l'utilisateur
+    const userQ = await pool.query('SELECT annee, option FROM users WHERE id = $1', [req.user.id]);
     if (userQ.rowCount === 0 || !userQ.rows[0].annee) {
       return res.status(404).json({ success: false, message: "Aucune année associée à votre compte." });
     }
     const a = parseInt(userQ.rows[0].annee);
+    const option = userQ.rows[0].option || '';
     if (isNaN(a) || a < 1 || a > 3) {
       return res.status(400).json({ success: false, message: 'Année invalide.' });
     }
 
     let periods = [];
     const periodNames = { 1: '1ère période', 2: '2ème période', 3: '3ème période' };
-    const anneeNames = { 1: '1ère année', 2: '2ème année', 3: '3ème année' };
 
     // Interroger les 3 tables de cette année
     for (let p = 1; p <= 3; p++) {
@@ -294,8 +295,7 @@ app.get('/api/resultats', requireAuth, async (req, res) => {
     }
 
     periods.sort((a, b) => a.periode - b.periode);
-    const anneeName = anneeNames[a];
-    res.json({ success: true, results: { annee: anneeName, periods } });
+    res.json({ success: true, results: { option, periods } });
   } catch (err) {
     logger.error(err);
     res.status(500).json({ success: false, message: 'Erreur DB.' });
