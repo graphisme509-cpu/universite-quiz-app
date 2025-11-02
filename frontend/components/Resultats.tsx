@@ -107,13 +107,13 @@ export default function Resultats({ user }: ResultatsProps) {
                     const total = noteValues.reduce((acc, n) => acc + n, 0);
                     const maxTotal = noteValues.length * maxPerSubject;
                     return (
-                      <div key={period.periode} className="bg-gray-50 p-6 rounded-lg shadow border border-gray-200">
+                      <div key={period.periode} className="bg-gray-50 p-8 rounded-lg shadow border border-gray-200">
                         <h4 className="text-xl font-bold mb-4 text-center text-slate-800">{period.title}</h4>
                         <ul className="space-y-3 mb-4">
                           {Object.entries(period.notes).map(([matiere, note]) => {
                             const validNote = typeof note === 'number' ? note : 0;
                             return (
-                              <li key={matiere} className="flex justify-between items-center p-3 bg-white rounded border">
+                              <li key={matiere} className="flex justify-between items-center px-6 py-3 bg-white rounded border">
                                 <span className="font-medium text-gray-700 capitalize">{matiere}</span>
                                 <span className={`font-bold ${validNote >= passingNote ? 'text-green-600' : 'text-red-600'}`}>
                                   {validNote.toFixed(2)} / {maxPerSubject.toFixed(0)}
@@ -205,4 +205,4 @@ export default function Resultats({ user }: ResultatsProps) {
       )}
     </section>
   );
-                          }
+                                                            }
