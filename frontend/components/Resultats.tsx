@@ -139,34 +139,34 @@ export default function Resultats({ user }: ResultatsProps) {
                     <table className="w-full table-auto border-collapse border border-blue-300">
                       <tbody className="divide-y divide-blue-200">
                         <tr className="bg-blue-100">
-                          <td className="px-4 py-2 font-medium text-left">Code de l'étudiante</td>
-                          <td className="px-4 py-2">{displayedCode}</td>
+                          <td className="px-4 py-2 font-medium text-left text-sm">Code de l'étudiante</td>
+                          <td className="px-4 py-2 text-sm">{displayedCode}</td>
                         </tr>
                         <tr>
-                          <td className="px-4 py-2 font-medium text-left">Option</td>
-                          <td className="px-4 py-2">{results.option}</td>
+                          <td className="px-4 py-2 font-medium text-left text-sm">Option</td>
+                          <td className="px-4 py-2 text-sm">{results.option}</td>
                         </tr>
                         <tr className="bg-blue-100">
-                          <td className="px-4 py-2 font-medium text-left">1ère période</td>
-                          <td className="px-4 py-2 min-w-[90px] text-right">{results.periods[0].moyenne.toFixed(2)} / {maxPerSubject.toFixed(0)}</td>
+                          <td className="px-4 py-2 font-medium text-left text-sm">1ère période</td>
+                          <td className="px-4 py-2 min-w-[90px] text-right text-sm">{results.periods[0].moyenne.toFixed(2)} / {maxPerSubject.toFixed(0)}</td>
                         </tr>
                         <tr>
-                          <td className="px-4 py-2 font-medium text-left">2ème période</td>
-                          <td className="px-4 py-2 min-w-[90px] text-right">{results.periods[1].moyenne.toFixed(2)} / {maxPerSubject.toFixed(0)}</td>
+                          <td className="px-4 py-2 font-medium text-left text-sm">2ème période</td>
+                          <td className="px-4 py-2 min-w-[90px] text-right text-sm">{results.periods[1].moyenne.toFixed(2)} / {maxPerSubject.toFixed(0)}</td>
                         </tr>
                         <tr className="bg-blue-100">
-                          <td className="px-4 py-2 font-medium text-left">3ème période</td>
-                          <td className="px-4 py-2 min-w-[90px] text-right">{results.periods[2].moyenne.toFixed(2)} / {maxPerSubject.toFixed(0)}</td>
+                          <td className="px-4 py-2 font-medium text-left text-sm">3ème période</td>
+                          <td className="px-4 py-2 min-w-[90px] text-right text-sm">{results.periods[2].moyenne.toFixed(2)} / {maxPerSubject.toFixed(0)}</td>
                         </tr>
                         <tr>
-                          <td className="px-4 py-2 font-medium text-left">Moyenne générale</td>
-                          <td className="px-4 py-2 font-bold min-w-[90px] text-right">
+                          <td className="px-4 py-2 font-medium text-left text-sm">Moyenne générale</td>
+                          <td className="px-4 py-2 font-bold min-w-[90px] text-right text-sm">
                             {((results.periods[0].moyenne + results.periods[1].moyenne + results.periods[2].moyenne) / 3).toFixed(2)} / {maxPerSubject.toFixed(0)}
                           </td>
                         </tr>
                         <tr className="bg-green-100">
-                          <td className="px-4 py-2 font-medium text-left">Décision</td>
-                          <td className="px-4 py-2 font-bold text-green-700">
+                          <td className="px-4 py-2 font-medium text-left text-sm">Décision</td>
+                          <td className="px-4 py-2 font-bold text-green-700 text-sm">
                             {(() => {
                               const genMoy = (results.periods[0].moyenne + results.periods[1].moyenne + results.periods[2].moyenne) / 3;
                               const avgPercent = (genMoy / maxPerSubject) * 100;
@@ -187,8 +187,8 @@ export default function Resultats({ user }: ResultatsProps) {
                             else mention = 'Excellent';
                             return (
                               <tr className="bg-yellow-100">
-                                <td className="px-4 py-2 font-medium text-left">Mention</td>
-                                <td className="px-4 py-2 font-bold text-yellow-700">{mention}</td>
+                                <td className="px-4 py-2 font-medium text-left text-sm">Mention</td>
+                                <td className="px-4 py-2 font-bold text-yellow-700 text-sm">{mention}</td>
                               </tr>
                             );
                           }
@@ -205,4 +205,4 @@ export default function Resultats({ user }: ResultatsProps) {
       )}
     </section>
   );
-                          }
+                      }
