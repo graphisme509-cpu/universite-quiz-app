@@ -208,6 +208,7 @@ app.post('/api/contact', async (req, res) => {
 // Pour un code étudiant spécifique (ex: recherche publique)
 // Route POST /api/resultats : Recherche par code étudiant (publique, mais auth required)
 // Route POST /api/resultats : Recherche par code étudiant (publique, mais auth required)
+// Route POST /api/resultats : Recherche par code étudiant (publique, mais auth required)
 app.post('/api/resultats', requireAuth, async (req, res) => {
   const { code } = req.body;
   if (!code) return res.status(400).json({ success: false, message: 'Code manquant.' });
@@ -215,35 +216,48 @@ app.post('/api/resultats', requireAuth, async (req, res) => {
     let periods = [];
     let option = '';
     const periodNames = { 1: '1ère période', 2: '2ème période', 3: '3ème période' };
-    let userId = null; // Pour récupérer l'option une seule fois
+    let userId = null;
+    let annee = null;
 
-    // Interroger toutes les 9 tables
-    for (let a = 1; a <= 3; a++) {
-      for (let p = 1; p <= 3; p++) {
+    // Trouver le premier enregistrement pour obtenir user_id et annee
+    for (let a = 1; a <= 3 && !userId; a++) {
+      for (let p = 1; p <= 3 && !userId; p++) {
         const table = `resultats_${a}_${p}`;
-        const q = await pool.query(`SELECT notes, moyenne, user_id FROM ${table} WHERE code_etudiant = $1`, [code]);
+        const q = await pool.query(`SELECT user_id, moyenne, notes FROM ${table} WHERE code_etudiant = $1`, [code]);
         if (q.rowCount > 0) {
-          const row = q.rows[0];
-          const notesObj = row.notes || {};
-          if (Object.keys(notesObj).length > 0) {
-            if (!userId) userId = row.user_id; // Prendre le premier user_id
-            periods.push({
-              periode: p,
-              title: periodNames[p],
-              notes: notesObj, // JSONB déjà objet
-              moyenne: parseFloat(row.moyenne)
-            });
-          }
+          userId = q.rows[0].user_id;
+          break;
         }
       }
     }
 
-    if (periods.length === 0) return res.status(404).json({ success: false, message: 'Aucune période avec notes trouvée pour ce code.' });
+    if (!userId) return res.status(404).json({ success: false, message: 'Aucun résultat trouvé pour ce code.' });
 
-    // Récupérer l'option si user_id trouvé
-    if (userId) {
-      const optionQ = await pool.query('SELECT option FROM users WHERE id = $1', [userId]);
-      option = optionQ.rows[0]?.option || '';
+    // Récupérer l'année et l'option de l'utilisateur
+    const userQ = await pool.query('SELECT annee, option FROM users WHERE id = $1', [userId]);
+    if (userQ.rowCount === 0) return res.status(404).json({ success: false, message: 'Utilisateur non trouvé.' });
+    annee = parseInt(userQ.rows[0].annee);
+    option = userQ.rows[0].option || '';
+    if (isNaN(annee) || annee < 1 || annee > 3) {
+      return res.status(400).json({ success: false, message: 'Année invalide.' });
+    }
+
+    // Interroger les 3 tables de cette année, inclure même si pas de notes (moyenne=0 si pas de ligne)
+    for (let p = 1; p <= 3; p++) {
+      const table = `resultats_${annee}_${p}`;
+      const q = await pool.query(`SELECT notes, moyenne FROM ${table} WHERE code_etudiant = $1`, [code]);
+      let notesObj = {};
+      let moyenne = 0;
+      if (q.rowCount > 0) {
+        notesObj = q.rows[0].notes || {};
+        moyenne = parseFloat(q.rows[0].moyenne) || 0;
+      }
+      periods.push({
+        periode: p,
+        title: periodNames[p],
+        notes: notesObj,
+        moyenne: moyenne
+      });
     }
 
     periods.sort((a, b) => a.periode - b.periode);
@@ -272,26 +286,22 @@ app.get('/api/resultats', requireAuth, async (req, res) => {
     let periods = [];
     const periodNames = { 1: '1ère période', 2: '2ème période', 3: '3ème période' };
 
-    // Interroger les 3 tables de cette année
+    // Interroger les 3 tables de cette année, inclure même si pas de notes (moyenne=0 si pas de ligne)
     for (let p = 1; p <= 3; p++) {
       const table = `resultats_${a}_${p}`;
       const q = await pool.query(`SELECT notes, moyenne FROM ${table} WHERE user_id = $1`, [req.user.id]);
+      let notesObj = {};
+      let moyenne = 0;
       if (q.rowCount > 0) {
-        const row = q.rows[0];
-        const notesObj = row.notes || {};
-        if (Object.keys(notesObj).length > 0) {
-          periods.push({
-            periode: p,
-            title: periodNames[p],
-            notes: notesObj,
-            moyenne: parseFloat(row.moyenne)
-          });
-        }
+        notesObj = q.rows[0].notes || {};
+        moyenne = parseFloat(q.rows[0].moyenne) || 0;
       }
-    }
-
-    if (periods.length === 0) {
-      return res.status(404).json({ success: false, message: "Aucune période avec notes trouvée pour votre année." });
+      periods.push({
+        periode: p,
+        title: periodNames[p],
+        notes: notesObj,
+        moyenne: moyenne
+      });
     }
 
     periods.sort((a, b) => a.periode - b.periode);
