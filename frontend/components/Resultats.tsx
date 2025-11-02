@@ -101,36 +101,38 @@ export default function Resultats({ user }: ResultatsProps) {
 
             return (
               <>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {results.periods.map((period) => {
-                    const noteValues = Object.values(period.notes).map(n => typeof n === 'number' ? n : 0);
-                    const total = noteValues.reduce((acc, n) => acc + n, 0);
-                    const maxTotal = noteValues.length * maxPerSubject;
-                    return (
-                      <div key={period.periode} className="bg-gray-50 p-8 rounded-lg shadow border border-gray-200">
-                        <h4 className="text-xl font-bold mb-4 text-center text-slate-800">{period.title}</h4>
-                        <ul className="space-y-4 mb-4">
-                          {Object.entries(period.notes).map(([matiere, note]) => {
-                            const validNote = typeof note === 'number' ? note : 0;
-                            return (
-                              <li key={matiere} className="flex justify-between items-center px-6 py-3 bg-white rounded border gap-8">
-                                <span className="font-medium text-gray-700 capitalize">{matiere}</span>
-                                <span className={`font-bold ${validNote >= passingNote ? 'text-green-600' : 'text-red-600'}`}>
-                                  {validNote.toFixed(2)} / {maxPerSubject.toFixed(0)}
-                                </span>
-                              </li>
-                            );
-                          })}
-                        </ul>
-                        <div className="text-center font-medium py-1 mb-2">
-                          Total: {total.toFixed(2)} / {maxTotal.toFixed(0)}
+                <div className="flex justify-center">
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl w-full">
+                    {results.periods.map((period) => {
+                      const noteValues = Object.values(period.notes).map(n => typeof n === 'number' ? n : 0);
+                      const total = noteValues.reduce((acc, n) => acc + n, 0);
+                      const maxTotal = noteValues.length * maxPerSubject;
+                      return (
+                        <div key={period.periode} className="bg-gray-50 p-8 rounded-lg shadow border border-gray-200">
+                          <h4 className="text-xl font-bold mb-4 text-center text-slate-800">{period.title}</h4>
+                          <ul className="space-y-4 mb-4">
+                            {Object.entries(period.notes).map(([matiere, note]) => {
+                              const validNote = typeof note === 'number' ? note : 0;
+                              return (
+                                <li key={matiere} className="flex justify-between items-center px-6 py-3 bg-white rounded border gap-8">
+                                  <span className="font-medium text-gray-700 capitalize">{matiere}</span>
+                                  <span className={`font-bold ${validNote >= passingNote ? 'text-green-600' : 'text-red-600'}`}>
+                                    {validNote.toFixed(2)} / {maxPerSubject.toFixed(0)}
+                                  </span>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                          <div className="text-center font-medium py-1 mb-2">
+                            Total: {total.toFixed(2)} / {maxTotal.toFixed(0)}
+                          </div>
+                          <div className={`text-center font-bold text-xl py-2 rounded ${period.moyenne >= passingNote ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                            Moyenne: {period.moyenne.toFixed(2)} / {maxPerSubject.toFixed(0)}
+                          </div>
                         </div>
-                        <div className={`text-center font-bold text-xl py-2 rounded ${period.moyenne >= passingNote ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                          Moyenne: {period.moyenne.toFixed(2)} / {maxPerSubject.toFixed(0)}
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
 
                 {results.periods.length === 3 && (
@@ -205,4 +207,4 @@ export default function Resultats({ user }: ResultatsProps) {
       )}
     </section>
   );
-                                                                                  }
+              }
