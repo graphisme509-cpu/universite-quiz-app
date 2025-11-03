@@ -26,6 +26,7 @@ export default function NewAdmin() {
 
  // Form 2 states
  const [matiereToAdd, setMatiereToAdd] = useState<{ [key: string]: string }>({});
+ const [loadingMatiereKeys, setLoadingMatiereKeys] = useState<Set<string>>(new Set()); // <-- CORRECTION: Ajout du state pour les spinners
 
  // Form 3 states
  const [students, setStudents] = useState<string[]>([]);
@@ -184,15 +185,18 @@ export default function NewAdmin() {
  };
 
  const handleAddMatiere = async (cl: string, per: string) => {
- const add = matiereToAdd[`${cl}_${per}`].trim();
+ const add = matiereToAdd[`${cl}_${per}`]?.trim();
  if (!add) return;
  const key = `${cl}_${per}`;
+ const addKey = `add_${key}`; // Clé unique pour le spinner
+ setLoadingMatiereKeys(prev => new Set(prev).add(addKey)); // <-- CORRECTION: Activer spinner
+
  const newList = [...(allMatieres[key] || []), add];
  try {
  const res = await fetch(`${API_BASE_URL}/api/admin/matieres`, {
  method: 'POST',
  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
- body: JSON.stringify({ classe: cl, periode: per, matieres: JSON.stringify(newList) }), // <-- CORRECTION ICI
+ body: JSON.stringify({ classe: cl, periode: per, matieres: JSON.stringify(newList) }),
  });
  if (res.ok) {
  setAllMatieres((prev) => ({ ...prev, [key]: newList }));
@@ -200,23 +204,41 @@ export default function NewAdmin() {
  }
  } catch {
  alert('Erreur lors de l\'ajout');
+ } finally {
+ setLoadingMatiereKeys(prev => { // <-- CORRECTION: Désactiver spinner
+ const newSet = new Set(prev);
+ newSet.delete(addKey);
+ return newSet;
+ });
  }
  };
 
  const handleRemoveMatiere = async (cl: string, per: string, mat: string) => {
+ // <-- CORRECTION: Ajout de la confirmation
+ if (!window.confirm(`Voulez-vous vraiment supprimer la matière "${mat}" ?`)) return;
+
  const key = `${cl}_${per}`;
+ const removeKey = `remove_${key}_${mat}`; // Clé unique pour le spinner
+ setLoadingMatiereKeys(prev => new Set(prev).add(removeKey)); // <-- CORRECTION: Activer spinner
+
  const newList = (allMatieres[key] || []).filter((m) => m !== mat);
  try {
  const res = await fetch(`${API_BASE_URL}/api/admin/matieres`, {
  method: 'POST',
  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
- body: JSON.stringify({ classe: cl, periode: per, matieres: JSON.stringify(newList) }), // <-- CORRECTION ICI
+ body: JSON.stringify({ classe: cl, periode: per, matieres: JSON.stringify(newList) }),
  });
  if (res.ok) {
  setAllMatieres((prev) => ({ ...prev, [key]: newList }));
  }
  } catch {
  alert('Erreur lors de la suppression');
+ } finally {
+ setLoadingMatiereKeys(prev => { // <-- CORRECTION: Désactiver spinner
+ const newSet = new Set(prev);
+ newSet.delete(removeKey);
+ return newSet;
+ });
  }
  };
 
@@ -366,7 +388,19 @@ export default function NewAdmin() {
  {list.map((m) => (
  <li key={m} className="flex justify-between">
  {m}
- <button onClick={() => handleRemoveMatiere(cl, per, m)} className="text-red-600">Retirer</button>
+ {/* --- CORRECTION BOUTON RETIRER --- */}
+ <button
+ onClick={() => handleRemoveMatiere(cl, per, m)}
+ className="text-red-600 w-20 flex items-center justify-center" // Classes pour centrer spinner
+ disabled={loadingMatiereKeys.has(`remove_${cl}_${per}_${m}`)}
+ >
+ {loadingMatiereKeys.has(`remove_${cl}_${per}_${m}`) ? (
+ <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-red-600"></div>
+ ) : (
+ 'Retirer'
+ )}
+ </button>
+ {/* --- FIN CORRECTION --- */}
  </li>
  ))}
  </ul>
@@ -378,9 +412,19 @@ export default function NewAdmin() {
  placeholder="Nouvelle matière"
  className="flex-grow p-2 border rounded-lg"
  />
- <button onClick={() => handleAddMatiere(cl, per)} className="bg-green-600 text-white py-2 px-4 rounded-lg">
- Ajouter
+ {/* --- CORRECTION BOUTON AJOUTER --- */}
+ <button
+ onClick={() => handleAddMatiere(cl, per)}
+ className="bg-green-600 text-white py-2 px-4 rounded-lg w-28 flex items-center justify-center" // Classes pour centrer spinner
+ disabled={loadingMatiereKeys.has(`add_${key}`)}
+ >
+ {loadingMatiereKeys.has(`add_${key}`) ? (
+ <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+ ) : (
+ 'Ajouter'
+ )}
  </button>
+ {/* --- FIN CORRECTION --- */}
  </div>
  </div>
  );
@@ -545,4 +589,4 @@ export default function NewAdmin() {
  </section>
  </div>
  );
- }
+}
