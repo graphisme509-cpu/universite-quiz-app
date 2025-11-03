@@ -211,21 +211,23 @@ app.post('/api/contact', async (req, res) => {
 // Route POST /api/resultats : Recherche par code étudiant (publique, mais auth required)
 // Route POST /api/resultats : Recherche par code étudiant (publique, mais auth required)
 // Route POST /api/resultats : Recherche par code étudiant (publique, mais auth required)
+
 app.post('/api/resultats', requireAuth, async (req, res) => {
   const { code } = req.body;
   if (!code) return res.status(400).json({ success: false, message: 'Code manquant.' });
   try {
-    let periods = [];
+    let years = [];
     let option = '';
     const periodNames = { 1: '1ère période', 2: '2ème période', 3: '3ème période' };
+    const academicYears = { 1: '2022-2023', 2: '2023-2024', 3: '2024-2025' };
+    const classes = { 1: '1ère année', 2: '2ème année', 3: '3ème année' };
     let userId = null;
-    let annee = null;
 
-    // Trouver le premier enregistrement pour obtenir user_id et annee
+    // Trouver le premier enregistrement pour obtenir user_id
     for (let a = 1; a <= 3 && !userId; a++) {
       for (let p = 1; p <= 3 && !userId; p++) {
         const table = `resultats_${a}_${p}`;
-        const q = await pool.query(`SELECT user_id, moyenne, notes FROM ${table} WHERE code_etudiant = $1`, [code]);
+        const q = await pool.query(`SELECT user_id, notes, moyenne FROM ${table} WHERE code_etudiant = $1`, [code]);
         if (q.rowCount > 0) {
           userId = q.rows[0].user_id;
           break;
@@ -235,79 +237,103 @@ app.post('/api/resultats', requireAuth, async (req, res) => {
 
     if (!userId) return res.status(404).json({ success: false, message: 'Aucun résultat trouvé pour ce code.' });
 
-    // Récupérer l'année et l'option de l'utilisateur
-    const userQ = await pool.query('SELECT annee, option FROM users WHERE id = $1', [userId]);
+    // Récupérer l'option de l'utilisateur
+    const userQ = await pool.query('SELECT option FROM users WHERE id = $1', [userId]);
     if (userQ.rowCount === 0) return res.status(404).json({ success: false, message: 'Utilisateur non trouvé.' });
-    annee = parseInt(userQ.rows[0].annee);
     option = userQ.rows[0].option || '';
-    if (isNaN(annee) || annee < 1 || annee > 3) {
-      return res.status(400).json({ success: false, message: 'Année invalide.' });
-    }
 
-    // Interroger les 3 tables de cette année, inclure même si pas de notes (moyenne=0 si pas de ligne)
-    for (let p = 1; p <= 3; p++) {
-      const table = `resultats_${annee}_${p}`;
-      const q = await pool.query(`SELECT notes, moyenne FROM ${table} WHERE code_etudiant = $1`, [code]);
-      let notesObj = {};
-      let moyenne = 0;
-      if (q.rowCount > 0) {
-        notesObj = q.rows[0].notes || {};
-        moyenne = parseFloat(q.rows[0].moyenne) || 0;
+    // Interroger toutes les tables pour les 3 années, inclure même si pas de notes (moyenne=0 si pas de ligne)
+    for (let a = 1; a <= 3; a++) {
+      let periods = [];
+      for (let p = 1; p <= 3; p++) {
+        const table = `resultats_${a}_${p}`;
+        const q = await pool.query(`SELECT notes, moyenne FROM ${table} WHERE code_etudiant = $1`, [code]);
+        let notesObj = {};
+        let moyenne = 0;
+        if (q.rowCount > 0) {
+          notesObj = q.rows[0].notes || {};
+          moyenne = parseFloat(q.rows[0].moyenne) || 0;
+
+          // Calculer moyenne si non fournie ou incohérente
+          const noteValues = Object.values(notesObj).map(n => typeof n === 'number' ? n : 0);
+          const calculatedMoy = noteValues.length > 0 ? noteValues.reduce((acc, val) => acc + val, 0) / noteValues.length : 0;
+          if (moyenne === 0 || Math.abs(moyenne - calculatedMoy) > 0.01) {
+            moyenne = calculatedMoy;
+          }
+        }
+        periods.push({
+          periode: p,
+          title: periodNames[p],
+          notes: notesObj,
+          moyenne: moyenne
+        });
       }
-      periods.push({
-        periode: p,
-        title: periodNames[p],
-        notes: notesObj,
-        moyenne: moyenne
-      });
+      if (periods.some(p => Object.keys(p.notes).length > 0 || p.moyenne > 0)) {
+        years.push({
+          annee: a,
+          academicYear: academicYears[a],
+          classe: classes[a],
+          periods: periods.sort((a, b) => a.periode - b.periode)
+        });
+      }
     }
 
-    periods.sort((a, b) => a.periode - b.periode);
-
-    res.json({ success: true, results: { option, periods } });
+    res.json({ success: true, results: { option, years } });
   } catch (err) {
     logger.error(err);
     res.status(500).json({ success: false, message: 'Erreur DB.' });
   }
 });
 
-// Route GET /api/resultats : Pour l'utilisateur connecté (basé sur son année)
 app.get('/api/resultats', requireAuth, async (req, res) => {
   try {
-    // Récupérer l'année et l'option de l'utilisateur
-    const userQ = await pool.query('SELECT annee, option FROM users WHERE id = $1', [req.user.id]);
-    if (userQ.rowCount === 0 || !userQ.rows[0].annee) {
-      return res.status(404).json({ success: false, message: "Aucune année associée à votre compte." });
-    }
-    const a = parseInt(userQ.rows[0].annee);
+    // Récupérer l'option de l'utilisateur
+    const userQ = await pool.query('SELECT option FROM users WHERE id = $1', [req.user.id]);
+    if (userQ.rowCount === 0) return res.status(404).json({ success: false, message: "Utilisateur non trouvé." });
     const option = userQ.rows[0].option || '';
-    if (isNaN(a) || a < 1 || a > 3) {
-      return res.status(400).json({ success: false, message: 'Année invalide.' });
-    }
 
-    let periods = [];
+    let years = [];
     const periodNames = { 1: '1ère période', 2: '2ème période', 3: '3ème période' };
+    const academicYears = { 1: '2022-2023', 2: '2023-2024', 3: '2024-2025' };
+    const classes = { 1: '1ère année', 2: '2ème année', 3: '3ème année' };
 
-    // Interroger les 3 tables de cette année, inclure même si pas de notes (moyenne=0 si pas de ligne)
-    for (let p = 1; p <= 3; p++) {
-      const table = `resultats_${a}_${p}`;
-      const q = await pool.query(`SELECT notes, moyenne FROM ${table} WHERE user_id = $1`, [req.user.id]);
-      let notesObj = {};
-      let moyenne = 0;
-      if (q.rowCount > 0) {
-        notesObj = q.rows[0].notes || {};
-        moyenne = parseFloat(q.rows[0].moyenne) || 0;
+    // Interroger toutes les tables pour les 3 années, inclure même si pas de notes (moyenne=0 si pas de ligne)
+    for (let a = 1; a <= 3; a++) {
+      let periods = [];
+      for (let p = 1; p <= 3; p++) {
+        const table = `resultats_${a}_${p}`;
+        const q = await pool.query(`SELECT notes, moyenne FROM ${table} WHERE user_id = $1`, [req.user.id]);
+        let notesObj = {};
+        let moyenne = 0;
+        if (q.rowCount > 0) {
+          notesObj = q.rows[0].notes || {};
+          moyenne = parseFloat(q.rows[0].moyenne) || 0;
+
+          // Calculer moyenne si non fournie ou incohérente
+          const noteValues = Object.values(notesObj).map(n => typeof n === 'number' ? n : 0);
+          const calculatedMoy = noteValues.length > 0 ? noteValues.reduce((acc, val) => acc + val, 0) / noteValues.length : 0;
+          if (moyenne === 0 || Math.abs(moyenne - calculatedMoy) > 0.01) {
+            moyenne = calculatedMoy;
+          }
+        }
+        periods.push({
+          periode: p,
+          title: periodNames[p],
+          notes: notesObj,
+          moyenne: moyenne
+        });
       }
-      periods.push({
-        periode: p,
-        title: periodNames[p],
-        notes: notesObj,
-        moyenne: moyenne
-      });
+      if (periods.some(p => Object.keys(p.notes).length > 0 || p.moyenne > 0)) {
+        years.push({
+          annee: a,
+          academicYear: academicYears[a],
+          classe: classes[a],
+          periods: periods.sort((a, b) => a.periode - b.periode)
+        });
+      }
     }
 
-    periods.sort((a, b) => a.periode - b.periode);
-    res.json({ success: true, results: { option, periods } });
+    res.json({ success: true, results: { option, years } });
   } catch (err) {
     logger.error(err);
     res.status(500).json({ success: false, message: 'Erreur DB.' });
