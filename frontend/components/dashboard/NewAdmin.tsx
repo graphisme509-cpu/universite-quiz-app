@@ -8,9 +8,11 @@ export default function NewAdmin() {
  const [adminCode, setAdminCode] = useState('');
  const [adminToken, setAdminToken] = useState('');
  const [isLoggedIn, setIsLoggedIn] = useState(false);
+ const [isLoggingIn, setIsLoggingIn] = useState(false);
 
  // New state for synthese visibility
  const [syntheseVisible, setSyntheseVisible] = useState(true);
+ const [isToggling, setIsToggling] = useState(false);
 
  // Form 1 states
  const [code, setCode] = useState('');
@@ -38,12 +40,14 @@ export default function NewAdmin() {
  const [editingNotes, setEditingNotes] = useState<{ [key: string]: { [key: string]: number } }>({});
  const [editingOption, setEditingOption] = useState('');
  const [editingAcademicYears, setEditingAcademicYears] = useState<{ [key: number]: string }>({});
+ const [isDeleting, setIsDeleting] = useState(false);
 
  const classes = ['1ère année', '2ème année', '3ème année'];
  const periodes = ['1ère période', '2ème période', '3ème période'];
 
  const handleAdminLogin = async (e: React.FormEvent) => {
  e.preventDefault();
+ setIsLoggingIn(true);
  try {
  const res = await fetch(`${API_BASE_URL}/api/admin/login`, {
  method: 'POST',
@@ -60,6 +64,9 @@ export default function NewAdmin() {
  } catch {
  alert('Erreur lors de la connexion admin');
  }
+ finally {
+   setIsLoggingIn(false);
+ }
  };
 
  useEffect(() => {
@@ -75,6 +82,7 @@ export default function NewAdmin() {
  }, [isLoggedIn]);
 
  const handleToggleSynthese = async () => {
+ setIsToggling(true);
  const newVisible = !syntheseVisible;
  try {
  const res = await fetch(`${API_BASE_URL}/api/admin/toggle-synthese`, {
@@ -93,6 +101,9 @@ export default function NewAdmin() {
  }
  } catch {
  alert('Erreur réseau');
+ }
+ finally {
+   setIsToggling(false);
  }
  };
 
@@ -288,6 +299,7 @@ export default function NewAdmin() {
 
  const handleDeleteStudent = async (code: string) => {
  if (!window.confirm('Confirmer la suppression de l\'étudiant ?')) return;
+ setIsDeleting(true);
  try {
  const res = await fetch(`${API_BASE_URL}/api/admin/student/${code}`, {
  method: 'DELETE',
@@ -303,6 +315,9 @@ export default function NewAdmin() {
  } catch {
  alert('Erreur lors de la suppression');
  }
+ finally {
+   setIsDeleting(false);
+ }
  };
 
  if (!isLoggedIn) {
@@ -317,8 +332,12 @@ export default function NewAdmin() {
  onChange={(e) => setAdminCode(e.target.value)}
  className="w-full p-3 border rounded-lg"
  />
- <button type="submit" className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700">
- Entrer
+ <button type="submit" disabled={isLoggingIn} className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 flex items-center justify-center">
+ {isLoggingIn ? (
+   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+ ) : (
+   'Entrer'
+ )}
  </button>
  </form>
  </div>
@@ -336,9 +355,14 @@ export default function NewAdmin() {
      <span className="text-lg">Actuellement: {syntheseVisible ? 'Visible' : 'Cachée'}</span>
      <button
        onClick={handleToggleSynthese}
-       className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700"
+       disabled={isToggling}
+       className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 flex items-center justify-center"
      >
-       {syntheseVisible ? 'Cacher' : 'Afficher'}
+       {isToggling ? (
+         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+       ) : (
+         syntheseVisible ? 'Cacher' : 'Afficher'
+       )}
      </button>
    </div>
  </section>
@@ -401,7 +425,7 @@ export default function NewAdmin() {
  <div>Total: {total}</div>
  <div>Moyenne: {moyenne}</div>
  <div>Moyenne générale: {moyenneGenerale}</div>
- <button type="button" onClick={calculateMoyenneGenerale} disabled={isCalculating} className="bg-blue-600 text-white py-2 px-4 rounded-lg flex items-center justify-center">
+ <button type="button" onClick={calculateMoyenneGenerale} disabled={isCalculating} className="hidden bg-blue-600 text-white py-2 px-4 rounded-lg flex items-center justify-center">
  {isCalculating ? (
    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
  ) : (
@@ -497,8 +521,12 @@ export default function NewAdmin() {
  onBlur={() => updateField(selectedCode, 'option', editingOption)}
  className="p-2 border rounded-lg"
  />
- <button onClick={() => handleDeleteStudent(selectedCode)} className="bg-red-600 text-white py-2 px-4 rounded-lg">
- Supprimer l'étudiant
+ <button onClick={() => handleDeleteStudent(selectedCode)} disabled={isDeleting} className="bg-red-600 text-white py-2 px-4 rounded-lg flex items-center justify-center">
+ {isDeleting ? (
+   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+ ) : (
+   'Supprimer l\'étudiant'
+ )}
  </button>
  </div>
  {results.years.map((year: any) => (
