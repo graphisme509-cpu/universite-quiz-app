@@ -12,7 +12,7 @@ import Termes from './components/Termes';
 import Politique from './components/Politique';
 import { User } from './types';
 import QuizDetail from './components/QuizDetail';
-import NewAdmin from './dashboard/NewAdmin';
+import NewAdmin from './components/dashboard/NewAdmin';';
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
