@@ -2,10 +2,6 @@ import React, { useState } from 'react';
 import { User } from '../types';
 import { Link } from 'react-router-dom';
 
-interface ResultatsProps {
-  user: User | null;
-}
-
 interface Notes {
   [key: string]: number;
 }
@@ -17,9 +13,16 @@ interface Period {
   moyenne: number;
 }
 
+interface Year {
+  annee: number;
+  academicYear: string;
+  classe: string;
+  periods: Period[];
+}
+
 interface Results {
   option: string;
-  periods: Period[];
+  years: Year[];
 }
 
 const API_BASE_URL = 'https://universite-quiz-app-production.up.railway.app';
@@ -95,14 +98,13 @@ export default function Resultats({ user }: ResultatsProps) {
             <p className="text-lg font-medium text-gray-700">Option: <span className="text-green-700">{results.option}</span></p>
           </div>
           {(() => {
-            const allNotes = results.periods.flatMap(period => Object.values(period.notes).filter(n => typeof n === 'number'));
-            const maxPerSubject = allNotes.length > 0 ? Math.max(...allNotes) : 100;
+            const maxPerSubject = 20; // Assumption: all subjects out of 20
             const passingNote = maxPerSubject / 2;
 
-            return (
-              <>
+            return results.years.map((year) => (
+              <div key={year.annee} className="space-y-6">
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 justify-center">
-                  {results.periods.map((period) => {
+                  {year.periods.map((period) => {
                     const noteValues = Object.values(period.notes).map(n => typeof n === 'number' ? n : 0);
                     const total = noteValues.reduce((acc, n) => acc + n, 0);
                     const maxTotal = noteValues.length * maxPerSubject;
@@ -133,76 +135,83 @@ export default function Resultats({ user }: ResultatsProps) {
                   })}
                 </div>
 
-                {results.periods.length === 3 && (
-                  <div className="bg-blue-50 p-6 rounded-lg shadow border border-blue-200">
-                    <h4 className="text-xl font-bold mb-4 text-center text-blue-800">Liste de décision</h4>
-                    <table className="w-full table-auto border-collapse border border-blue-300">
-                      <tbody className="divide-y divide-blue-200">
-                        <tr className="bg-blue-100">
-                          <td className="px-4 py-2 font-medium text-left text-sm">Code de l'étudiante</td>
-                          <td className="px-4 py-2 text-sm text-left">{displayedCode}</td>
-                        </tr>
-                        <tr>
-                          <td className="px-4 py-2 font-medium text-left text-sm">Option</td>
-                          <td className="px-4 py-2 text-sm text-left">{results.option}</td>
-                        </tr>
-                        <tr className="bg-blue-100">
-                          <td className="px-4 py-2 font-medium text-left text-sm">1ère période</td>
-                          <td className="px-4 py-2 min-w-[90px] text-left text-sm">{results.periods[0].moyenne.toFixed(2)} / {maxPerSubject.toFixed(0)}</td>
-                        </tr>
-                        <tr>
-                          <td className="px-4 py-2 font-medium text-left text-sm">2ème période</td>
-                          <td className="px-4 py-2 min-w-[90px] text-left text-sm">{results.periods[1].moyenne.toFixed(2)} / {maxPerSubject.toFixed(0)}</td>
-                        </tr>
-                        <tr className="bg-blue-100">
-                          <td className="px-4 py-2 font-medium text-left text-sm">3ème période</td>
-                          <td className="px-4 py-2 min-w-[90px] text-left text-sm">{results.periods[2].moyenne.toFixed(2)} / {maxPerSubject.toFixed(0)}</td>
-                        </tr>
-                        <tr>
-                          <td className="px-4 py-2 font-medium text-left text-sm">Moyenne générale</td>
-                          <td className="px-4 py-2 font-bold min-w-[90px] text-left text-sm">
-                            {((results.periods[0].moyenne + results.periods[1].moyenne + results.periods[2].moyenne) / 3).toFixed(2)} / {maxPerSubject.toFixed(0)}
-                          </td>
-                        </tr>
-                        <tr className="bg-green-100">
-                          <td className="px-4 py-2 font-medium text-left text-sm">Décision</td>
-                          <td className="px-4 py-2 font-bold text-green-700 text-sm text-left">
-                            {(() => {
-                              const genMoy = (results.periods[0].moyenne + results.periods[1].moyenne + results.periods[2].moyenne) / 3;
-                              const avgPercent = (genMoy / maxPerSubject) * 100;
-                              if (avgPercent >= 60) return 'Admise';
-                              if (avgPercent >= 50) return 'Reprise';
-                              return 'Non admise';
-                            })()}
-                          </td>
-                        </tr>
-                        {(() => {
-                          const genMoy = (results.periods[0].moyenne + results.periods[1].moyenne + results.periods[2].moyenne) / 3;
-                          const avgPercent = (genMoy / maxPerSubject) * 100;
-                          const decision = avgPercent >= 60 ? 'Admise' : avgPercent >= 50 ? 'Reprise' : 'Non admise';
-                          if (decision === 'Admise') {
-                            let mention = '';
-                            if (avgPercent < 75) mention = 'Bien';
-                            else if (avgPercent < 90) mention = 'Très bien';
-                            else mention = 'Excellent';
-                            return (
-                              <tr className="bg-yellow-100">
-                                <td className="px-4 py-2 font-medium text-left text-sm">Mention</td>
-                                <td className="px-4 py-2 font-bold text-yellow-700 text-sm text-left">{mention}</td>
-                              </tr>
-                            );
-                          }
-                          return null;
-                        })()}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </>
-            );
+                <div className="bg-blue-50 p-6 rounded-lg shadow border border-blue-200">
+                  <h4 className="text-xl font-bold mb-4 text-center text-blue-800">ÉCOLE NORMALE D'INSTITUTEURS ET DE JARDINIÈRES D'ENFANTS (ENIJE)</h4>
+                  <h4 className="text-xl font-bold mb-4 text-center text-blue-800">Liste de décision</h4>
+                  <table className="w-full table-auto border-collapse border border-blue-300">
+                    <tbody className="divide-y divide-blue-200">
+                      <tr className="bg-blue-100">
+                        <td className="px-4 py-2 font-medium text-left text-sm">Code de l'étudiante</td>
+                        <td className="px-4 py-2 text-sm text-left">{displayedCode}</td>
+                      </tr>
+                      <tr>
+                        <td className="px-4 py-2 font-medium text-left text-sm">Option</td>
+                        <td className="px-4 py-2 text-sm text-left">{results.option}</td>
+                      </tr>
+                      <tr className="bg-blue-100">
+                        <td className="px-4 py-2 font-medium text-left text-sm">Classe</td>
+                        <td className="px-4 py-2 text-sm text-left">{year.classe}</td>
+                      </tr>
+                      <tr>
+                        <td className="px-4 py-2 font-medium text-left text-sm">1ère période</td>
+                        <td className="px-4 py-2 min-w-[90px] text-left text-sm">{year.periods[0].moyenne.toFixed(2)} / {maxPerSubject.toFixed(0)}</td>
+                      </tr>
+                      <tr className="bg-blue-100">
+                        <td className="px-4 py-2 font-medium text-left text-sm">2ème période</td>
+                        <td className="px-4 py-2 min-w-[90px] text-left text-sm">{year.periods[1].moyenne.toFixed(2)} / {maxPerSubject.toFixed(0)}</td>
+                      </tr>
+                      <tr>
+                        <td className="px-4 py-2 font-medium text-left text-sm">3ème période</td>
+                        <td className="px-4 py-2 min-w-[90px] text-left text-sm">{year.periods[2].moyenne.toFixed(2)} / {maxPerSubject.toFixed(0)}</td>
+                      </tr>
+                      <tr className="bg-blue-100">
+                        <td className="px-4 py-2 font-medium text-left text-sm">Moyenne générale</td>
+                        <td className="px-4 py-2 font-bold min-w-[90px] text-left text-sm">
+                          {((year.periods[0].moyenne + year.periods[1].moyenne + year.periods[2].moyenne) / 3).toFixed(2)} / {maxPerSubject.toFixed(0)}
+                        </td>
+                      </tr>
+                      <tr className="bg-green-100">
+                        <td className="px-4 py-2 font-medium text-left text-sm">Décision</td>
+                        <td className="px-4 py-2 font-bold text-green-700 text-sm text-left">
+                          {(() => {
+                            const genMoy = (year.periods[0].moyenne + year.periods[1].moyenne + year.periods[2].moyenne) / 3;
+                            const avgPercent = (genMoy / maxPerSubject) * 100;
+                            if (avgPercent >= 60) return 'Admise';
+                            if (avgPercent >= 50) return 'Reprise';
+                            return 'Non admise';
+                          })()}
+                        </td>
+                      </tr>
+                      {(() => {
+                        const genMoy = (year.periods[0].moyenne + year.periods[1].moyenne + year.periods[2].moyenne) / 3;
+                        const avgPercent = (genMoy / maxPerSubject) * 100;
+                        const decision = avgPercent >= 60 ? 'Admise' : avgPercent >= 50 ? 'Reprise' : 'Non admise';
+                        if (decision === 'Admise') {
+                          let mention = '';
+                          if (avgPercent < 75) mention = 'Bien';
+                          else if (avgPercent < 90) mention = 'Très bien';
+                          else mention = 'Excellent';
+                          return (
+                            <tr className="bg-yellow-100">
+                              <td className="px-4 py-2 font-medium text-left text-sm">Mention</td>
+                              <td className="px-4 py-2 font-bold text-yellow-700 text-sm text-left">{mention}</td>
+                            </tr>
+                          );
+                        }
+                        return null;
+                      })()}
+                      <tr className="bg-blue-100">
+                        <td className="px-4 py-2 font-medium text-left text-sm">Année académique</td>
+                        <td className="px-4 py-2 text-sm text-left">{year.academicYear}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ));
           })()}
         </div>
       )}
     </section>
   );
-          }
+                }
