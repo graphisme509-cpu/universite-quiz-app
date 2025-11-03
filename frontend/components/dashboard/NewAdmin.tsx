@@ -192,7 +192,7 @@ export default function NewAdmin() {
  const res = await fetch(`${API_BASE_URL}/api/admin/matieres`, {
  method: 'POST',
  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
- body: JSON.stringify({ classe: cl, periode: per, matieres: newList }),
+ body: JSON.stringify({ classe: cl, periode: per, matieres: JSON.stringify(newList) }), // <-- CORRECTION ICI
  });
  if (res.ok) {
  setAllMatieres((prev) => ({ ...prev, [key]: newList }));
@@ -210,7 +210,7 @@ export default function NewAdmin() {
  const res = await fetch(`${API_BASE_URL}/api/admin/matieres`, {
  method: 'POST',
  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
- body: JSON.stringify({ classe: cl, periode: per, matieres: newList }),
+ body: JSON.stringify({ classe: cl, periode: per, matieres: JSON.stringify(newList) }), // <-- CORRECTION ICI
  });
  if (res.ok) {
  setAllMatieres((prev) => ({ ...prev, [key]: newList }));
