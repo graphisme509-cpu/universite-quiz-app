@@ -111,7 +111,8 @@ export default function Resultats({ user }: ResultatsProps) {
                     return (
                       <div key={period.periode} className="bg-gray-50 p-6 rounded-lg shadow border border-gray-200">
                         <h4 className="text-xl font-bold mb-1 text-center text-slate-800">{period.title}</h4>
-                        <p className="text-sm text-center text-gray-600 mb-4">{year.academicYear}</p>
+                        <p className="text-sm text-center text-gray-600 mb-1">{year.academicYear}</p>
+                        <p className="text-sm text-center text-gray-600 mb-4 font-medium">{year.classe}</p>
                         <ul className="space-y-3 mb-4">
                           {Object.entries(period.notes).map(([matiere, note]) => {
                             const validNote = typeof note === 'number' ? note : 0;
@@ -215,4 +216,4 @@ export default function Resultats({ user }: ResultatsProps) {
       )}
     </section>
   );
-                                                                                                                                                     }
+                        }
