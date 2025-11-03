@@ -9,6 +9,9 @@ export default function NewAdmin() {
  const [adminToken, setAdminToken] = useState('');
  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
+ // New state for synthese visibility
+ const [syntheseVisible, setSyntheseVisible] = useState(true);
+
  // Form 1 states
  const [code, setCode] = useState('');
  const [option, setOption] = useState('Jardinière');
@@ -63,8 +66,35 @@ export default function NewAdmin() {
  if (isLoggedIn) {
  fetchMatieres();
  fetchStudents();
+ // Fetch synthese visibility
+ fetch(`${API_BASE_URL}/api/settings/synthese-visible`)
+   .then(res => res.json())
+   .then(data => setSyntheseVisible(data.visible))
+   .catch(() => setSyntheseVisible(true)); // Default true
  }
  }, [isLoggedIn]);
+
+ const handleToggleSynthese = async () => {
+ const newVisible = !syntheseVisible;
+ try {
+ const res = await fetch(`${API_BASE_URL}/api/admin/toggle-synthese`, {
+ method: 'POST',
+ headers: { 
+   'Content-Type': 'application/json',
+   'Authorization': `Bearer ${adminToken}`
+ },
+ body: JSON.stringify({ visible: newVisible })
+ });
+ const data = await res.json();
+ if (data.success) {
+ setSyntheseVisible(newVisible);
+ } else {
+ alert('Erreur lors du changement de visibilité');
+ }
+ } catch {
+ alert('Erreur réseau');
+ }
+ };
 
  const fetchMatieres = async () => {
  try {
@@ -298,6 +328,20 @@ export default function NewAdmin() {
  return (
  <div className="space-y-12">
  <h1 className="text-3xl font-bold text-center">Page Administration</h1>
+
+ {/* New Toggle Section */}
+ <section className="bg-white p-8 rounded-xl shadow-lg border">
+   <h2 className="text-2xl font-bold mb-6">Visibilité de la Synthèse des résultats annuels (page Résultats)</h2>
+   <div className="flex items-center space-x-4">
+     <span className="text-lg">Actuellement: {syntheseVisible ? 'Visible' : 'Cachée'}</span>
+     <button
+       onClick={handleToggleSynthese}
+       className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700"
+     >
+       {syntheseVisible ? 'Cacher' : 'Afficher'}
+     </button>
+   </div>
+ </section>
 
  <section className="bg-white p-8 rounded-xl shadow-lg border">
  <h2 className="text-2xl font-bold mb-6">Ajouter/Modifier Notes Étudiante</h2>
@@ -589,4 +633,4 @@ export default function NewAdmin() {
  </section>
  </div>
  );
-}
+  }
