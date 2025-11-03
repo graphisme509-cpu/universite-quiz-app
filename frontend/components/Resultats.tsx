@@ -139,7 +139,7 @@ export default function Resultats({ user }: ResultatsProps) {
 
                 <div className="bg-blue-50 p-6 rounded-lg shadow border border-blue-200">
                   <h4 className="text-xl font-bold mb-4 text-center text-blue-800">ÉCOLE NORMALE D'INSTITUTEURS ET DE JARDINIÈRES D'ENFANTS (ENIJE)</h4>
-                  <h4 className="text-xl font-bold mb-4 text-center text-blue-800">Liste de décision</h4>
+                  <h4 className="text-xl font-bold mb-4 text-center text-blue-800">Synthèse des résultats annuels</h4>
                   <table className="w-full table-auto border-collapse border border-blue-300">
                     <tbody className="divide-y divide-blue-200">
                       <tr className="bg-blue-100">
@@ -216,4 +216,4 @@ export default function Resultats({ user }: ResultatsProps) {
       )}
     </section>
   );
-                                                                                                                                                    }
+                }
