@@ -31,7 +31,7 @@ export default function NewAdmin() {
 
  // Form 2 states
  const [matiereToAdd, setMatiereToAdd] = useState<{ [key: string]: string }>({});
- const [loadingMatiereKeys, setLoadingMatiereKeys] = useState<Set<string>>(new Set()); // <-- CORRECTION: Ajout du state pour les spinners
+ const [loadingMatiereKeys, setLoadingMatiereKeys] = useState<Set<string>>(new Set());
 
  // Form 3 states
  const [students, setStudents] = useState<string[]>([]);
@@ -73,11 +73,10 @@ export default function NewAdmin() {
  if (isLoggedIn) {
  fetchMatieres();
  fetchStudents();
- // Fetch synthese visibility
  fetch(`${API_BASE_URL}/api/settings/synthese-visible`)
    .then(res => res.json())
    .then(data => setSyntheseVisible(data.visible))
-   .catch(() => setSyntheseVisible(true)); // Default true
+   .catch(() => setSyntheseVisible(true));
  }
  }, [isLoggedIn]);
 
@@ -149,7 +148,6 @@ export default function NewAdmin() {
  acad[year.annee] = year.academicYear;
  });
  setEditingAcademicYears(acad);
- // Prepare editing notes
  const editNotes: { [key: string]: { [key: string]: number } } = {};
  data.results.years.forEach((year: any) => {
  year.periods.forEach((period: any) => {
@@ -229,8 +227,8 @@ export default function NewAdmin() {
  const add = matiereToAdd[`${cl}_${per}`]?.trim();
  if (!add) return;
  const key = `${cl}_${per}`;
- const addKey = `add_${key}`; // Clé unique pour le spinner
- setLoadingMatiereKeys(prev => new Set(prev).add(addKey)); // <-- CORRECTION: Activer spinner
+ const addKey = `add_${key}`;
+ setLoadingMatiereKeys(prev => new Set(prev).add(addKey));
 
  const newList = [...(allMatieres[key] || []), add];
  try {
@@ -246,7 +244,7 @@ export default function NewAdmin() {
  } catch {
  alert('Erreur lors de l\'ajout');
  } finally {
- setLoadingMatiereKeys(prev => { // <-- CORRECTION: Désactiver spinner
+ setLoadingMatiereKeys(prev => {
  const newSet = new Set(prev);
  newSet.delete(addKey);
  return newSet;
@@ -255,12 +253,11 @@ export default function NewAdmin() {
  };
 
  const handleRemoveMatiere = async (cl: string, per: string, mat: string) => {
- // <-- CORRECTION: Ajout de la confirmation
  if (!window.confirm(`Voulez-vous vraiment supprimer la matière "${mat}" ?`)) return;
 
  const key = `${cl}_${per}`;
- const removeKey = `remove_${key}_${mat}`; // Clé unique pour le spinner
- setLoadingMatiereKeys(prev => new Set(prev).add(removeKey)); // <-- CORRECTION: Activer spinner
+ const removeKey = `remove_${key}_${mat}`;
+ setLoadingMatiereKeys(prev => new Set(prev).add(removeKey));
 
  const newList = (allMatieres[key] || []).filter((m) => m !== mat);
  try {
@@ -275,7 +272,7 @@ export default function NewAdmin() {
  } catch {
  alert('Erreur lors de la suppression');
  } finally {
- setLoadingMatiereKeys(prev => { // <-- CORRECTION: Désactiver spinner
+ setLoadingMatiereKeys(prev => {
  const newSet = new Set(prev);
  newSet.delete(removeKey);
  return newSet;
@@ -437,10 +434,9 @@ export default function NewAdmin() {
  {list.map((m) => (
  <li key={m} className="flex justify-between">
  {m}
- {/* --- CORRECTION BOUTON RETIRER --- */}
  <button
  onClick={() => handleRemoveMatiere(cl, per, m)}
- className="text-red-600 w-20 flex items-center justify-center" // Classes pour centrer spinner
+ className="text-red-600 w-20 flex items-center justify-center"
  disabled={loadingMatiereKeys.has(`remove_${cl}_${per}_${m}`)}
  >
  {loadingMatiereKeys.has(`remove_${cl}_${per}_${m}`) ? (
@@ -449,7 +445,6 @@ export default function NewAdmin() {
  'Retirer'
  )}
  </button>
- {/* --- FIN CORRECTION --- */}
  </li>
  ))}
  </ul>
@@ -461,10 +456,9 @@ export default function NewAdmin() {
  placeholder="Nouvelle matière"
  className="flex-1 min-w-0 p-2 border rounded-lg"
  />
- {/* --- CORRECTION BOUTON AJOUTER --- */}
  <button
  onClick={() => handleAddMatiere(cl, per)}
- className="bg-green-600 text-white py-2 px-4 rounded-lg w-28 flex items-center justify-center" // Classes pour centrer spinner
+ className="bg-green-600 text-white py-2 px-4 rounded-lg w-28 flex items-center justify-center"
  disabled={loadingMatiereKeys.has(`add_${key}`)}
  >
  {loadingMatiereKeys.has(`add_${key}`) ? (
@@ -473,7 +467,6 @@ export default function NewAdmin() {
  'Ajouter'
  )}
  </button>
- {/* --- FIN CORRECTION --- */}
  </div>
  </div>
  );
@@ -508,7 +501,13 @@ export default function NewAdmin() {
  />
  </div>
  </div>
- {results.years.map((year: any) => (
+ {results.years.map((year: any) => {
+ const p1 = year.periods[0]?.moyenne ?? 0;
+ const p2 = year.periods[1]?.moyenne ?? 0;
+ const p3 = year.periods[2]?.moyenne ?? 0;
+ const genMoy = (p1 + p2 + p3) / 3;
+ const avgPercent = genMoy;
+ return (
  <div key={year.annee} className="space-y-6">
  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 justify-center">
  {year.periods.map((period: any) => {
@@ -583,52 +582,36 @@ export default function NewAdmin() {
  </tr>
  <tr>
  <td className="px-4 py-2 font-medium text-left text-sm">1ère période</td>
- <td className="px-4 py-2 min-w-[90px] text-left text-sm">{year.periods[0]?.moyenne?.toFixed(2) || '0'} / 100</td>
+ <td className="px-4 py-2 min-w-[90px] text-left text-sm">{p1.toFixed(2)} / 100</td>
  </tr>
  <tr className="bg-blue-100">
  <td className="px-4 py-2 font-medium text-left text-sm">2ème période</td>
- <td className="px-4 py-2 min-w-[90px] text-left text-sm">{year.periods[1]?.moyenne?.toFixed(2) || '0'} / 100</td>
+ <td className="px-4 py-2 min-w-[90px] text-left text-sm">{p2.toFixed(2)} / 100</td>
  </tr>
  <tr>
  <td className="px-4 py-2 font-medium text-left text-sm">3ème période</td>
- <td className="px-4 py-2 min-w-[90px] text-left text-sm">{year.periods[2]?.moyenne?.toFixed(2) || '0'} / 100</td>
+ <td className="px-4 py-2 min-w-[90px] text-left text-sm">{p3.toFixed(2)} / 100</td>
  </tr>
  <tr className="bg-blue-100">
  <td className="px-4 py-2 font-medium text-left text-sm">Moyenne générale</td>
  <td className="px-4 py-2 font-bold min-w-[90px] text-left text-sm">
- {((year.periods[0]?.moyenne || 0) + (year.periods[1]?.moyenne || 0) + (year.periods[2]?.moyenne || 0)) / 3).toFixed(2)} / 100
+ {genMoy.toFixed(2)} / 100
  </td>
  </tr>
  <tr className="bg-green-100">
  <td className="px-4 py-2 font-medium text-left text-sm">Décision</td>
  <td className="px-4 py-2 font-bold text-green-700 text-sm text-left">
- {(() => {
- const genMoy = ((year.periods[0]?.moyenne || 0) + (year.periods[1]?.moyenne || 0) + (year.periods[2]?.moyenne || 0)) / 3;
- const avgPercent = genMoy;
- if (avgPercent >= 60) return 'Admise';
- if (avgPercent >= 50) return 'Reprise';
- return 'Non admise';
- })()}
+ {avgPercent >= 60 ? 'Admise' : avgPercent >= 50 ? 'Reprise' : 'Non admise'}
  </td>
  </tr>
- {(() => {
- const genMoy = ((year.periods[0]?.moyenne || 0) + (year.periods[1]?.moyenne || 0) + (year.periods[2]?.moyenne || 0)) / 3;
- const avgPercent = genMoy;
- const decision = avgPercent >= 60 ? 'Admise' : avgPercent >= 50 ? 'Reprise' : 'Non admise';
- if (decision === 'Admise') {
- let mention = '';
- if (avgPercent < 75) mention = 'Bien';
- else if (avgPercent < 90) mention = 'Très bien';
- else mention = 'Excellent';
- return (
+ {avgPercent >= 60 && (
  <tr className="bg-yellow-100">
  <td className="px-4 py-2 font-medium text-left text-sm">Mention</td>
- <td className="px-4 py-2 font-bold text-yellow-700 text-sm text-left">{mention}</td>
+ <td className="px-4 py-2 font-bold text-yellow-700 text-sm text-left">
+ {avgPercent < 75 ? 'Bien' : avgPercent < 90 ? 'Très bien' : 'Excellent'}
+ </td>
  </tr>
- );
- }
- return null;
- })()}
+ )}
  <tr className="bg-blue-100">
  <td className="px-4 py-2 font-medium text-left text-sm">Année académique</td>
  <td className="px-4 py-2 text-sm text-left">{year.academicYear}</td>
@@ -638,7 +621,8 @@ export default function NewAdmin() {
  </div>
  )}
  </div>
- ))}
+ );
+ })}
  <div className="mt-6 flex justify-center">
  <button onClick={() => handleDeleteStudent(selectedCode)} disabled={isDeleting} className="bg-red-600 text-white py-2 px-4 rounded-lg flex items-center justify-center">
  {isDeleting ? (
@@ -652,7 +636,6 @@ export default function NewAdmin() {
  )}
  </section>
 
- {/* New Toggle Section */}
  <section className="bg-white p-8 rounded-xl shadow-lg border">
    <h2 className="text-2xl font-bold mb-6">Visibilité de la Synthèse des résultats annuels (page Résultats)</h2>
    <div className="flex items-center space-x-4">
@@ -672,4 +655,4 @@ export default function NewAdmin() {
  </section>
  </div>
  );
-                  }
+                                       }
