@@ -99,7 +99,7 @@ export default function Resultats({ user }: ResultatsProps) {
           </div>
           {(() => {
             const maxPerSubject = 20; // Assumption: all subjects out of 20
-            const passingNote = max9PerSubject / 2;
+            const passingNote = maxPerSubject / 2;
 
             return results.years.map((year) => (
               <div key={year.annee} className="space-y-6">
