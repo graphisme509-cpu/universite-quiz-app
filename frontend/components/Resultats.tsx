@@ -115,6 +115,9 @@ export default function Resultats({ user }: ResultatsProps) {
               <div key={year.annee} className="space-y-6">
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 justify-center">
                   {year.periods.map((period) => {
+                    if (Object.keys(period.notes).length === 0) {
+                      return null;
+                    }
                     const noteValues = Object.values(period.notes).map(n => typeof n === 'number' ? n : 0);
                     const total = noteValues.reduce((acc, n) => acc + n, 0);
                     const maxTotal = noteValues.length * maxPerSubject;
@@ -229,4 +232,4 @@ export default function Resultats({ user }: ResultatsProps) {
       )}
     </section>
   );
-                          }
+}
