@@ -17,6 +17,8 @@ export default function NewAdmin() {
  const [classe, setClasse] = useState('1ère année');
  const [notes, setNotes] = useState<{ [key: string]: number }>({});
  const [moyenneGenerale, setMoyenneGenerale] = useState('0 / 100');
+ const [isSubmitting, setIsSubmitting] = useState(false);
+ const [isCalculating, setIsCalculating] = useState(false);
 
  // Common
  const [allMatieres, setAllMatieres] = useState<{ [key: string]: string[] }>({});
@@ -141,6 +143,7 @@ export default function NewAdmin() {
 
  const calculateMoyenneGenerale = async () => {
  if (!code || !classe) return;
+ setIsCalculating(true);
  try {
  const res = await fetch(`${API_BASE_URL}/api/admin/get-results?code=${code}`, {
  headers: { Authorization: `Bearer ${adminToken}` },
@@ -155,10 +158,14 @@ export default function NewAdmin() {
  }
  }
  } catch {}
+ finally {
+   setIsCalculating(false);
+ }
  };
 
  const handleSubmitForm1 = async (e: React.FormEvent) => {
  e.preventDefault();
+ setIsSubmitting(true);
  try {
  const res = await fetch(`${API_BASE_URL}/api/admin/update-results`, {
  method: 'POST',
@@ -170,6 +177,9 @@ export default function NewAdmin() {
  calculateMoyenneGenerale();
  } catch {
  setMessage1('Erreur lors de la sauvegarde');
+ }
+ finally {
+   setIsSubmitting(false);
  }
  };
 
@@ -325,11 +335,19 @@ export default function NewAdmin() {
  <div>Total: {total}</div>
  <div>Moyenne: {moyenne}</div>
  <div>Moyenne générale: {moyenneGenerale}</div>
- <button type="button" onClick={calculateMoyenneGenerale} className="bg-blue-600 text-white py-2 px-4 rounded-lg">
- Calculer Moyenne Générale
+ <button type="button" onClick={calculateMoyenneGenerale} disabled={isCalculating} className="bg-blue-600 text-white py-2 px-4 rounded-lg flex items-center justify-center">
+ {isCalculating ? (
+   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+ ) : (
+   'Calculer Moyenne Générale'
+ )}
  </button>
- <button type="submit" className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700">
- Soumettre
+ <button type="submit" disabled={isSubmitting} className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 flex items-center justify-center">
+ {isSubmitting ? (
+   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+ ) : (
+   'Soumettre'
+ )}
  </button>
  {message1 && <p className="text-center">{message1}</p>}
  </form>
@@ -527,4 +545,4 @@ export default function NewAdmin() {
  </section>
  </div>
  );
-   }
+ }
