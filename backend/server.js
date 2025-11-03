@@ -218,41 +218,33 @@ app.post('/api/resultats', requireAuth, async (req, res) => {
   try {
     let years = [];
     let option = '';
+    let userId = null;
     const periodNames = { 1: '1ère période', 2: '2ème période', 3: '3ème période' };
     const academicYears = { 1: '2022-2023', 2: '2023-2024', 3: '2024-2025' };
     const classes = { 1: '1ère année', 2: '2ème année', 3: '3ème année' };
-    let userId = null;
-
-    // Trouver le premier enregistrement pour obtenir user_id
-    for (let a = 1; a <= 3 && !userId; a++) {
-      for (let p = 1; p <= 3 && !userId; p++) {
-        const table = `resultats_${a}_${p}`;
-        const q = await pool.query(`SELECT user_id, notes, moyenne FROM ${table} WHERE code_etudiant = $1`, [code]);
-        if (q.rowCount > 0) {
-          userId = q.rows[0].user_id;
-          break;
-        }
-      }
-    }
-
-    if (!userId) return res.status(404).json({ success: false, message: 'Aucun résultat trouvé pour ce code.' });
-
-    // Récupérer l'option de l'utilisateur
-    const userQ = await pool.query('SELECT option FROM users WHERE id = $1', [userId]);
-    if (userQ.rowCount === 0) return res.status(404).json({ success: false, message: 'Utilisateur non trouvé.' });
-    option = userQ.rows[0].option || '';
 
     // Interroger toutes les tables pour les 3 années, inclure même si pas de notes (moyenne=0 si pas de ligne)
     for (let a = 1; a <= 3; a++) {
+      let yearAcademicYear = academicYears[a];
       let periods = [];
       for (let p = 1; p <= 3; p++) {
         const table = `resultats_${a}_${p}`;
-        const q = await pool.query(`SELECT notes, moyenne FROM ${table} WHERE code_etudiant = $1`, [code]);
+        const q = await pool.query(`SELECT user_id, notes, moyenne, option, academic_year FROM ${table} WHERE code_etudiant = $1`, [code]);
         let notesObj = {};
         let moyenne = 0;
         if (q.rowCount > 0) {
           notesObj = q.rows[0].notes || {};
           moyenne = parseFloat(q.rows[0].moyenne) || 0;
+
+          if (q.rows[0].user_id && !userId) {
+            userId = q.rows[0].user_id;
+          }
+          if (q.rows[0].user_id === null && !option && q.rows[0].option) {
+            option = q.rows[0].option;
+          }
+          if (q.rows[0].academic_year && yearAcademicYear === academicYears[a]) {
+            yearAcademicYear = q.rows[0].academic_year;
+          }
 
           // Calculer moyenne si non fournie ou incohérente
           const noteValues = Object.values(notesObj).map(n => typeof n === 'number' ? n : 0);
@@ -271,11 +263,19 @@ app.post('/api/resultats', requireAuth, async (req, res) => {
       if (periods.some(p => Object.keys(p.notes).length > 0 || p.moyenne > 0)) {
         years.push({
           annee: a,
-          academicYear: academicYears[a],
+          academicYear: yearAcademicYear,
           classe: classes[a],
           periods: periods.sort((a, b) => a.periode - b.periode)
         });
       }
+    }
+
+    if (years.length === 0) return res.status(404).json({ success: false, message: 'Aucun résultat trouvé pour ce code.' });
+
+    if (userId) {
+      const userQ = await pool.query('SELECT option FROM users WHERE id = $1', [userId]);
+      if (userQ.rowCount === 0) return res.status(404).json({ success: false, message: 'Utilisateur non trouvé.' });
+      option = userQ.rows[0].option || '';
     }
 
     res.json({ success: true, results: { option, years } });
