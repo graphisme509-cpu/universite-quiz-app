@@ -203,6 +203,18 @@ app.post('/api/contact', async (req, res) => {
   res.json({ success: true });
 });
 
+// New Settings Endpoint (public, no auth)
+app.get('/api/settings/synthese-visible', async (req, res) => {
+  try {
+    const q = await pool.query('SELECT setting_value FROM app_settings WHERE setting_key = $1', ['synthese_visible']);
+    const visible = q.rowCount > 0 ? q.rows[0].setting_value : true; // Default to visible
+    res.json({ visible });
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ error: 'Erreur lors de la récupération du paramètre.' });
+  }
+});
+
 // Routes Résultats 
 // Pour un code étudiant spécifique (ex: recherche publique)
 // Pour un code étudiant spécifique (ex: recherche publique)
@@ -381,6 +393,24 @@ app.post('/api/admin/save-notes', async (req, res) => {
   } catch (err) {
     logger.error(err);
     res.status(500).json({ success: false, message: 'Erreur DB.' });
+  }
+});
+
+// New Admin Toggle Endpoint
+app.post('/api/admin/toggle-synthese', async (req, res) => {
+  const auth = req.headers.authorization?.match(/^Bearer (.+)$/);
+  if (!verifyAdminToken(auth?.[1])) return res.status(401).json({ success: false, message: 'Token admin invalide.' });
+  const { visible } = req.body;
+  if (visible === undefined) return res.status(400).json({ success: false, message: 'Valeur visible manquante.' });
+  try {
+    await pool.query(
+      'INSERT INTO app_settings (setting_key, setting_value) VALUES ($1, $2) ON CONFLICT (setting_key) DO UPDATE SET setting_value = $2',
+      ['synthese_visible', !!visible]
+    );
+    res.json({ success: true, visible: !!visible });
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ success: false, message: 'Erreur lors de la mise à jour.' });
   }
 });
 
