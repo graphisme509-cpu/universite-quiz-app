@@ -506,17 +506,6 @@ export default function NewAdmin() {
  {results.years.map((year: any) => (
  <div key={year.annee} className="mb-8">
  <div className="mb-4">
- <h3 className="text-xl font-bold mb-2">La classe de l'étudiante: {year.classe}</h3>
- <div className="flex items-center space-x-2">
- <label className="font-bold whitespace-nowrap">Année académique:</label>
- <input
- type="text"
- value={editingAcademicYears[year.annee] || ''}
- onChange={(e) => setEditingAcademicYears((prev) => ({ ...prev, [year.annee]: e.target.value }))}
- onBlur={() => updateField(selectedCode, 'academicYear', editingAcademicYears[year.annee], { annee: year.annee })}
- className="w-64 p-2 border rounded-lg"
- />
- </div>
  </div>
  <div className="grid md:grid-cols-3 gap-6">
  {year.periods.map((period: any) => {
@@ -528,6 +517,7 @@ export default function NewAdmin() {
  return (
  <div key={period.periode} className="bg-gray-50 p-6 rounded-lg shadow border">
  <h4 className="text-xl font-bold mb-4 text-center">{period.title}</h4>
+ <div className="text-center mb-4">{year.academicYear} - {year.classe}</div>
  <ul className="space-y-3 mb-4">
  {Object.entries(period.notes).map(([matiere, note]) => (
  <li key={matiere} className="flex justify-between items-center p-3 bg-white rounded border">
