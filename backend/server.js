@@ -509,6 +509,223 @@ app.get('/api/dashboard/quizzes', requireAuth, async (req, res) => {
   }
 });
 
+// Routes nouvelles:
+
+const classeToAnnee = {
+ '1ère année': 1,
+ '2ème année': 2,
+ '3ème année': 3,
+};
+const periodeToNum = {
+ '1ère période': 1,
+ '2ème période': 2,
+ '3ème période': 3,
+};
+
+app.get('/api/admin/matieres', async (req, res) => {
+ const auth = req.headers.authorization?.match(/^Bearer (.+)$/);
+ if (!verifyAdminToken(auth?.[1])) return res.status(401).json({ success: false, message: 'Token invalide.' });
+ try {
+ const q = await pool.query('SELECT classe, periode, matieres FROM matieres_predefinies');
+ res.json(q.rows);
+ } catch (err) {
+ logger.error(err);
+ res.status(500).json({ success: false });
+ }
+});
+
+app.post('/api/admin/matieres', async (req, res) => {
+ const auth = req.headers.authorization?.match(/^Bearer (.+)$/);
+ if (!verifyAdminToken(auth?.[1])) return res.status(401).json({ success: false, message: 'Token invalide.' });
+ const { classe, periode, matieres } = req.body;
+ try {
+ await pool.query(
+ 'INSERT INTO matieres_predefinies (classe, periode, matieres) VALUES ($1, $2, $3) ON CONFLICT (classe, periode) DO UPDATE SET matieres = $3',
+ [classe, periode, matieres]
+ );
+ res.json({ success: true });
+ } catch (err) {
+ logger.error(err);
+ res.status(500).json({ success: false });
+ }
+});
+
+app.post('/api/admin/update-results', async (req, res) => {
+ const auth = req.headers.authorization?.match(/^Bearer (.+)$/);
+ if (!verifyAdminToken(auth?.[1])) return res.status(401).json({ success: false, message: 'Token invalide.' });
+ const { code, option, academicYear, classe, periode, notes } = req.body;
+ if (!code || !classe || !periode) return res.status(400).json({ success: false, message: 'Données incomplètes.' });
+ const annee = classeToAnnee[classe];
+ const perNum = periodeToNum[periode];
+ if (!annee || !perNum) return res.status(400).json({ success: false, message: 'Classe ou période invalide.' });
+ const table = `resultats_${annee}_${perNum}`;
+ const noteValues = Object.values(notes).map(Number);
+ const moyenne = noteValues.length > 0 ? noteValues.reduce((a, b) => a + b, 0) / noteValues.length : 0;
+ try {
+ await pool.query(
+ `INSERT INTO ${table} (code_etudiant, option, academic_year, notes, moyenne, user_id) VALUES ($1, $2, $3, $4, $5, NULL) ON CONFLICT (code_etudiant) DO UPDATE SET option=$2, academic_year=$3, notes=$4, moyenne=$5, updated_at=NOW()`,
+ [code, option, academicYear, notes, moyenne]
+ );
+ res.json({ success: true });
+ } catch (err) {
+ logger.error(err);
+ res.status(500).json({ success: false });
+ }
+});
+
+app.get('/api/admin/students', async (req, res) => {
+ const auth = req.headers.authorization?.match(/^Bearer (.+)$/);
+ if (!verifyAdminToken(auth?.[1])) return res.status(401).json({ success: false, message: 'Token invalide.' });
+ try {
+ const q = await pool.query(`
+ SELECT DISTINCT code_etudiant FROM resultats_1_1
+ UNION SELECT DISTINCT code_etudiant FROM resultats_1_2
+ UNION SELECT DISTINCT code_etudiant FROM resultats_1_3
+ UNION SELECT DISTINCT code_etudiant FROM resultats_2_1
+ UNION SELECT DISTINCT code_etudiant FROM resultats_2_2
+ UNION SELECT DISTINCT code_etudiant FROM resultats_2_3
+ UNION SELECT DISTINCT code_etudiant FROM resultats_3_1
+ UNION SELECT DISTINCT code_etudiant FROM resultats_3_2
+ UNION SELECT DISTINCT code_etudiant FROM resultats_3_3
+ `);
+ res.json(q.rows.map(r => r.code_etudiant));
+ } catch (err) {
+ logger.error(err);
+ res.status(500).json({ success: false });
+ }
+});
+
+app.get('/api/admin/get-results', async (req, res) => {
+ const auth = req.headers.authorization?.match(/^Bearer (.+)$/);
+ if (!verifyAdminToken(auth?.[1])) return res.status(401).json({ success: false, message: 'Token invalide.' });
+ const { code } = req.query;
+ if (!code) return res.status(400).json({ success: false, message: 'Code manquant.' });
+ // Le code ici est similaire à app.post('/api/resultats', ...) mais sans requireAuth, et avec query au lieu de body.
+ // Pour éviter duplication, vous pouvez extraire la logique en fonction, mais comme demandé "nouvelles routes", voici le code (copié/adapté).
+ try {
+ let years = [];
+ let option = '';
+ const periodNames = { 1: '1ère période', 2: '2ème période', 3: '3ème période' };
+ const academicYears = { 1: '2022-2023', 2: '2023-2024', 3: '2024-2025' };
+ const classes = { 1: '1ère année', 2: '2ème année', 3: '3ème année' };
+ let userId = null;
+ let firstOption = '';
+ let firstAcademic = new Map();
+
+ for (let a = 1; a <= 3 && !userId; a++) {
+ for (let p = 1; p <= 3 && !userId; p++) {
+ const table = `resultats_${a}_${p}`;
+ const q = await pool.query(`SELECT user_id, notes, moyenne, option, academic_year FROM ${table} WHERE code_etudiant = $1`, [code]);
+ if (q.rowCount > 0) {
+ userId = q.rows[0].user_id;
+ if (!firstOption) firstOption = q.rows[0].option || '';
+ firstAcademic.set(a, q.rows[0].academic_year || academicYears[a]);
+ }
+ }
+ }
+
+ if (!firstOption && !userId) return res.status(404).json({ success: false, message: 'Aucun résultat trouvé.' });
+
+ if (userId) {
+ const userQ = await pool.query('SELECT option FROM users WHERE id = $1', [userId]);
+ option = userQ.rowCount > 0 ? userQ.rows[0].option || '' : firstOption;
+ } else {
+ option = firstOption;
+ }
+
+ for (let a = 1; a <= 3; a++) {
+ let periods = [];
+ for (let p = 1; p <= 3; p++) {
+ const table = `resultats_${a}_${p}`;
+ const q = await pool.query(`SELECT notes, moyenne FROM ${table} WHERE code_etudiant = $1`, [code]);
+ let notesObj = {};
+ let moyenne = 0;
+ if (q.rowCount > 0) {
+ notesObj = q.rows[0].notes || {};
+ moyenne = parseFloat(q.rows[0].moyenne) || 0;
+ const noteValues = Object.values(notesObj).map(Number);
+ const calculatedMoy = noteValues.length > 0 ? noteValues.reduce((acc, val) => acc + val, 0) / noteValues.length : 0;
+ if (moyenne === 0 || Math.abs(moyenne - calculatedMoy) > 0.01) {
+ moyenne = calculatedMoy;
+ }
+ }
+ periods.push({
+ periode: p,
+ title: periodNames[p],
+ notes: notesObj,
+ moyenne: moyenne
+ });
+ }
+ if (periods.some(p => Object.keys(p.notes).length > 0 || p.moyenne > 0)) {
+ years.push({
+ annee: a,
+ academicYear: firstAcademic.get(a),
+ classe: classes[a],
+ periods: periods.sort((a, b) => a.periode - b.periode)
+ });
+ }
+ }
+
+ res.json({ success: true, results: { option, years } });
+ } catch (err) {
+ logger.error(err);
+ res.status(500).json({ success: false, message: 'Erreur DB.' });
+ }
+});
+
+app.post('/api/admin/update-field', async (req, res) => {
+ const auth = req.headers.authorization?.match(/^Bearer (.+)$/);
+ if (!verifyAdminToken(auth?.[1])) return res.status(401).json({ success: false, message: 'Token invalide.' });
+ const { code, field, value, annee, periode, matiere } = req.body;
+ if (!code || !field) return res.status(400).json({ success: false });
+ try {
+ if (field === 'note') {
+ if (!annee || !periode || !matiere) return res.status(400).json({ success: false });
+ const table = `resultats_${annee}_${periode}`;
+ const q = await pool.query(`SELECT notes FROM ${table} WHERE code_etudiant = $1`, [code]);
+ let currentNotes = q.rowCount > 0 ? q.rows[0].notes || {} : {};
+ currentNotes[matiere] = Number(value);
+ const noteValues = Object.values(currentNotes).map(Number);
+ const moyenne = noteValues.length > 0 ? noteValues.reduce((a, b) => a + b, 0) / noteValues.length : 0;
+ await pool.query(`UPDATE ${table} SET notes = $1, moyenne = $2, updated_at=NOW() WHERE code_etudiant = $3`, [currentNotes, moyenne, code]);
+ } else if (field === 'option') {
+ for (let a = 1; a <= 3; a++) {
+ for (let p = 1; p <= 3; p++) {
+ const table = `resultats_${a}_${p}`;
+ await pool.query(`UPDATE ${table} SET option = $1, updated_at=NOW() WHERE code_etudiant = $2`, [value, code]);
+ }
+ }
+ } else if (field === 'academicYear') {
+ if (!annee) return res.status(400).json({ success: false });
+ for (let p = 1; p <= 3; p++) {
+ const table = `resultats_${annee}_${p}`;
+ await pool.query(`UPDATE ${table} SET academic_year = $1, updated_at=NOW() WHERE code_etudiant = $2`, [value, code]);
+ }
+ }
+ res.json({ success: true });
+ } catch (err) {
+ logger.error(err);
+ res.status(500).json({ success: false });
+ }
+});
+
+app.delete('/api/admin/student/:code', async (req, res) => {
+ const auth = req.headers.authorization?.match(/^Bearer (.+)$/);
+ if (!verifyAdminToken(auth?.[1])) return res.status(401).json({ success: false, message: 'Token invalide.' });
+ const { code } = req.params;
+ try {
+ for (let a = 1; a <= 3; a++) {
+ for (let p = 1; p <= 3; p++) {
+ const table = `resultats_${a}_${p}`;
+ await pool.query(`DELETE FROM ${table} WHERE code_etudiant = $1`, [code]);
+ }
+ }
+ res.json({ success: true });
+ } catch (err) {
+ logger.error(err);
+ res.status(500).json({ success: false });
+ }
+});
 
 // Servir le front-end
 // app.use(express.static(path.join(__dirname, '../dist')));
