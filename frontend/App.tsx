@@ -12,6 +12,7 @@ import Termes from './components/Termes';
 import Politique from './components/Politique';
 import { User } from './types';
 import QuizDetail from './components/QuizDetail';
+import NewAdmin from './dashboard/NewAdmin';
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -125,7 +126,13 @@ function App() {
                         >
                           Classement
                         </Link>
-                        <hr className="my-1 border-gray-200" />
+                        <Link 
+ to="/dashboard/newadmin" 
+ className={`block px-4 py-2.5 text-sm font-medium transition-colors ${location.pathname === '/dashboard/newadmin' ? 'text-green-700 bg-green-50' : 'text-gray-700 hover:bg-gray-100'}`}
+>
+ Administration
+</Link>
+                      <hr className="my-1 border-gray-200" />
                         <button 
                           onClick={handleLogout} 
                           className="w-full text-left block px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 font-medium transition-colors"
@@ -155,6 +162,7 @@ function App() {
           <Route path="/admin" element={<Admin />} />
           <Route path="/termes" element={<Termes />} />
           <Route path="/politique" element={<Politique />} />
+          <Route path="/dashboard/newadmin" element={<NewAdmin />} />
         </Routes>
       </main>
 
