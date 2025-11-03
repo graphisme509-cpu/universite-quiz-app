@@ -493,41 +493,51 @@ export default function NewAdmin() {
  </select>
  {results && (
  <div>
- <div className="flex items-center space-x-2 mb-4">
+ <div className="text-center">
+ <h3 className="text-2xl font-semibold mb-2">
+ <span className="font-mono text-green-700 bg-green-50 px-2 py-1 rounded">{selectedCode}</span>
+ </h3>
+ <div className="flex items-center space-x-2 justify-center mb-4">
  <label className="font-bold whitespace-nowrap">Option:</label>
  <input
  type="text"
  value={editingOption}
  onChange={(e) => setEditingOption(e.target.value)}
  onBlur={() => updateField(selectedCode, 'option', editingOption)}
- className="flex-1 p-2 border rounded-lg"
+ className="flex-1 p-2 border rounded-lg max-w-md"
  />
  </div>
- {results.years.map((year: any) => (
- <div key={year.annee} className="mb-8">
- <div className="mb-4">
  </div>
- <div className="grid md:grid-cols-3 gap-6">
+ {results.years.map((year: any) => (
+ <div key={year.annee} className="space-y-6">
+ <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 justify-center">
  {year.periods.map((period: any) => {
+ if (Object.keys(period.notes).length === 0) {
+ return null;
+ }
  const periodKey = `${year.annee}_${period.periode}`;
  const editNotes = editingNotes[periodKey] || {};
  const noteValues = Object.values(editNotes);
  const totalVal = noteValues.reduce((acc: number, n: any) => acc + n, 0);
  const maxTotal = noteValues.length * 100;
+ const passingNote = 50;
  return (
- <div key={period.periode} className="bg-gray-50 p-6 rounded-lg shadow border">
- <h4 className="text-xl font-bold mb-4 text-center">{period.title}</h4>
- <div className="text-center mb-4">{year.academicYear} - {year.classe}</div>
+ <div key={period.periode} className="bg-gray-50 p-6 rounded-lg shadow border border-gray-200">
+ <h4 className="text-xl font-bold mb-1 text-center text-slate-800">{period.title}</h4>
+ <p className="text-sm text-center text-gray-600 mb-1">{year.academicYear}</p>
+ <p className="text-sm text-center text-gray-600 mb-4 font-medium">{year.classe}</p>
  <ul className="space-y-3 mb-4">
- {Object.entries(period.notes).map(([matiere, note]) => (
+ {Object.entries(editNotes).map(([matiere, note]) => {
+ const currentNote = editNotes[matiere] || 0;
+ return (
  <li key={matiere} className="flex justify-between items-center p-3 bg-white rounded border">
- <span className="font-medium">{matiere}</span>
+ <span className="font-medium text-gray-700">{matiere}</span>
  <input
  type="number"
  min={0}
  max={100}
  step={0.01}
- value={editNotes[matiere] || ''}
+ value={editNotes[matiere] !== undefined ? editNotes[matiere] : ''}
  onChange={(e) => setEditingNotes((prev) => ({
  ...prev,
  [periodKey]: { ...prev[periodKey], [matiere]: parseFloat(e.target.value) || 0 },
@@ -537,90 +547,96 @@ export default function NewAdmin() {
  periode: period.periode,
  matiere,
  })}
- className="w-24 text-right border rounded p-1"
+ className={`w-24 text-right border rounded p-1 ${currentNote >= passingNote ? 'text-green-600' : 'text-red-600'}`}
  />
  </li>
- ))}
+ );
+ })}
  </ul>
- <div className="text-center font-medium mb-2">Total: {totalVal.toFixed(2)} / {maxTotal}</div>
- <div className="text-center font-bold text-xl py-2 rounded bg-green-100 text-green-700">
+ <div className="text-center font-medium py-1 mb-2 min-w-[120px] mx-auto">
+ Total: {totalVal.toFixed(2)} / {maxTotal}
+ </div>
+ <div className={`text-center font-bold text-xl py-2 rounded min-w-[120px] mx-auto ${period.moyenne >= passingNote ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
  Moyenne: {period.moyenne.toFixed(2)} / 100
  </div>
  </div>
  );
  })}
  </div>
- {/* Synthèse similaire à Resultats.tsx, mais non éditable ici */}
- <div className="bg-blue-50 p-6 rounded-lg shadow border mt-6">
+ {syntheseVisible && (
+ <div className="bg-blue-50 p-6 rounded-lg shadow border border-blue-200">
+ <h4 className="text-xl font-bold mb-4 text-center text-blue-800">ÉCOLE NORMALE D'INSTITUTEURS ET DE JARDINIÈRES D'ENFANTS (ENIJE)</h4>
  <h4 className="text-xl font-bold mb-4 text-center text-blue-800">Synthèse des résultats annuels</h4>
- <table className="w-full border-collapse border">
- <tbody>
+ <table className="w-full table-auto border-collapse border border-blue-300">
+ <tbody className="divide-y divide-blue-200">
  <tr className="bg-blue-100">
- <td className="px-4 py-2 font-medium text-sm">Code de l'étudiante</td>
- <td className="px-4 py-2 text-sm">{selectedCode}</td>
+ <td className="px-4 py-2 font-medium text-left text-sm">Code de l'étudiante</td>
+ <td className="px-4 py-2 text-sm text-left">{selectedCode}</td>
  </tr>
  <tr>
- <td className="px-4 py-2 font-medium text-sm">Option</td>
- <td className="px-4 py-2 text-sm">{results.option}</td>
+ <td className="px-4 py-2 font-medium text-left text-sm">Option</td>
+ <td className="px-4 py-2 text-sm text-left">{editingOption}</td>
  </tr>
  <tr className="bg-blue-100">
- <td className="px-4 py-2 font-medium text-sm">Classe</td>
- <td className="px-4 py-2 text-sm">{year.classe}</td>
+ <td className="px-4 py-2 font-medium text-left text-sm">Classe</td>
+ <td className="px-4 py-2 text-sm text-left">{year.classe}</td>
  </tr>
  <tr>
- <td className="px-4 py-2 font-medium text-sm">1ère période</td>
- <td className="px-4 py-2 text-sm">{year.periods[0].moyenne.toFixed(2)} / 100</td>
+ <td className="px-4 py-2 font-medium text-left text-sm">1ère période</td>
+ <td className="px-4 py-2 min-w-[90px] text-left text-sm">{year.periods[0]?.moyenne?.toFixed(2) || '0'} / 100</td>
  </tr>
  <tr className="bg-blue-100">
- <td className="px-4 py-2 font-medium text-sm">2ème période</td>
- <td className="px-4 py-2 text-sm">{year.periods[1].moyenne.toFixed(2)} / 100</td>
+ <td className="px-4 py-2 font-medium text-left text-sm">2ème période</td>
+ <td className="px-4 py-2 min-w-[90px] text-left text-sm">{year.periods[1]?.moyenne?.toFixed(2) || '0'} / 100</td>
  </tr>
  <tr>
- <td className="px-4 py-2 font-medium text-sm">3ème période</td>
- <td className="px-4 py-2 text-sm">{year.periods[2].moyenne.toFixed(2)} / 100</td>
+ <td className="px-4 py-2 font-medium text-left text-sm">3ème période</td>
+ <td className="px-4 py-2 min-w-[90px] text-left text-sm">{year.periods[2]?.moyenne?.toFixed(2) || '0'} / 100</td>
  </tr>
  <tr className="bg-blue-100">
- <td className="px-4 py-2 font-medium text-sm">Moyenne générale</td>
- <td className="px-4 py-2 font-bold text-sm">
- {((year.periods[0].moyenne + year.periods[1].moyenne + year.periods[2].moyenne) / 3).toFixed(2)} / 100
+ <td className="px-4 py-2 font-medium text-left text-sm">Moyenne générale</td>
+ <td className="px-4 py-2 font-bold min-w-[90px] text-left text-sm">
+ {((year.periods[0]?.moyenne || 0) + (year.periods[1]?.moyenne || 0) + (year.periods[2]?.moyenne || 0)) / 3).toFixed(2)} / 100
  </td>
  </tr>
  <tr className="bg-green-100">
- <td className="px-4 py-2 font-medium text-sm">Décision</td>
- <td className="px-4 py-2 font-bold text-green-700 text-sm">
+ <td className="px-4 py-2 font-medium text-left text-sm">Décision</td>
+ <td className="px-4 py-2 font-bold text-green-700 text-sm text-left">
  {(() => {
- const genMoy = (year.periods[0].moyenne + year.periods[1].moyenne + year.periods[2].moyenne) / 3;
+ const genMoy = ((year.periods[0]?.moyenne || 0) + (year.periods[1]?.moyenne || 0) + (year.periods[2]?.moyenne || 0)) / 3;
  const avgPercent = genMoy;
  if (avgPercent >= 60) return 'Admise';
  if (avgPercent >= 50) return 'Reprise';
- return 'Non adm ise';
+ return 'Non admise';
  })()}
  </td>
  </tr>
  {(() => {
- const genMoy = (year.periods[0].moyenne + year.periods[1].moyenne + year.periods[2].moyenne) / 3;
+ const genMoy = ((year.periods[0]?.moyenne || 0) + (year.periods[1]?.moyenne || 0) + (year.periods[2]?.moyenne || 0)) / 3;
  const avgPercent = genMoy;
- if (avgPercent >= 60) {
+ const decision = avgPercent >= 60 ? 'Admise' : avgPercent >= 50 ? 'Reprise' : 'Non admise';
+ if (decision === 'Admise') {
  let mention = '';
  if (avgPercent < 75) mention = 'Bien';
  else if (avgPercent < 90) mention = 'Très bien';
  else mention = 'Excellent';
  return (
  <tr className="bg-yellow-100">
- <td className="px-4 py-2 font-medium text-sm">Mention</td>
- <td className="px-4 py-2 font-bold text-yellow-700 text-sm">{mention}</td>
+ <td className="px-4 py-2 font-medium text-left text-sm">Mention</td>
+ <td className="px-4 py-2 font-bold text-yellow-700 text-sm text-left">{mention}</td>
  </tr>
  );
  }
  return null;
  })()}
  <tr className="bg-blue-100">
- <td className="px-4 py-2 font-medium text-sm">Année académique</td>
- <td className="px-4 py-2 text-sm">{year.academicYear}</td>
+ <td className="px-4 py-2 font-medium text-left text-sm">Année académique</td>
+ <td className="px-4 py-2 text-sm text-left">{year.academicYear}</td>
  </tr>
  </tbody>
  </table>
  </div>
+ )}
  </div>
  ))}
  <div className="mt-6 flex justify-center">
@@ -656,4 +672,4 @@ export default function NewAdmin() {
  </section>
  </div>
  );
-  }
+                  }
