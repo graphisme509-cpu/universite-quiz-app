@@ -348,27 +348,8 @@ export default function NewAdmin() {
  <div className="space-y-12">
  <h1 className="text-3xl font-bold text-center">Page Administration</h1>
 
- {/* New Toggle Section */}
  <section className="bg-white p-8 rounded-xl shadow-lg border">
-   <h2 className="text-2xl font-bold mb-6">Visibilité de la Synthèse des résultats annuels (page Résultats)</h2>
-   <div className="flex items-center space-x-4">
-     <span className="text-lg">Actuellement: {syntheseVisible ? 'Visible' : 'Cachée'}</span>
-     <button
-       onClick={handleToggleSynthese}
-       disabled={isToggling}
-       className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 flex items-center justify-center"
-     >
-       {isToggling ? (
-         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-       ) : (
-         syntheseVisible ? 'Cacher' : 'Afficher'
-       )}
-     </button>
-   </div>
- </section>
-
- <section className="bg-white p-8 rounded-xl shadow-lg border">
- <h2 className="text-2xl font-bold mb-6">Ajouter/Modifier Notes Étudiante</h2>
+ <h2 className="text-2xl font-bold mb-6">Ajouter des notes</h2>
  <form onSubmit={handleSubmitForm1} className="space-y-4">
  <input
  type="text"
@@ -444,7 +425,7 @@ export default function NewAdmin() {
  </section>
 
  <section className="bg-white p-8 rounded-xl shadow-lg border">
- <h2 className="text-2xl font-bold mb-6">Matières Prédéfinies</h2>
+ <h2 className="text-2xl font-bold mb-6">Matières</h2>
  {classes.map((cl) => (
  periodes.map((per) => {
  const key = `${cl}_${per}`;
@@ -478,7 +459,7 @@ export default function NewAdmin() {
  value={matiereToAdd[key] || ''}
  onChange={(e) => setMatiereToAdd((prev) => ({ ...prev, [key]: e.target.value }))}
  placeholder="Nouvelle matière"
- className="flex-grow p-2 border rounded-lg"
+ className="flex-1 min-w-0 p-2 border rounded-lg"
  />
  {/* --- CORRECTION BOUTON AJOUTER --- */}
  <button
@@ -501,7 +482,7 @@ export default function NewAdmin() {
  </section>
 
  <section className="bg-white p-8 rounded-xl shadow-lg border">
- <h2 className="text-2xl font-bold mb-6">Étudiants Enregistrés</h2>
+ <h2 className="text-2xl font-bold mb-6">Étudiantes</h2>
  <select
  value={selectedCode}
  onChange={(e) => setSelectedCode(e.target.value)}
@@ -512,34 +493,30 @@ export default function NewAdmin() {
  </select>
  {results && (
  <div>
- <div className="flex items-center space-x-4 mb-4">
- <label>Option:</label>
+ <div className="flex items-center space-x-2 mb-4">
+ <label className="font-bold whitespace-nowrap">Option:</label>
  <input
  type="text"
  value={editingOption}
  onChange={(e) => setEditingOption(e.target.value)}
  onBlur={() => updateField(selectedCode, 'option', editingOption)}
- className="p-2 border rounded-lg"
+ className="flex-1 p-2 border rounded-lg"
  />
- <button onClick={() => handleDeleteStudent(selectedCode)} disabled={isDeleting} className="bg-red-600 text-white py-2 px-4 rounded-lg flex items-center justify-center">
- {isDeleting ? (
-   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
- ) : (
-   'Supprimer l\'étudiant'
- )}
- </button>
  </div>
  {results.years.map((year: any) => (
  <div key={year.annee} className="mb-8">
- <div className="flex items-center space-x-4 mb-4">
- <h3 className="text-xl font-bold">{year.classe} - Année académique:</h3>
+ <div className="mb-4">
+ <h3 className="text-xl font-bold mb-2">La classe de l'étudiante: {year.classe}</h3>
+ <div className="flex items-center space-x-2">
+ <label className="font-bold whitespace-nowrap">Année académique:</label>
  <input
  type="text"
  value={editingAcademicYears[year.annee] || ''}
  onChange={(e) => setEditingAcademicYears((prev) => ({ ...prev, [year.annee]: e.target.value }))}
  onBlur={() => updateField(selectedCode, 'academicYear', editingAcademicYears[year.annee], { annee: year.annee })}
- className="p-2 border rounded-lg"
+ className="w-64 p-2 border rounded-lg"
  />
+ </div>
  </div>
  <div className="grid md:grid-cols-3 gap-6">
  {year.periods.map((period: any) => {
@@ -656,8 +633,36 @@ export default function NewAdmin() {
  </div>
  </div>
  ))}
+ <div className="mt-6 flex justify-center">
+ <button onClick={() => handleDeleteStudent(selectedCode)} disabled={isDeleting} className="bg-red-600 text-white py-2 px-4 rounded-lg flex items-center justify-center">
+ {isDeleting ? (
+   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+ ) : (
+   'Supprimer l\'étudiant'
+ )}
+ </button>
+ </div>
  </div>
  )}
+ </section>
+
+ {/* New Toggle Section */}
+ <section className="bg-white p-8 rounded-xl shadow-lg border">
+   <h2 className="text-2xl font-bold mb-6">Visibilité de la Synthèse des résultats annuels (page Résultats)</h2>
+   <div className="flex items-center space-x-4">
+     <span className="text-lg">Actuellement: {syntheseVisible ? 'Visible' : 'Cachée'}</span>
+     <button
+       onClick={handleToggleSynthese}
+       disabled={isToggling}
+       className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 flex items-center justify-center"
+     >
+       {isToggling ? (
+         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+       ) : (
+         syntheseVisible ? 'Cacher' : 'Afficher'
+       )}
+     </button>
+   </div>
  </section>
  </div>
  );
