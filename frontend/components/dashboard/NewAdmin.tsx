@@ -531,11 +531,9 @@ export default function NewAdmin() {
                      children: [
                        new TableCell({
                          children: [new Paragraph("Mention")],
-                         shading: { type: ShadingType.SOLID, color: "FFFFE0" },
                        }),
                        new TableCell({
                          children: [new Paragraph(mention)],
-                         shading: { type: ShadingType.SOLID, color: "FFFFE0" },
                        }),
                      ],
                    })
