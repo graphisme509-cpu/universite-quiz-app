@@ -563,7 +563,7 @@ export default function NewAdmin() {
  })}
  </div>
  {syntheseVisible && (
- <div>
+ <div className="mt-6">
  <div className="bg-blue-50 p-6 rounded-lg shadow border border-blue-200">
  <h4 className="text-xl font-bold mb-4 text-center text-blue-800">ÉCOLE NORMALE D'INSTITUTEURS ET DE JARDINIÈRES D'ENFANTS (ENIJE)</h4>
  <h4 className="text-xl font-bold mb-4 text-center text-blue-800">Synthèse des résultats annuels</h4>
@@ -657,4 +657,4 @@ export default function NewAdmin() {
  </section>
  </div>
  );
-  }
+ }
