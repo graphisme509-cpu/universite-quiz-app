@@ -387,7 +387,7 @@ export default function NewAdmin() {
                else if (avgPercent < 90) mention = 'Très bien';
                else mention = 'Excellent';
              }
-             return [
+             let yearContent: any[] = [
                new Paragraph({
                  children: [
                    new TextRun({
@@ -398,7 +398,47 @@ export default function NewAdmin() {
                  ],
                  spacing: { after: 200 },
                }),
-               new Table({
+             ];
+             year.periods.forEach((period: any, index: number) => {
+               if (Object.keys(period.notes).length === 0) return;
+               const perName = ['1ère période', '2ème période', '3ème période'][index];
+               const detailRows = [
+                 new TableRow({
+                   children: [
+                     new TableCell({
+                       children: [new Paragraph("Matière")],
+                       width: { size: 50, type: WidthType.PERCENTAGE },
+                     }),
+                     new TableCell({
+                       children: [new Paragraph("Note")],
+                       width: { size: 50, type: WidthType.PERCENTAGE },
+                     }),
+                   ],
+                 }),
+                 ...Object.entries(period.notes).map(([matiere, note]) => new TableRow({
+                   children: [
+                     new TableCell({
+                       children: [new Paragraph(matiere)],
+                     }),
+                     new TableCell({
+                       children: [new Paragraph(`${(note as number).toFixed(2)} / 100`)],
+                     }),
+                   ],
+                 })),
+                 new TableRow({
+                   children: [
+                     new TableCell({
+                       children: [new Paragraph("Moyenne")],
+                       shading: { type: ShadingType.SOLID, color: "D3D3D3" },
+                     }),
+                     new TableCell({
+                       children: [new Paragraph(`${period.moyenne.toFixed(2)} / 100`)],
+                       shading: { type: ShadingType.SOLID, color: "D3D3D3" },
+                     }),
+                   ],
+                 }),
+               ];
+               const detailTable = new Table({
                  width: {
                    size: 100,
                    type: WidthType.PERCENTAGE,
@@ -411,74 +451,105 @@ export default function NewAdmin() {
                    insideHorizontal: { style: BorderStyle.SINGLE, size: 1 },
                    insideVertical: { style: BorderStyle.SINGLE, size: 1 },
                  },
-                 rows: [
+                 rows: detailRows,
+               });
+               yearContent.push(
+                 new Paragraph({
+                   children: [
+                     new TextRun({
+                       text: perName,
+                       bold: true,
+                       size: 20,
+                     }),
+                   ],
+                   spacing: { after: 100 },
+                 }),
+                 detailTable,
+                 new Paragraph({ spacing: { after: 200 } })
+               );
+             });
+             const summaryTable = new Table({
+               width: {
+                 size: 100,
+                 type: WidthType.PERCENTAGE,
+               },
+               borders: {
+                 top: { style: BorderStyle.SINGLE, size: 1 },
+                 bottom: { style: BorderStyle.SINGLE, size: 1 },
+                 left: { style: BorderStyle.SINGLE, size: 1 },
+                 right: { style: BorderStyle.SINGLE, size: 1 },
+                 insideHorizontal: { style: BorderStyle.SINGLE, size: 1 },
+                 insideVertical: { style: BorderStyle.SINGLE, size: 1 },
+               },
+               rows: [
+                 new TableRow({
+                   children: [
+                     new TableCell({
+                       children: [new Paragraph("Période")],
+                       width: { size: 50, type: WidthType.PERCENTAGE },
+                     }),
+                     new TableCell({
+                       children: [new Paragraph("Moyenne")],
+                       width: { size: 50, type: WidthType.PERCENTAGE },
+                     }),
+                   ],
+                 }),
+                 ...(year.periods.map((period: any, index: number) => {
+                   const perName = ['1ère période', '2ème période', '3ème période'][index];
+                   const moy = period.moyenne ?? 0;
+                   return new TableRow({
+                     children: [
+                       new TableCell({
+                         children: [new Paragraph(perName)],
+                       }),
+                       new TableCell({
+                         children: [new Paragraph(`${moy.toFixed(2)} / 100`)],
+                       }),
+                     ],
+                   });
+                 }) as any[]),
+                 new TableRow({
+                   children: [
+                     new TableCell({
+                       children: [new Paragraph("Moyenne générale")],
+                       shading: { type: ShadingType.SOLID, color: "D3D3D3" },
+                     }),
+                     new TableCell({
+                       children: [new Paragraph(`${genMoy.toFixed(2)} / 100`)],
+                       shading: { type: ShadingType.SOLID, color: "D3D3D3" },
+                     }),
+                   ],
+                 }),
+                 new TableRow({
+                   children: [
+                     new TableCell({
+                       children: [new Paragraph("Décision")],
+                       shading: { type: ShadingType.SOLID, color: "90EE90" },
+                     }),
+                     new TableCell({
+                       children: [new Paragraph(decision)],
+                       shading: { type: ShadingType.SOLID, color: "90EE90" },
+                     }),
+                   ],
+                 }),
+                 ...(mention ? [
                    new TableRow({
                      children: [
                        new TableCell({
-                         children: [new Paragraph("Période")],
-                         width: { size: 50, type: WidthType.PERCENTAGE },
+                         children: [new Paragraph("Mention")],
+                         shading: { type: ShadingType.SOLID, color: "FFFFE0" },
                        }),
                        new TableCell({
-                         children: [new Paragraph("Moyenne")],
-                         width: { size: 50, type: WidthType.PERCENTAGE },
+                         children: [new Paragraph(mention)],
+                         shading: { type: ShadingType.SOLID, color: "FFFFE0" },
                        }),
                      ],
-                   }),
-                   ...(year.periods.map((period: any, index: number) => {
-                     const perName = ['1ère période', '2ème période', '3ème période'][index];
-                     const moy = period.moyenne ?? 0;
-                     return new TableRow({
-                       children: [
-                         new TableCell({
-                           children: [new Paragraph(perName)],
-                         }),
-                         new TableCell({
-                           children: [new Paragraph(`${moy.toFixed(2)} / 100`)],
-                         }),
-                       ],
-                     });
-                   }) as any[]),
-                   new TableRow({
-                     children: [
-                       new TableCell({
-                         children: [new Paragraph("Moyenne générale")],
-                         shading: { type: ShadingType.SOLID, color: "D3D3D3" },
-                       }),
-                       new TableCell({
-                         children: [new Paragraph(`${genMoy.toFixed(2)} / 100`)],
-                         shading: { type: ShadingType.SOLID, color: "D3D3D3" },
-                       }),
-                     ],
-                   }),
-                   new TableRow({
-                     children: [
-                       new TableCell({
-                         children: [new Paragraph("Décision")],
-                         shading: { type: ShadingType.SOLID, color: "90EE90" },
-                       }),
-                       new TableCell({
-                         children: [new Paragraph(decision)],
-                         shading: { type: ShadingType.SOLID, color: "90EE90" },
-                       }),
-                     ],
-                   }),
-                   ...(mention ? [
-                     new TableRow({
-                       children: [
-                         new TableCell({
-                           children: [new Paragraph("Mention")],
-                           shading: { type: ShadingType.SOLID, color: "FFFFE0" },
-                         }),
-                         new TableCell({
-                           children: [new Paragraph(mention)],
-                           shading: { type: ShadingType.SOLID, color: "FFFFE0" },
-                         }),
-                       ],
-                     })
-                   ] : []),
-                 ],
-               }),
-             ];
+                   })
+                 ] : []),
+               ],
+             });
+             yearContent.push(summaryTable);
+             return yearContent;
            }),
          ],
        },
@@ -837,4 +908,4 @@ export default function NewAdmin() {
  </section>
  </div>
  );
-                            }
+}
