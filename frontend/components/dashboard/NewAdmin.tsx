@@ -508,7 +508,7 @@ export default function NewAdmin() {
  const genMoy = (p1 + p2 + p3) / 3;
  const avgPercent = genMoy;
  return (
- <div key={year.annee} className="space-y-6">
+ <div key={year.annee} className="space-y-6 mb-12">
  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 justify-center">
  {year.periods.map((period: any) => {
  if (Object.keys(period.notes).length === 0) {
@@ -563,7 +563,7 @@ export default function NewAdmin() {
  })}
  </div>
  {syntheseVisible && (
- <div className="mt-6">
+ <div className="mt-6 mb-12">
  <div className="bg-blue-50 p-6 rounded-lg shadow border border-blue-200">
  <h4 className="text-xl font-bold mb-4 text-center text-blue-800">ÉCOLE NORMALE D'INSTITUTEURS ET DE JARDINIÈRES D'ENFANTS (ENIJE)</h4>
  <h4 className="text-xl font-bold mb-4 text-center text-blue-800">Synthèse des résultats annuels</h4>
@@ -657,4 +657,4 @@ export default function NewAdmin() {
  </section>
  </div>
  );
- }
+               }
