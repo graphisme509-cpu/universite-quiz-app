@@ -351,7 +351,7 @@ export default function NewAdmin() {
            new Paragraph({
              children: [
                new TextRun({
-                 text: "Synthèse des résultats annuels",
+                 text: "Relevé de notes",
                  bold: true,
                  size: 28,
                  centering: { type: AlignmentType.CENTER },
@@ -429,11 +429,9 @@ export default function NewAdmin() {
                    children: [
                      new TableCell({
                        children: [new Paragraph("Moyenne")],
-                       shading: { type: ShadingType.SOLID, color: "D3D3D3" },
                      }),
                      new TableCell({
                        children: [new Paragraph(`${period.moyenne.toFixed(2)} / 100`)],
-                       shading: { type: ShadingType.SOLID, color: "D3D3D3" },
                      }),
                    ],
                  }),
@@ -512,11 +510,9 @@ export default function NewAdmin() {
                    children: [
                      new TableCell({
                        children: [new Paragraph("Moyenne générale")],
-                       shading: { type: ShadingType.SOLID, color: "D3D3D3" },
                      }),
                      new TableCell({
                        children: [new Paragraph(`${genMoy.toFixed(2)} / 100`)],
-                       shading: { type: ShadingType.SOLID, color: "D3D3D3" },
                      }),
                    ],
                  }),
@@ -524,11 +520,9 @@ export default function NewAdmin() {
                    children: [
                      new TableCell({
                        children: [new Paragraph("Décision")],
-                       shading: { type: ShadingType.SOLID, color: "90EE90" },
                      }),
                      new TableCell({
                        children: [new Paragraph(decision)],
-                       shading: { type: ShadingType.SOLID, color: "90EE90" },
                      }),
                    ],
                  }),
@@ -908,4 +902,4 @@ export default function NewAdmin() {
  </section>
  </div>
  );
-}
+   }
