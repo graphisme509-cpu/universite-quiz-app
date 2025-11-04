@@ -1,6 +1,19 @@
 // components/dashboard/NewAdmin.tsx
 
 import React, { useState, useEffect } from 'react';
+import {
+  Document,
+  Packer,
+  Paragraph,
+  TextRun,
+  Table,
+  TableRow,
+  TableCell,
+  AlignmentType,
+  BorderStyle,
+  WidthType,
+  ShadingType,
+} from 'docx';
 
 const API_BASE_URL = 'https://universite-quiz-app-production.up.railway.app';
 
@@ -317,6 +330,170 @@ export default function NewAdmin() {
  }
  };
 
+ const generateWordDocument = async () => {
+   if (!results) return;
+
+   const doc = new Document({
+     sections: [
+       {
+         properties: {},
+         children: [
+           new Paragraph({
+             children: [
+               new TextRun({
+                 text: "ÉCOLE NORMALE D'INSTITUTEURS ET DE JARDINIÈRES D'ENFANTS (ENIJE)",
+                 bold: true,
+                 size: 28,
+                 centering: { type: AlignmentType.CENTER },
+               }),
+             ],
+           }),
+           new Paragraph({
+             children: [
+               new TextRun({
+                 text: "Synthèse des résultats annuels",
+                 bold: true,
+                 size: 28,
+                 centering: { type: AlignmentType.CENTER },
+               }),
+             ],
+           }),
+           new Paragraph({
+             children: [
+               new TextRun({
+                 text: `Code de l'étudiante: ${selectedCode}`,
+                 size: 24,
+               }),
+             ],
+           }),
+           new Paragraph({
+             children: [
+               new TextRun({
+                 text: `Option: ${editingOption}`,
+                 size: 24,
+               }),
+             ],
+           }),
+           ...results.years.flatMap((year: any) => {
+             const p1 = year.periods[0]?.moyenne ?? 0;
+             const p2 = year.periods[1]?.moyenne ?? 0;
+             const p3 = year.periods[2]?.moyenne ?? 0;
+             const genMoy = (p1 + p2 + p3) / 3;
+             const avgPercent = genMoy;
+             const decision = avgPercent >= 60 ? 'Admise' : avgPercent >= 50 ? 'Reprise' : 'Non admise';
+             let mention = '';
+             if (avgPercent >= 60) {
+               if (avgPercent < 75) mention = 'Bien';
+               else if (avgPercent < 90) mention = 'Très bien';
+               else mention = 'Excellent';
+             }
+             return [
+               new Paragraph({
+                 children: [
+                   new TextRun({
+                     text: `Année académique: ${year.academicYear} - ${year.classe}`,
+                     bold: true,
+                     size: 24,
+                   }),
+                 ],
+                 spacing: { after: 200 },
+               }),
+               new Table({
+                 width: {
+                   size: 100,
+                   type: WidthType.PERCENTAGE,
+                 },
+                 borders: {
+                   top: { style: BorderStyle.SINGLE, size: 1 },
+                   bottom: { style: BorderStyle.SINGLE, size: 1 },
+                   left: { style: BorderStyle.SINGLE, size: 1 },
+                   right: { style: BorderStyle.SINGLE, size: 1 },
+                   insideHorizontal: { style: BorderStyle.SINGLE, size: 1 },
+                   insideVertical: { style: BorderStyle.SINGLE, size: 1 },
+                 },
+                 rows: [
+                   new TableRow({
+                     children: [
+                       new TableCell({
+                         children: [new Paragraph("Période")],
+                         width: { size: 50, type: WidthType.PERCENTAGE },
+                       }),
+                       new TableCell({
+                         children: [new Paragraph("Moyenne")],
+                         width: { size: 50, type: WidthType.PERCENTAGE },
+                       }),
+                     ],
+                   }),
+                   ...(year.periods.map((period: any, index: number) => {
+                     const perName = ['1ère période', '2ème période', '3ème période'][index];
+                     const moy = period.moyenne ?? 0;
+                     return new TableRow({
+                       children: [
+                         new TableCell({
+                           children: [new Paragraph(perName)],
+                         }),
+                         new TableCell({
+                           children: [new Paragraph(`${moy.toFixed(2)} / 100`)],
+                         }),
+                       ],
+                     });
+                   }) as any[]),
+                   new TableRow({
+                     children: [
+                       new TableCell({
+                         children: [new Paragraph("Moyenne générale")],
+                         shading: { type: ShadingType.SOLID, color: "D3D3D3" },
+                       }),
+                       new TableCell({
+                         children: [new Paragraph(`${genMoy.toFixed(2)} / 100`)],
+                         shading: { type: ShadingType.SOLID, color: "D3D3D3" },
+                       }),
+                     ],
+                   }),
+                   new TableRow({
+                     children: [
+                       new TableCell({
+                         children: [new Paragraph("Décision")],
+                         shading: { type: ShadingType.SOLID, color: "90EE90" },
+                       }),
+                       new TableCell({
+                         children: [new Paragraph(decision)],
+                         shading: { type: ShadingType.SOLID, color: "90EE90" },
+                       }),
+                     ],
+                   }),
+                   ...(mention ? [
+                     new TableRow({
+                       children: [
+                         new TableCell({
+                           children: [new Paragraph("Mention")],
+                           shading: { type: ShadingType.SOLID, color: "FFFFE0" },
+                         }),
+                         new TableCell({
+                           children: [new Paragraph(mention)],
+                           shading: { type: ShadingType.SOLID, color: "FFFFE0" },
+                         }),
+                       ],
+                     })
+                   ] : []),
+                 ],
+               }),
+             ];
+           }),
+         ],
+       },
+     ],
+   });
+
+   const blob = await Packer.toBlob(doc);
+   const url = URL.createObjectURL(blob);
+   const a = document.createElement('a');
+   a.href = url;
+   a.download = `${selectedCode}_resultats.docx`;
+   a.click();
+   URL.revokeObjectURL(url);
+ };
+
  if (!isLoggedIn) {
  return (
  <div className="max-w-md mx-auto p-8 bg-white rounded-xl shadow-lg border">
@@ -625,7 +802,10 @@ export default function NewAdmin() {
  </div>
  );
  })}
- <div className="mt-6 flex justify-center">
+ <div className="mt-6 flex space-x-4 justify-center">
+ <button onClick={generateWordDocument} className="bg-blue-600 text-white py-2 px-4 rounded-lg flex items-center justify-center hover:bg-blue-700">
+   Télécharger en Word
+ </button>
  <button onClick={() => handleDeleteStudent(selectedCode)} disabled={isDeleting} className="bg-red-600 text-white py-2 px-4 rounded-lg flex items-center justify-center">
  {isDeleting ? (
    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
@@ -657,4 +837,4 @@ export default function NewAdmin() {
  </section>
  </div>
  );
-               }
+                            }
