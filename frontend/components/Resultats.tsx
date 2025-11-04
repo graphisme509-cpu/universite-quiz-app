@@ -108,7 +108,7 @@ export default function Resultats({ user }: ResultatsProps) {
             <p className="text-lg font-medium text-gray-700">Option: <span className="text-green-700">{results.option}</span></p>
           </div>
           {(() => {
-            const maxPerSubject = 20; // Assumption: all subjects out of 20
+            const maxPerSubject = 100; // Assumption: all subjects out of 20
             const passingNote = maxPerSubject / 2;
 
             return results.years.map((year) => (
