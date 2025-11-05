@@ -78,7 +78,7 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
 
   return (
     <section className="w-full space-y-4 min-h-64">  {/* min-h anti-blanc, w-full pour pleine largeur */}
-      <h1 className="text-3xl font-bold text-slate-800 whitespace-nowrap">Classement général</h1>
+      <h1 className="text-3xl font-bold text-slate-800 whitespace-nowrap text-center">Classement général</h1>
       {classement.length === 0 ? (
         <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
           <p>Aucun score enregistré pour l'instant.</p>
@@ -91,8 +91,7 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
               <tr>
                 <th className="p-4 font-semibold text-gray-700 rounded-l-lg">Rang</th>
                 <th className="p-4 font-semibold text-gray-700">Utilisateur</th>
-                <th className="p-4 font-semibold text-gray-700 text-right">Score Total</th>
-                <th className="p-4 font-semibold text-gray-700 text-right">XP</th>
+                <th className="p-4 font-semibold text-gray-700 text-right">Score</th>
                 <th className="p-4 font-semibold text-gray-700 rounded-r-lg">Badges</th>
               </tr>
             </thead>
@@ -108,7 +107,6 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
                   </td>
                   <td className="p-4 font-semibold text-slate-800">{u.name || 'Anonyme'}</td>
                   <td className="p-4 text-right font-medium text-slate-900">{u.score}</td>
-                  <td className="p-4 text-right font-medium text-slate-900">{u.xp}</td>
                   <td className="p-4">
                     <div className="flex flex-wrap gap-1">
                       {u.badges && u.badges.length > 0 ? (
@@ -133,4 +131,4 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
       )}
     </section>
   );
-}
+                              }
