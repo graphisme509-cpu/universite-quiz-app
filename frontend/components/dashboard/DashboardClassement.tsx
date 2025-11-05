@@ -77,62 +77,60 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
   }
 
   return (
-    <section className="space-y-6 min-h-64">  {/* min-h anti-blanc */}
-      <h1 className="text-4xl font-bold text-slate-800">Classement Général</h1>
-      <div className="p-6 bg-white rounded-xl shadow-lg border border-gray-200">
-        {classement.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <p>Aucun score enregistré pour l'instant.</p>
-            <p className="text-sm mt-2">Passez des quiz pour grimper au classement !</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left min-w-full">
-              <thead className="bg-gray-100 text-sm text-gray-600 uppercase tracking-wider">
-                <tr>
-                  <th className="p-3 rounded-l-lg">Rang</th>
-                  <th className="p-3">Utilisateur</th>
-                  <th className="p-3 text-right">Score Total</th>
-                  <th className="p-3 text-right">XP</th>
-                  <th className="p-3 rounded-r-lg">Badges</th>
+    <section className="w-full space-y-4 min-h-64">  {/* min-h anti-blanc, w-full pour pleine largeur */}
+      <h1 className="text-3xl font-bold text-slate-800 whitespace-nowrap">Classement général</h1>
+      {classement.length === 0 ? (
+        <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
+          <p>Aucun score enregistré pour l'instant.</p>
+          <p className="text-sm mt-2">Passez des quiz pour grimper au classement !</p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto bg-white border border-gray-200 rounded-lg">
+          <table className="w-full text-left min-w-full">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="p-4 font-semibold text-gray-700 rounded-l-lg">Rang</th>
+                <th className="p-4 font-semibold text-gray-700">Utilisateur</th>
+                <th className="p-4 font-semibold text-gray-700 text-right">Score Total</th>
+                <th className="p-4 font-semibold text-gray-700 text-right">XP</th>
+                <th className="p-4 font-semibold text-gray-700 rounded-r-lg">Badges</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {classement.map((u: ClassementEntry) => (  // ← Explicit type pour safety
+                <tr key={u.rank} className={`hover:bg-gray-50 transition-colors ${u.name === user.name ? 'bg-green-50 border-l-4 border-green-400' : ''}`}>
+                  <td className="p-4">
+                    <span className={`font-bold text-lg ${
+                      u.rank <= 3 ? 'text-yellow-500' : 'text-green-700'
+                    }`}>
+                      #{u.rank}
+                    </span>
+                  </td>
+                  <td className="p-4 font-semibold text-slate-800">{u.name || 'Anonyme'}</td>
+                  <td className="p-4 text-right font-medium text-slate-900">{u.score}</td>
+                  <td className="p-4 text-right font-medium text-slate-900">{u.xp}</td>
+                  <td className="p-4">
+                    <div className="flex flex-wrap gap-1">
+                      {u.badges && u.badges.length > 0 ? (
+                        u.badges.map((b: string) => (
+                          <span 
+                            key={b} 
+                            className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded-full"
+                          >
+                            {b}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-gray-400 text-xs italic">Aucun badge</span>
+                      )}
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {classement.map((u: ClassementEntry) => (  // ← Explicit type pour safety
-                  <tr key={u.rank} className={`hover:bg-gray-50 ${u.name === user.name ? 'bg-green-50' : ''}`}>
-                    <td className="p-3">
-                      <span className={`font-bold text-lg ${
-                        u.rank <= 3 ? 'text-yellow-500' : 'text-green-700'
-                      }`}>
-                        #{u.rank}
-                      </span>
-                    </td>
-                    <td className="p-3 font-semibold text-slate-800">{u.name || 'Anonyme'}</td>
-                    <td className="p-3 text-right font-medium">{u.score}</td>
-                    <td className="p-3 text-right font-medium">{u.xp}</td>
-                    <td className="p-3">
-                      <div className="flex flex-wrap gap-1">
-                        {u.badges && u.badges.length > 0 ? (
-                          u.badges.map((b: string) => (
-                            <span 
-                              key={b} 
-                              className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded-full"
-                            >
-                              {b}
-                            </span>
-                          ))
-                        ) : (
-                          <span className="text-gray-400 text-xs italic">Aucun badge</span>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </section>
   );
-                                                                  }
+}
