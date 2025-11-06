@@ -90,8 +90,8 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="p-4 font-semibold text-gray-700 rounded-l-lg">Rang</th>
-                <th className="p-4 font-semibold text-gray-700">Utilisateur</th>
-                <th className="p-4 font-semibold text-gray-700 text-right">Score</th>
+                <th className="px-2 py-4 font-semibold text-gray-700">Utilisateur</th>
+                <th className="px-2 py-4 font-semibold text-gray-700 text-right">Score</th>
                 <th className="p-4 font-semibold text-gray-700 rounded-r-lg">Badges</th>
               </tr>
             </thead>
@@ -105,8 +105,8 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
                       #{u.rank}
                     </span>
                   </td>
-                  <td className="p-4 font-semibold text-slate-800">{u.name || 'Anonyme'}</td>
-                  <td className="p-4 text-right font-medium text-slate-900">{u.score}</td>
+                  <td className="px-2 py-4 font-semibold text-slate-800">{u.name || 'Anonyme'}</td>
+                  <td className="px-2 py-4 text-right font-medium text-slate-900">{u.score}</td>
                   <td className="p-4">
                     <div className="flex flex-wrap gap-1">
                       {u.badges && u.badges.length > 0 ? (
@@ -131,4 +131,4 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
       )}
     </section>
   );
-                              }
+                  }
