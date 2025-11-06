@@ -81,7 +81,7 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
         </div>
       ) : (
         <div className="overflow-x-auto bg-white border border-gray-200 rounded-lg">
-          <table className="w-full min-w-full text-center">
+          <table className="w-full min-w-full text-center border-separate border-spacing-0">
             <thead className="bg-gray-50 border-b border-gray-200 text-center">
               <tr>
                 <th className="p-1 font-semibold text-gray-700 rounded-l-lg text-center">Rang</th>
@@ -95,8 +95,9 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
               {classement.map((u: ClassementEntry) => (
                 <tr
                   key={u.rank}
-                  className={`hover:bg-gray-50 transition-colors 
-                  ${u.name === user.name ? 'bg-green-50 border-l-4 border-green-400 ring-2 ring-green-500' : ''}`}
+                  className={`hover:bg-gray-50 transition-colors ${
+                    u.name === user.name ? 'bg-green-50 border-l-4 border-green-500 ring-2 ring-green-600' : ''
+                  }`}
                 >
                   
                   <td className="p-1 align-middle text-center">
