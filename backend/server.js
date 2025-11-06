@@ -184,8 +184,15 @@ app.post('/api/auth/refresh', async (req, res) => {
   }
 });
 
-app.get('/api/auth/session', requireAuth, (req, res) => {
-    res.json({ user: req.user });
+app.get('/api/auth/session', requireAuth, async (req, res) => {
+  try {
+    const userFull = await pool.query('SELECT id, name, email FROM users WHERE id = $1', [req.user.id]);
+    if (userFull.rowCount === 0) return res.status(404).json({ message: 'User not found.' });
+    res.json({ user: userFull.rows[0] });
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ message: 'Error fetching user.' });
+  }
 });
 
 app.post('/api/auth/deconnexion', requireAuth, async (req, res) => {
