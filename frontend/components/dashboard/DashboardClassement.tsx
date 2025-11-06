@@ -93,7 +93,11 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
 
             <tbody className="divide-y divide-gray-100 align-middle text-center">
               {classement.map((u: ClassementEntry) => (
-                <tr key={u.rank} className={`hover:bg-gray-50 transition-colors ${u.name === user.name ? 'bg-green-50 border-l-4 border-green-400' : ''}`}>
+                <tr
+                  key={u.rank}
+                  className={`hover:bg-gray-50 transition-colors 
+                  ${u.name === user.name ? 'bg-green-50 border-l-4 border-green-400 ring-2 ring-green-500' : ''}`}
+                >
                   
                   <td className="p-1 align-middle text-center">
                     <span className={`font-bold text-lg ${u.rank <= 3 ? 'text-yellow-500' : 'text-green-700'}`}>
