@@ -8,14 +8,11 @@ interface DashboardClassementProps {
 const API_BASE_URL = 'https://universite-quiz-app-production.up.railway.app';
 
 export default function DashboardClassement({ user }: DashboardClassementProps) {
-  console.log('🔥 DashboardClassement MOUNTED - user:', user.name);
-
   const [classement, setClassement] = useState<ClassementEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    console.log('🚀 useEffect triggered - fetching classement');
     const fetchClassement = async () => {
       try {
         const res = await fetch(`${API_BASE_URL}/api/dashboard/classement`, { 
@@ -38,7 +35,6 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
         
         setClassement(parsedClassement);
       } catch (err: any) {
-        console.error('❌ Fetch error:', err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -91,27 +87,27 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-gray-100 align-middle text-center">
+            <tbody className="align-middle text-center">
               {classement.map((u: ClassementEntry) => {
                 const isCurrentUser = u.name === user.name;
-
                 return (
-                  <tr key={u.rank} className="hover:bg-gray-50 transition-colors">
-                    <td className={`p-1 align-middle text-center ${isCurrentUser ? 'bg-green-50 border border-green-500 rounded' : ''}`}>
+                  <tr key={u.rank} className={`hover:bg-gray-50 transition-colors ${isCurrentUser ? '' : 'divide-y divide-gray-100'}`}>
+                    
+                    <td className={`p-1 align-middle text-center ${isCurrentUser ? 'bg-green-50 ring-2 ring-green-500 rounded-lg' : ''}`}>
                       <span className={`font-bold text-lg ${u.rank <= 3 ? 'text-yellow-500' : 'text-green-700'}`}>
                         #{u.rank}
                       </span>
                     </td>
 
-                    <td className={`px-1 py-1 font-semibold text-slate-800 align-middle text-center ${isCurrentUser ? 'bg-green-50 border border-green-500 rounded' : ''}`}>
+                    <td className={`px-1 py-1 font-semibold text-slate-800 align-middle text-center ${isCurrentUser ? 'bg-green-50 ring-2 ring-green-500 rounded-lg' : ''}`}>
                       {u.name || 'Anonyme'}
                     </td>
 
-                    <td className={`px-1 py-1 font-medium text-slate-900 align-middle text-center ${isCurrentUser ? 'bg-green-50 border border-green-500 rounded' : ''}`}>
+                    <td className={`px-1 py-1 font-medium text-slate-900 align-middle text-center ${isCurrentUser ? 'bg-green-50 ring-2 ring-green-500 rounded-lg' : ''}`}>
                       {u.score}
                     </td>
 
-                    <td className={`p-1 align-middle text-center ${isCurrentUser ? 'bg-green-50 border border-green-500 rounded' : ''}`}>
+                    <td className={`p-1 align-middle text-center ${isCurrentUser ? 'bg-green-50 ring-2 ring-green-500 rounded-lg' : ''}`}>
                       <div className="flex flex-wrap gap-1 justify-center">
                         {u.badges && u.badges.length > 0 ? (
                           u.badges.map((b: string) => (
@@ -127,6 +123,7 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
                         )}
                       </div>
                     </td>
+
                   </tr>
                 );
               })}
