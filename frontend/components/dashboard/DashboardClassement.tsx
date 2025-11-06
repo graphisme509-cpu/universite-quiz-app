@@ -9,6 +9,7 @@ const API_BASE_URL = 'https://universite-quiz-app-production.up.railway.app';
 
 export default function DashboardClassement({ user }: DashboardClassementProps) {
   const [classement, setClassement] = useState<ClassementEntry[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -45,6 +46,10 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
     fetchClassement();
   }, []);
 
+  const filteredClassement = classement.filter(u =>
+    u.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   if (loading) {
     return (
       <div className="flex justify-center items-center p-8 min-h-64">
@@ -74,7 +79,17 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
         Classement général
       </h1>
 
-      {classement.length === 0 ? (
+      <div className="flex justify-center">
+        <input
+          type="text"
+          placeholder="Rechercher un utilisateur..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-64 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+        />
+      </div>
+
+      {filteredClassement.length === 0 ? (
         <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
           <p>Aucun score enregistré pour l'instant.</p>
           <p className="text-sm mt-2">Passez des quiz pour grimper au classement !</p>
@@ -92,13 +107,13 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
             </thead>
 
             <tbody className="align-middle text-center">
-              {classement.map((u: ClassementEntry) => {
+              {filteredClassement.map((u: ClassementEntry) => {
                 const isCurrentUser = u.name === user.name;
                 return (
                   <tr
                     key={u.rank}
-                    className={`hover:bg-gray-50 transition-colors ${
-                      isCurrentUser ? 'bg-green-50 shadow-inner rounded-lg' : 'divide-y divide-gray-100'
+                    className={`hover:bg-gray-50 transition-colors border-2 ${
+                      isCurrentUser ? 'bg-green-100 border-green-400' : 'border-transparent divide-y divide-gray-100'
                     }`}
                   >
                     <td className="p-1 align-middle text-center">
@@ -140,4 +155,4 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
       )}
     </section>
   );
-}
+          }
