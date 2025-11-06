@@ -8,28 +8,27 @@ interface DashboardClassementProps {
 const API_BASE_URL = 'https://universite-quiz-app-production.up.railway.app';
 
 export default function DashboardClassement({ user }: DashboardClassementProps) {
-  console.log('🔥 DashboardClassement MOUNTED - user:', user.name);  // ← Debug 1: Composant monte-t-il ?
+  console.log('🔥 DashboardClassement MOUNTED - user:', user.name);
 
   const [classement, setClassement] = useState<ClassementEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    console.log('🚀 useEffect triggered - fetching classement');  // ← Debug 2: Fetch lance-t-il ?
+    console.log('🚀 useEffect triggered - fetching classement');
     const fetchClassement = async () => {
       try {
         const res = await fetch(`${API_BASE_URL}/api/dashboard/classement`, { 
           credentials: 'include',
-          cache: 'no-store'  // Anti-cache
+          cache: 'no-store'
         });
-        console.log('📡 Response status:', res.status, res.ok);  // ← Debug 3: 200 ?
+        console.log('📡 Response status:', res.status, res.ok);
         if (!res.ok) throw new Error(`HTTP ${res.status}: Impossible de charger le classement.`);
         const data = await res.json();
-        console.log('📦 Raw data from API:', data, 'Type:', Array.isArray(data) ? 'Array' : typeof data);  // ← Debug 4: Array ou error ?
+        console.log('📦 Raw data from API:', data, 'Type:', Array.isArray(data) ? 'Array' : typeof data);
         if (data.error) throw new Error(data.error);
         if (!Array.isArray(data)) throw new Error('Données invalides (pas un array).');
         
-        // ← Parse si strings (comme notes)
         const parsedClassement = data.map((entry: any, idx: number) => ({
           ...entry,
           rank: Number(entry.rank) || idx + 1,
@@ -37,11 +36,11 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
           xp: Number(entry.xp) || 0,
           badges: Array.isArray(entry.badges) ? entry.badges : (entry.badges ? entry.badges.split(', ').filter(Boolean) : [])
         }));
-        console.log('✅ Parsed classement length:', parsedClassement.length);  // ← Debug 5
+        console.log('✅ Parsed classement length:', parsedClassement.length);
         
         setClassement(parsedClassement);
       } catch (err: any) {
-        console.error('❌ Fetch error full:', err);  // ← Log détaillé
+        console.error('❌ Fetch error full:', err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -49,13 +48,13 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
       }
     };
     fetchClassement();
-  }, []);  // Re-run si [user.id] pour refresh
+  }, []);
 
-  console.log('🎨 Rendering - loading:', loading, 'error:', error, 'classement len:', classement.length);  // ← Debug 6: Avant return
+  console.log('🎨 Rendering - loading:', loading, 'error:', error, 'classement len:', classement.length);
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center p-8 min-h-64">  {/* min-h pour éviter blanc */}
+      <div className="flex justify-center items-center p-8 min-h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-600 mr-2"></div>
         <span className="text-gray-600">Chargement du classement...</span>
       </div>
@@ -77,7 +76,7 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
   }
 
   return (
-    <section className="w-full space-y-4 min-h-64">  {/* min-h anti-blanc, w-full pour pleine largeur */}
+    <section className="w-full space-y-4 min-h-64">
       <h1 className="text-3xl font-bold text-slate-800 whitespace-nowrap text-center">Classement général</h1>
       {classement.length === 0 ? (
         <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
@@ -90,24 +89,22 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="p-4 font-semibold text-gray-700 rounded-l-lg">Rang</th>
-                <th className="px-2 py-4 font-semibold text-gray-700">Utilisateur</th>
-                <th className="px-2 py-4 font-semibold text-gray-700 text-left">Score</th>
+                <th className="px-4 py-3 font-semibold text-gray-700">Utilisateur</th>
+                <th className="px-4 py-3 font-semibold text-gray-700 text-left">Score</th>
                 <th className="p-4 font-semibold text-gray-700 rounded-r-lg">Badges</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
-              {classement.map((u: ClassementEntry) => (  // ← Explicit type pour safety
+            <tbody className="divide-y divide-gray-100 align-middle">
+              {classement.map((u: ClassementEntry) => (
                 <tr key={u.rank} className={`hover:bg-gray-50 transition-colors ${u.name === user.name ? 'bg-green-50 border-l-4 border-green-400' : ''}`}>
-                  <td className="p-4">
-                    <span className={`font-bold text-lg ${
-                      u.rank <= 3 ? 'text-yellow-500' : 'text-green-700'
-                    }`}>
+                  <td className="p-4 align-middle">
+                    <span className={`font-bold text-lg ${u.rank <= 3 ? 'text-yellow-500' : 'text-green-700'}`}>
                       #{u.rank}
                     </span>
                   </td>
-                  <td className="px-2 py-4 font-semibold text-slate-800 align-middle">{u.name || 'Anonyme'}</td>
-                  <td className="px-2 py-4 text-left font-medium text-slate-900 align-middle">{u.score}</td>
-                  <td className="p-4">
+                  <td className="px-4 py-3 font-semibold text-slate-800 align-middle">{u.name || 'Anonyme'}</td>
+                  <td className="px-4 py-3 text-left font-medium text-slate-900 align-middle">{u.score}</td>
+                  <td className="p-4 align-middle">
                     <div className="flex flex-wrap gap-1">
                       {u.badges && u.badges.length > 0 ? (
                         u.badges.map((b: string) => (
@@ -131,4 +128,4 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
       )}
     </section>
   );
-        }
+}
