@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { User, ClassementEntry } from '../../types';  // Vérifie types.ts : export interface ClassementEntry { rank: number; name: string; score: number; xp: number; badges: string[]; }
+import { User, ClassementEntry } from '../../types';
 
 interface DashboardClassementProps {
   user: User;
@@ -22,10 +22,9 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
           credentials: 'include',
           cache: 'no-store'
         });
-        console.log('📡 Response status:', res.status, res.ok);
+
         if (!res.ok) throw new Error(`HTTP ${res.status}: Impossible de charger le classement.`);
         const data = await res.json();
-        console.log('📦 Raw data from API:', data, 'Type:', Array.isArray(data) ? 'Array' : typeof data);
         if (data.error) throw new Error(data.error);
         if (!Array.isArray(data)) throw new Error('Données invalides (pas un array).');
         
@@ -36,21 +35,17 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
           xp: Number(entry.xp) || 0,
           badges: Array.isArray(entry.badges) ? entry.badges : (entry.badges ? entry.badges.split(', ').filter(Boolean) : [])
         }));
-        console.log('✅ Parsed classement length:', parsedClassement.length);
         
         setClassement(parsedClassement);
       } catch (err: any) {
-        console.error('❌ Fetch error full:', err);
+        console.error('❌ Fetch error:', err);
         setError(err.message);
       } finally {
         setLoading(false);
-        console.log('🏁 Loading set to false');
       }
     };
     fetchClassement();
   }, []);
-
-  console.log('🎨 Rendering - loading:', loading, 'error:', error, 'classement len:', classement.length);
 
   if (loading) {
     return (
@@ -78,6 +73,7 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
   return (
     <section className="w-full space-y-4 min-h-64">
       <h1 className="text-3xl font-bold text-slate-800 whitespace-nowrap text-center">Classement général</h1>
+
       {classement.length === 0 ? (
         <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
           <p>Aucun score enregistré pour l'instant.</p>
@@ -85,27 +81,36 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
         </div>
       ) : (
         <div className="overflow-x-auto bg-white border border-gray-200 rounded-lg">
-          <table className="w-full text-left min-w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
+          <table className="w-full min-w-full text-center">
+            <thead className="bg-gray-50 border-b border-gray-200 text-center">
               <tr>
-                <th className="p-4 font-semibold text-gray-700 rounded-l-lg">Rang</th>
-                <th className="px-4 py-3 font-semibold text-gray-700">Utilisateur</th>
-                <th className="px-4 py-3 font-semibold text-gray-700 text-left">Score</th>
-                <th className="p-4 font-semibold text-gray-700 rounded-r-lg">Badges</th>
+                <th className="p-4 font-semibold text-gray-700 rounded-l-lg text-center">Rang</th>
+                <th className="px-4 py-3 font-semibold text-gray-700 text-center">Utilisateur</th>
+                <th className="px-4 py-3 font-semibold text-gray-700 text-center">Score</th>
+                <th className="p-4 font-semibold text-gray-700 rounded-r-lg text-center">Badges</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 align-middle">
+
+            <tbody className="divide-y divide-gray-100 align-middle text-center">
               {classement.map((u: ClassementEntry) => (
                 <tr key={u.rank} className={`hover:bg-gray-50 transition-colors ${u.name === user.name ? 'bg-green-50 border-l-4 border-green-400' : ''}`}>
-                  <td className="p-4 align-middle">
+                  
+                  <td className="p-4 align-middle text-center">
                     <span className={`font-bold text-lg ${u.rank <= 3 ? 'text-yellow-500' : 'text-green-700'}`}>
                       #{u.rank}
                     </span>
                   </td>
-                  <td className="px-4 py-3 font-semibold text-slate-800 align-middle">{u.name || 'Anonyme'}</td>
-                  <td className="px-4 py-3 text-left font-medium text-slate-900 align-middle">{u.score}</td>
-                  <td className="p-4 align-middle">
-                    <div className="flex flex-wrap gap-1">
+
+                  <td className="px-4 py-3 font-semibold text-slate-800 align-middle text-center">
+                    {u.name || 'Anonyme'}
+                  </td>
+
+                  <td className="px-4 py-3 font-medium text-slate-900 align-middle text-center">
+                    {u.score}
+                  </td>
+
+                  <td className="p-4 align-middle text-center">
+                    <div className="flex flex-wrap gap-1 justify-center">
                       {u.badges && u.badges.length > 0 ? (
                         u.badges.map((b: string) => (
                           <span 
@@ -120,6 +125,7 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
                       )}
                     </div>
                   </td>
+
                 </tr>
               ))}
             </tbody>
