@@ -84,10 +84,10 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
           <table className="w-full min-w-full text-center">
             <thead className="bg-gray-50 border-b border-gray-200 text-center">
               <tr>
-                <th className="p-4 font-semibold text-gray-700 rounded-l-lg text-center">Rang</th>
-                <th className="px-4 py-3 font-semibold text-gray-700 text-center">Utilisateur</th>
-                <th className="px-4 py-3 font-semibold text-gray-700 text-center">Score</th>
-                <th className="p-4 font-semibold text-gray-700 rounded-r-lg text-center">Badges</th>
+                <th className="p-1 font-semibold text-gray-700 rounded-l-lg text-center">Rang</th>
+                <th className="px-1 py-1 font-semibold text-gray-700 text-center">Utilisateur</th>
+                <th className="px-1 py-1 font-semibold text-gray-700 text-center">Score</th>
+                <th className="p-1 font-semibold text-gray-700 rounded-r-lg text-center">Badges</th>
               </tr>
             </thead>
 
@@ -95,21 +95,21 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
               {classement.map((u: ClassementEntry) => (
                 <tr key={u.rank} className={`hover:bg-gray-50 transition-colors ${u.name === user.name ? 'bg-green-50 border-l-4 border-green-400' : ''}`}>
                   
-                  <td className="p-4 align-middle text-center">
+                  <td className="p-1 align-middle text-center">
                     <span className={`font-bold text-lg ${u.rank <= 3 ? 'text-yellow-500' : 'text-green-700'}`}>
                       #{u.rank}
                     </span>
                   </td>
 
-                  <td className="px-4 py-3 font-semibold text-slate-800 align-middle text-center">
+                  <td className="px-1 py-1 font-semibold text-slate-800 align-middle text-center">
                     {u.name || 'Anonyme'}
                   </td>
 
-                  <td className="px-4 py-3 font-medium text-slate-900 align-middle text-center">
+                  <td className="px-1 py-1 font-medium text-slate-900 align-middle text-center">
                     {u.score}
                   </td>
 
-                  <td className="p-4 align-middle text-center">
+                  <td className="p-1 align-middle text-center">
                     <div className="flex flex-wrap gap-1 justify-center">
                       {u.badges && u.badges.length > 0 ? (
                         u.badges.map((b: string) => (
