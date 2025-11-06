@@ -92,47 +92,44 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
             </thead>
 
             <tbody className="divide-y divide-gray-100 align-middle text-center">
-              {classement.map((u: ClassementEntry) => (
-                <tr
-                  key={u.rank}
-                  className={`hover:bg-gray-50 transition-colors ${
-                    u.name === user.name ? 'bg-green-50 border-l-4 border-green-500 ring-2 ring-green-600' : ''
-                  }`}
-                >
-                  
-                  <td className="p-1 align-middle text-center">
-                    <span className={`font-bold text-lg ${u.rank <= 3 ? 'text-yellow-500' : 'text-green-700'}`}>
-                      #{u.rank}
-                    </span>
-                  </td>
+              {classement.map((u: ClassementEntry) => {
+                const isCurrentUser = u.name === user.name;
 
-                  <td className="px-1 py-1 font-semibold text-slate-800 align-middle text-center">
-                    {u.name || 'Anonyme'}
-                  </td>
+                return (
+                  <tr key={u.rank} className="hover:bg-gray-50 transition-colors">
+                    <td className={`p-1 align-middle text-center ${isCurrentUser ? 'bg-green-50 border border-green-500 rounded' : ''}`}>
+                      <span className={`font-bold text-lg ${u.rank <= 3 ? 'text-yellow-500' : 'text-green-700'}`}>
+                        #{u.rank}
+                      </span>
+                    </td>
 
-                  <td className="px-1 py-1 font-medium text-slate-900 align-middle text-center">
-                    {u.score}
-                  </td>
+                    <td className={`px-1 py-1 font-semibold text-slate-800 align-middle text-center ${isCurrentUser ? 'bg-green-50 border border-green-500 rounded' : ''}`}>
+                      {u.name || 'Anonyme'}
+                    </td>
 
-                  <td className="p-1 align-middle text-center">
-                    <div className="flex flex-wrap gap-1 justify-center">
-                      {u.badges && u.badges.length > 0 ? (
-                        u.badges.map((b: string) => (
-                          <span 
-                            key={b} 
-                            className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded-full"
-                          >
-                            {b}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="text-gray-400 text-xs italic">Aucun badge</span>
-                      )}
-                    </div>
-                  </td>
+                    <td className={`px-1 py-1 font-medium text-slate-900 align-middle text-center ${isCurrentUser ? 'bg-green-50 border border-green-500 rounded' : ''}`}>
+                      {u.score}
+                    </td>
 
-                </tr>
-              ))}
+                    <td className={`p-1 align-middle text-center ${isCurrentUser ? 'bg-green-50 border border-green-500 rounded' : ''}`}>
+                      <div className="flex flex-wrap gap-1 justify-center">
+                        {u.badges && u.badges.length > 0 ? (
+                          u.badges.map((b: string) => (
+                            <span 
+                              key={b} 
+                              className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded-full"
+                            >
+                              {b}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-gray-400 text-xs italic">Aucun badge</span>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
