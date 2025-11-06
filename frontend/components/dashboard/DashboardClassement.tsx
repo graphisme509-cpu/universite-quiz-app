@@ -30,7 +30,9 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
           rank: Number(entry.rank) || idx + 1,
           score: Number(entry.score) || 0,
           xp: Number(entry.xp) || 0,
-          badges: Array.isArray(entry.badges) ? entry.badges : (entry.badges ? entry.badges.split(', ').filter(Boolean) : [])
+          badges: Array.isArray(entry.badges)
+            ? entry.badges
+            : (entry.badges ? entry.badges.split(', ').filter(Boolean) : [])
         }));
         
         setClassement(parsedClassement);
@@ -68,7 +70,9 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
 
   return (
     <section className="w-full space-y-4 min-h-64">
-      <h1 className="text-3xl font-bold text-slate-800 whitespace-nowrap text-center">Classement général</h1>
+      <h1 className="text-3xl font-bold text-slate-800 whitespace-nowrap text-center">
+        Classement général
+      </h1>
 
       {classement.length === 0 ? (
         <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
@@ -91,23 +95,27 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
               {classement.map((u: ClassementEntry) => {
                 const isCurrentUser = u.name === user.name;
                 return (
-                  <tr key={u.rank} className={`hover:bg-gray-50 transition-colors ${isCurrentUser ? '' : 'divide-y divide-gray-100'}`}>
-                    
-                    <td className={`p-1 align-middle text-center ${isCurrentUser ? 'bg-green-50 ring-2 ring-green-500 rounded-lg' : ''}`}>
+                  <tr
+                    key={u.rank}
+                    className={`hover:bg-gray-50 transition-colors ${
+                      isCurrentUser ? 'bg-green-50 shadow-inner rounded-lg' : 'divide-y divide-gray-100'
+                    }`}
+                  >
+                    <td className="p-1 align-middle text-center">
                       <span className={`font-bold text-lg ${u.rank <= 3 ? 'text-yellow-500' : 'text-green-700'}`}>
                         #{u.rank}
                       </span>
                     </td>
 
-                    <td className={`px-1 py-1 font-semibold text-slate-800 align-middle text-center ${isCurrentUser ? 'bg-green-50 ring-2 ring-green-500 rounded-lg' : ''}`}>
+                    <td className="px-1 py-1 font-semibold text-slate-800 align-middle text-center">
                       {u.name || 'Anonyme'}
                     </td>
 
-                    <td className={`px-1 py-1 font-medium text-slate-900 align-middle text-center ${isCurrentUser ? 'bg-green-50 ring-2 ring-green-500 rounded-lg' : ''}`}>
+                    <td className="px-1 py-1 font-medium text-slate-900 align-middle text-center">
                       {u.score}
                     </td>
 
-                    <td className={`p-1 align-middle text-center ${isCurrentUser ? 'bg-green-50 ring-2 ring-green-500 rounded-lg' : ''}`}>
+                    <td className="p-1 align-middle text-center">
                       <div className="flex flex-wrap gap-1 justify-center">
                         {u.badges && u.badges.length > 0 ? (
                           u.badges.map((b: string) => (
@@ -123,7 +131,6 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
                         )}
                       </div>
                     </td>
-
                   </tr>
                 );
               })}
