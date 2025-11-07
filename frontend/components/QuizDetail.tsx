@@ -1,250 +1,846 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import express from 'express';
+import dotenv from 'dotenv';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import { Pool } from 'pg';
+import { z } from 'zod';
+import { nanoid } from 'nanoid';
+import pino from 'pino';
+import pinoHttp from 'pino-http';
+import promClient from 'prom-client';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const API_BASE_URL = 'https://universite-quiz-app-production.up.railway.app';
+dotenv.config();
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-interface Option {
-  text: string;
+const app = express();
+const PORT = process.env.PORT || 3000;
+const logger = pino({ level: process.env.NODE_ENV === 'production' ? 'info' : 'debug' });
+app.use(pinoHttp({ logger }));
+
+// DB Pool (scalabilité)
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+
+app.set('trust proxy', 1); // fait confiance au proxy de la plateforme
+
+// Middlewares Sécurité/Scalabilité
+app.use(helmet());
+app.use(cors({
+  origin: ['https://universite-quiz-app.vercel.app'], // 🔒 domaine précis du front
+  credentials: true
+}));
+app.use(express.json({ limit: '100kb' }));
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+
+// Rate Limits
+const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20 });
+const quizLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
+app.use('/api/auth', authLimiter);
+app.use('/api/quiz', quizLimiter);
+
+// Prometheus (monitoring)
+const register = new promClient.Registry();
+promClient.collectDefaultMetrics({ register });
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', register.contentType);
+  res.end(await register.metrics());
+});
+
+// Utils
+const normalizeEmail = (email) => email.trim().toLowerCase();
+const daysFromNow = (days) => new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+
+function passwordStrength(pw, { email, name }) {
+  const issues = [];
+  if (pw.length < 8) issues.push('8 caractères min.');
+  if (!/[a-z]/.test(pw)) issues.push('Minuscule.');
+  if (!/[A-Z]/.test(pw)) issues.push('Majuscule.');
+  if (!/[0-9]/.test(pw)) issues.push('Chiffre.');
+  if (!/[^\w\s]/.test(pw)) issues.push('Symbole.');
+  const parts = [...(email ? email.split(/[@._-]/) : []), ...(name ? name.split(/\s+/) : [])].map(s => s.toLowerCase()).filter(s => s.length >= 3);
+  if (parts.some(p => pw.toLowerCase().includes(p))) issues.push('Pas nom/email.');
+  if (/0123|1234|abcd|qwerty|password/i.test(pw)) issues.push('Évitez séquences évidentes.');
+  return { ok: issues.length === 0, issues };
 }
 
-interface Question {
-  key_name: string;
-  question: string;
-  options: Option[];
-  correct_index: number;
-  explanation?: string;
+const signupSchema = z.object({ nom: z.string().min(2).max(100).trim(), email: z.string().email().trim(), motdepasse: z.string().min(8).max(72) });
+const loginSchema = z.object({ email: z.string().email().trim(), motdepasse: z.string().min(1) });
+
+// JWT
+const ACCESS_TOKEN_TTL_MIN = process.env.ACCESS_TOKEN_TTL_MIN || 15;
+const REFRESH_TOKEN_TTL_DAYS = process.env.REFRESH_TOKEN_TTL_DAYS || 7;
+
+function signAccessToken(user) { return jwt.sign({ sub: String(user.id), email: user.email }, process.env.JWT_ACCESS_SECRET, { expiresIn: `${ACCESS_TOKEN_TTL_MIN}m` }); }
+function signRefreshToken(user) { return jwt.sign({ sub: String(user.id) }, process.env.JWT_REFRESH_SECRET, { expiresIn: `${REFRESH_TOKEN_TTL_DAYS}d` }); }
+
+function setAuthCookies(res, access, refresh) {
+  const isProd = process.env.NODE_ENV === 'production';
+  res.cookie('access_token', access, { 
+    httpOnly: true, 
+    secure: true,
+    path: '/',
+    sameSite: 'none',  // ⚠️ change ici
+    maxAge: ACCESS_TOKEN_TTL_MIN * 6000 * 1000 
+  });
+  res.cookie('refresh_token', refresh, { 
+    httpOnly: true, 
+    secure: true,
+    path: '/',
+    sameSite: 'none',  // ⚠️ change ici
+    maxAge: REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000 
+  });
 }
 
-interface Quiz {
-  id: number;
-  name: string;
-  questions: Question[];
+function clearAuthCookies(res) {
+  const isProd = process.env.NODE_ENV === 'production';
+  res.clearCookie('access_token', { httpOnly: true, path: '/', secure: true, sameSite: 'none' });
+  res.clearCookie('refresh_token', { httpOnly: true, path: '/', secure: true, sameSite: 'none' });
 }
 
-export default function QuizDetail() {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const [quiz, setQuiz] = useState<Quiz | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [answers, setAnswers] = useState<Record<string, number>>({});
-  const [submitted, setSubmitted] = useState(false);
-  const [resultMessage, setResultMessage] = useState('');
-  const [score, setScore] = useState<number | null>(null);
-  const [submitting, setSubmitting] = useState(false); // Pour spinner soumission
-  const [navigating, setNavigating] = useState(false); // Pour spinner retour
-  const [totalHistoricalScore, setTotalHistoricalScore] = useState(0);
+// Middleware Auth
+async function requireAuth(req, res, next) {
+  try {
+    const token = req.cookies?.access_token;
+    if (!token) return res.status(401).json({ message: 'Non authentifié.' });
+    const payload = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
+    req.user = { id: Number(payload.sub), email: payload.email };
+    next();
+  } catch {
+    res.status(401).json({ message: 'Token invalide.' });
+  }
+}
 
-  // Charger le quiz
-  useEffect(() => {
-    const loadQuiz = async () => {
-      if (!id) {
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      setError(''); // Reset error
-
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/dashboard/quizzes`, { credentials: 'include' });
-        if (!res.ok) {
-          throw new Error(`Erreur HTTP ${res.status}: ${res.statusText}`);
-        }
-        const data: Quiz[] = await res.json();
-        const parsedId = parseInt(id, 10);
-        const found = data.find(q => q.id === parsedId);
-        if (!found) throw new Error("Quiz introuvable.");
-        setQuiz(found);
-      } catch (err: any) {
-        setError(err.message || 'Une erreur est survenue lors du chargement.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadQuiz();
-  }, [id]);
-
-  // Charger le score total historique pour ce quiz
-  useEffect(() => {
-    const fetchTotalForQuiz = async () => {
-      if (!quiz) return;
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/dashboard/user-quiz-total/${quiz.id}`, { credentials: 'include' });
-        if (res.ok) {
-          const data = await res.json();
-          setTotalHistoricalScore(data.total || 0);
-        }
-      } catch (err) {
-        console.error('Erreur fetch total:', err);
-      }
-    };
-
-    fetchTotalForQuiz();
-  }, [quiz]);
-
-  // Sélection d'une réponse
-  const handleSelect = (questionKey: string, optionIndex: number) => {
-    if (submitted) return;
-    setAnswers(prev => ({ ...prev, [questionKey]: optionIndex }));
-  };
-
-  // Réessayer le quiz
-  const handleRetry = () => {
-    setAnswers({});
-    setSubmitted(false);
-    setResultMessage('');
-    setScore(null);
-  };
-
-  // Vérifie si toutes les questions ont une réponse
-  const allAnswered = quiz && quiz.questions.every(q => answers.hasOwnProperty(q.key_name));
-
-  // Soumission et calcul du score
-  const handleSubmit = async () => {
-    if (!quiz || !allAnswered || submitting) return;
-
-    setSubmitting(true);
-
-    // Calcul local du score
-    let points = 0;
-    quiz.questions.forEach(q => {
-      if (answers[q.key_name] === q.correct_index) points++;
-    });
-    const total = quiz.questions.length;
-    const percent = Math.round((points / total) * 100);
-    setScore(points);
-
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/quiz/${quiz.name}`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ answers, score: percent }),
-      });
-
-      if (!res.ok) throw new Error('Erreur serveur');
-      const text = await res.text();
-      setResultMessage(`Score : ${points}/${total} (${percent}%) — ${text}`);
-      setSubmitted(true);
-    } catch {
-      setResultMessage('Erreur serveur lors de la soumission.');
-    } finally {
-      setSubmitting(false);
+// Fonctions pour badges (appelées après soumission quiz)
+async function awardSingleBadge(pool, userId, badgeName) {
+  try {
+    const badgeRes = await pool.query('SELECT id FROM badges WHERE name ILIKE $1', [badgeName]);
+    if (badgeRes.rowCount === 0) return;
+    const badgeId = badgeRes.rows[0].id;
+    const existsRes = await pool.query('SELECT 1 FROM user_badges WHERE user_id=$1 AND badge_id=$2', [userId, badgeId]);
+    if (existsRes.rowCount === 0) {
+      await pool.query('INSERT INTO user_badges (user_id, badge_id) VALUES ($1, $2)', [userId, badgeId]);
     }
-  };
+  } catch (err) {
+    logger.error('Erreur attribution badge:', err);
+  }
+}
 
-  // Retour au dashboard avec spinner
-  const handleBackToDashboard = () => {
-    if (navigating) return;
-    setNavigating(true);
-    navigate('/dashboard');
-  };
+async function awardBadges(userId, quizId, score, totalQuestions) {
+  try {
+    const quizRes = await pool.query('SELECT matiere FROM quizzes WHERE id=$1', [quizId]);
+    if (quizRes.rowCount === 0) return;
+    const matiere = quizRes.rows[0].matiere;
 
-  // États d’attente
-  if (loading) return <p className="p-8 text-center">Chargement du quiz...</p>;
-  if (error) return <p className="p-8 text-center text-red-600">{error}</p>;
-  if (!quiz) return <p className="p-8 text-center">Aucun quiz trouvé.</p>;
+    // Débutant : première soumission
+    const scoreCountRes = await pool.query('SELECT COUNT(*)::int as cnt FROM scores WHERE user_id=$1', [userId]);
+    const totalScoreCount = scoreCountRes.rows[0].cnt;
+    if (totalScoreCount === 1) {
+      await awardSingleBadge(pool, userId, 'Débutant');
+    }
 
-  return (
-    <div className="max-w-3xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">{quiz.name}</h1>
-      <p className="mb-4 p-2 bg-blue-50 rounded text-center">Votre score cumulé pour ce quiz : {totalHistoricalScore} points</p>
+    // Maître Maths : 5+ quizzes maths parfaits
+    if (matiere === 'maths' && score === totalQuestions) {
+      const perfectCountRes = await pool.query(`
+        SELECT COUNT(*)::int as cnt 
+        FROM scores s 
+        JOIN quizzes q ON s.quiz_id = q.id 
+        JOIN (SELECT quiz_id, COUNT(*)::int as qcount FROM questions GROUP BY quiz_id) qq ON s.quiz_id = qq.quiz_id
+        WHERE s.user_id = $1 AND q.matiere = $2 AND s.score = qq.qcount
+      `, [userId, 'maths']);
+      const perfectCount = perfectCountRes.rows[0].cnt;
+      if (perfectCount >= 5) {
+        await awardSingleBadge(pool, userId, 'Maître Maths');
+      }
+    }
 
-      {quiz.questions.map((q, i) => (
-        <div
-          key={q.key_name}
-          className="mb-6 p-4 border rounded-lg bg-white shadow-sm transition-all"
-        >
-          <p className="font-semibold mb-2">{i + 1}. {q.question}</p>
-          <ul className="space-y-2">
-            {q.options.map((opt, j) => {
-              const isSelected = answers[q.key_name] === j;
-              const isCorrect = submitted && j === q.correct_index;
-              const isWrong = submitted && isSelected && j !== q.correct_index;
+    // Expert : XP >= 400
+    const xpRes = await pool.query('SELECT xp FROM users WHERE id=$1', [userId]);
+    const xp = xpRes.rows[0]?.xp || 0;
+    if (xp >= 400) {
+      await awardSingleBadge(pool, userId, 'Expert');
+    }
+  } catch (err) {
+    logger.error('Erreur awardBadges:', err);
+  }
+}
 
-              return (
-                <li
-                  key={j}
-                  onClick={() => handleSelect(q.key_name, j)}
-                  className={`p-2 rounded border cursor-pointer transition
-                    ${isSelected ? 'border-blue-400' : 'border-gray-200'}
-                    ${isCorrect ? 'bg-green-200 border-green-400' : ''}
-                    ${isWrong ? 'bg-red-200 border-red-400' : ''}
-                    ${!isCorrect && !isWrong && !isSelected ? 'bg-gray-50 hover:bg-gray-100' : ''}
-                  `}
-                >
-                  {opt.text}
-                </li>
-              );
-            })}
-          </ul>
+// Routes Auth (Inscription/Connexion unifiées)
+app.post('/api/auth/inscription', async (req, res) => {
+  try {
+    const { nom, email, motdepasse } = signupSchema.parse(req.body);
+    const emailNorm = normalizeEmail(email);
+    const strength = passwordStrength(motdepasse, { email: emailNorm, name: nom });
+    if (!strength.ok) return res.status(400).json({ message: 'Mot de passe faible', details: strength.issues });
+    const exists = await pool.query('SELECT 1 FROM users WHERE LOWER(email) = $1', [emailNorm]);
+    if (exists.rowCount > 0) return res.status(409).json({ message: 'Email utilisé.' });
+    const passwordHash = await bcrypt.hash(motdepasse, 12);
+    const insert = await pool.query(
+      'INSERT INTO users (name, email, password_hash, email_verified) VALUES ($1, $2, $3, TRUE) RETURNING id, name, email, created_at',
+      [nom, emailNorm, passwordHash]
+    );
+    const user = insert.rows[0];
+    res.status(201).json({ message: 'Inscription OK.', user: {id: user.id, name: user.name, email: user.email} });
+  } catch (err) {
+    if (err.code === '23505') return res.status(409).json({ message: 'Email utilisé.' });
+    logger.error(err);
+    res.status(500).json({ message: 'Erreur serveur.' });
+  }
+});
 
-          {submitted && q.explanation && (
-            <p className="mt-2 text-sm text-gray-700 italic">
-              Explication : {q.explanation}
-            </p>
-          )}
-        </div>
-      ))}
+app.post('/api/auth/connexion', async (req, res) => {
+  try {
+    const { email, motdepasse } = loginSchema.parse(req.body);
+    const emailNorm = normalizeEmail(email);
+    const q = await pool.query('SELECT * FROM users WHERE LOWER(email) = $1', [emailNorm]);
+    if (q.rowCount === 0 || !await bcrypt.compare(motdepasse, q.rows[0].password_hash)) {
+      return res.status(401).json({ message: 'Identifiants invalides.' });
+    }
+    const user = q.rows[0];
+    const accessToken = signAccessToken(user);
+    const refreshToken = signRefreshToken(user);
+    const refreshExp = daysFromNow(REFRESH_TOKEN_TTL_DAYS);
+    await pool.query('INSERT INTO refresh_tokens (token, user_id, expires_at) VALUES ($1, $2, $3) ON CONFLICT (token) DO NOTHING', [refreshToken, user.id, refreshExp]);
+    setAuthCookies(res, accessToken, refreshToken);
+    res.json({ message: 'Connexion OK.', user: { id: user.id, name: user.name, email: user.email } });
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ message: 'Erreur.' });
+  }
+});
 
-      {resultMessage && (
-        <div className="p-4 bg-gray-100 rounded mb-4 text-center font-medium">
-          {resultMessage}
-        </div>
-      )}
+app.post('/api/auth/refresh', async (req, res) => {
+  try {
+    const rToken = req.cookies?.refresh_token;
+    if (!rToken) return res.status(401).json({ message: 'Refresh manquant.' });
+    const payload = jwt.verify(rToken, process.env.JWT_REFRESH_SECRET);
+    const q = await pool.query('SELECT rt.token, rt.expires_at, u.* FROM refresh_tokens rt JOIN users u ON u.id = rt.user_id WHERE rt.token = $1', [rToken]);
+    if (q.rowCount === 0 || new Date(q.rows[0].expires_at) < new Date()) {
+        if(q.rowCount > 0) await pool.query('DELETE FROM refresh_tokens WHERE token = $1', [rToken]);
+        return res.status(401).json({ message: 'Refresh invalide.' });
+    }
+    await pool.query('DELETE FROM refresh_tokens WHERE token = $1', [rToken]);
+    const user = q.rows[0];
+    const newRefresh = signRefreshToken(user);
+    const newAccess = signAccessToken(user);
+    const refreshExp = daysFromNow(REFRESH_TOKEN_TTL_DAYS);
+    await pool.query('INSERT INTO refresh_tokens (token, user_id, expires_at) VALUES ($1, $2, $3)', [newRefresh, user.id, refreshExp]);
+    setAuthCookies(res, newAccess, newRefresh);
+    res.json({ message: 'Rafraîchi.', user: { id: user.id, name: user.name, email: user.email } });
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ message: 'Erreur.' });
+  }
+});
 
-      <div className="flex justify-center gap-4 mt-6">
-        {!submitted ? (
-          <button
-            onClick={handleSubmit}
-            disabled={!allAnswered || submitting}
-            className={`h-12 w-48 rounded-lg text-white font-medium transition flex items-center justify-center
-              ${allAnswered && !submitting
-                ? 'bg-green-600 hover:bg-green-700 cursor-pointer'
-                : 'bg-gray-400 cursor-not-allowed'
-              }`}
-          >
-            {submitting ? (
-              <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-            ) : (
-              'Soumettre le quiz'
-            )}
-          </button>
-        ) : (
-          <button
-            onClick={handleRetry}
-            className="h-12 w-48 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center justify-center font-medium"
-          >
-            Recommencer le quiz
-          </button>
-        )}
+app.get('/api/auth/session', requireAuth, async (req, res) => {
+  try {
+    const userFull = await pool.query('SELECT id, name, email FROM users WHERE id = $1', [req.user.id]);
+    if (userFull.rowCount === 0) return res.status(404).json({ message: 'User not found.' });
+    res.json({ user: userFull.rows[0] });
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ message: 'Error fetching user.' });
+  }
+});
 
-        <button
-          onClick={handleBackToDashboard}
-          disabled={navigating}
-          className={`h-12 w-48 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition flex items-center justify-center`}
-        >
-          {navigating ? (
-            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          ) : (
-            'Retour au Dashboard'
-          )}
-        </button>
-      </div>
+app.post('/api/auth/deconnexion', requireAuth, async (req, res) => {
+  const rToken = req.cookies?.refresh_token;
+  if (rToken) await pool.query('DELETE FROM refresh_tokens WHERE token = $1', [rToken]);
+  clearAuthCookies(res);
+  res.json({ message: 'Déconnecté.' });
+});
 
-      {!submitted && !allAnswered && (
-        <p className="mt-2 text-sm text-red-600 text-center">
-          Répondez à toutes les questions pour pouvoir soumettre le quiz.
-        </p>
-      )}
-    </div>
-  );
+// Routes Contact
+app.post('/api/contact', async (req, res) => {
+  const { nom, email, message } = req.body;
+  if (!nom || !email || !message) return res.status(400).json({ success: false, error: 'Champs requis.' });
+  logger.info({ contactForm: { nom, email, message } }, 'Nouveau message de contact reçu');
+  res.json({ success: true });
+});
+
+// New Settings Endpoint (public, no auth)
+app.get('/api/settings/synthese-visible', async (req, res) => {
+  try {
+    const q = await pool.query('SELECT setting_value FROM app_settings WHERE setting_key = $1', ['synthese_visible']);
+    const visible = q.rowCount > 0 ? q.rows[0].setting_value : true; // Default to visible
+    res.json({ visible });
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ error: 'Erreur lors de la récupération du paramètre.' });
+  }
+});
+
+// Routes Résultats 
+// Pour un code étudiant spécifique (ex: recherche publique)
+// Pour un code étudiant spécifique (ex: recherche publique)
+// Route POST /api/resultats : Recherche par code étudiant (publique, mais auth required)
+// Route POST /api/resultats : Recherche par code étudiant (publique, mais auth required)
+// Route POST /api/resultats : Recherche par code étudiant (publique, mais auth required)
+// Route POST /api/resultats : Recherche par code étudiant (publique, mais auth required)
+// Route POST /api/resultats : Recherche par code étudiant (publique, mais auth required)
+
+app.post('/api/resultats', requireAuth, async (req, res) => {
+  const { code } = req.body;
+  if (!code) return res.status(400).json({ success: false, message: 'Code manquant.' });
+  try {
+    let years = [];
+    let option = '';
+    let userId = null;
+    const periodNames = { 1: '1ère période', 2: '2ème période', 3: '3ème période' };
+    const academicYears = { 1: '2022-2023', 2: '2023-2024', 3: '2024-2025' };
+    const classes = { 1: '1ère année', 2: '2ème année', 3: '3ème année' };
+
+    // Interroger toutes les tables pour les 3 années, inclure même si pas de notes (moyenne=0 si pas de ligne)
+    for (let a = 1; a <= 3; a++) {
+      let yearAcademicYear = academicYears[a];
+      let periods = [];
+      for (let p = 1; p <= 3; p++) {
+        const table = `resultats_${a}_${p}`;
+        const q = await pool.query(`SELECT user_id, notes, moyenne, option, academic_year FROM ${table} WHERE code_etudiant = $1`, [code]);
+        let notesObj = {};
+        let moyenne = 0;
+        if (q.rowCount > 0) {
+          notesObj = q.rows[0].notes || {};
+          moyenne = parseFloat(q.rows[0].moyenne) || 0;
+
+          if (q.rows[0].user_id && !userId) {
+            userId = q.rows[0].user_id;
           }
+          if (q.rows[0].user_id === null && !option && q.rows[0].option) {
+            option = q.rows[0].option;
+          }
+          if (q.rows[0].academic_year && yearAcademicYear === academicYears[a]) {
+            yearAcademicYear = q.rows[0].academic_year;
+          }
+
+          // Calculer moyenne si non fournie ou incohérente
+          const noteValues = Object.values(notesObj).map(n => typeof n === 'number' ? n : 0);
+          const calculatedMoy = noteValues.length > 0 ? noteValues.reduce((acc, val) => acc + val, 0) / noteValues.length : 0;
+          if (moyenne === 0 || Math.abs(moyenne - calculatedMoy) > 0.01) {
+            moyenne = calculatedMoy;
+          }
+        }
+        periods.push({
+          periode: p,
+          title: periodNames[p],
+          notes: notesObj,
+          moyenne: moyenne
+        });
+      }
+      if (periods.some(p => Object.keys(p.notes).length > 0 || p.moyenne > 0)) {
+        years.push({
+          annee: a,
+          academicYear: yearAcademicYear,
+          classe: classes[a],
+          periods: periods.sort((a, b) => a.periode - b.periode)
+        });
+      }
+    }
+
+    if (years.length === 0) return res.status(404).json({ success: false, message: 'Aucun résultat trouvé pour ce code.' });
+
+    if (userId) {
+      const userQ = await pool.query('SELECT option FROM users WHERE id = $1', [userId]);
+      if (userQ.rowCount === 0) return res.status(404).json({ success: false, message: 'Utilisateur non trouvé.' });
+      option = userQ.rows[0].option || '';
+    }
+
+    res.json({ success: true, results: { option, years } });
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ success: false, message: 'Erreur DB.' });
+  }
+});
+
+app.get('/api/resultats', requireAuth, async (req, res) => {
+  try {
+    // Récupérer l'option de l'utilisateur
+    const userQ = await pool.query('SELECT option FROM users WHERE id = $1', [req.user.id]);
+    if (userQ.rowCount === 0) return res.status(404).json({ success: false, message: "Utilisateur non trouvé." });
+    const option = userQ.rows[0].option || '';
+
+    let years = [];
+    const periodNames = { 1: '1ère période', 2: '2ème période', 3: '3ème période' };
+    const academicYears = { 1: '2022-2023', 2: '2023-2024', 3: '2024-2025' };
+    const classes = { 1: '1ère année', 2: '2ème année', 3: '3ème année' };
+
+    // Interroger toutes les tables pour les 3 années, inclure même si pas de notes (moyenne=0 si pas de ligne)
+    for (let a = 1; a <= 3; a++) {
+      let periods = [];
+      for (let p = 1; p <= 3; p++) {
+        const table = `resultats_${a}_${p}`;
+        const q = await pool.query(`SELECT notes, moyenne FROM ${table} WHERE user_id = $1`, [req.user.id]);
+        let notesObj = {};
+        let moyenne = 0;
+        if (q.rowCount > 0) {
+          notesObj = q.rows[0].notes || {};
+          moyenne = parseFloat(q.rows[0].moyenne) || 0;
+
+          // Calculer moyenne si non fournie ou incohérente
+          const noteValues = Object.values(notesObj).map(n => typeof n === 'number' ? n : 0);
+          const calculatedMoy = noteValues.length > 0 ? noteValues.reduce((acc, val) => acc + val, 0) / noteValues.length : 0;
+          if (moyenne === 0 || Math.abs(moyenne - calculatedMoy) > 0.01) {
+            moyenne = calculatedMoy;
+          }
+        }
+        periods.push({
+          periode: p,
+          title: periodNames[p],
+          notes: notesObj,
+          moyenne: moyenne
+        });
+      }
+      if (periods.some(p => Object.keys(p.notes).length > 0 || p.moyenne > 0)) {
+        years.push({
+          annee: a,
+          academicYear: academicYears[a],
+          classe: classes[a],
+          periods: periods.sort((a, b) => a.periode - b.periode)
+        });
+      }
+    }
+
+    res.json({ success: true, results: { option, years } });
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ success: false, message: 'Erreur DB.' });
+  }
+});
+
+// Admin Notes
+const ADMIN_CODE = process.env.ADMIN_CODE;
+const tokens = new Map();
+const TOKEN_TTL = 3600000;
+function createAdminToken() {
+  const t = nanoid(32);
+  tokens.set(t, Date.now() + TOKEN_TTL);
+  return t;
+}
+function verifyAdminToken(t) {
+  if (!t || !tokens.has(t) || Date.now() > tokens.get(t)) {
+    tokens.delete(t);
+    return false;
+  }
+  tokens.set(t, Date.now() + TOKEN_TTL);
+  return true;
+}
+setInterval(() => { for (const [t, exp] of tokens) if (Date.now() > exp) tokens.delete(t); }, 600000);
+
+app.post('/api/admin/login', (req, res) => {
+  const { code } = req.body;
+  if (code !== ADMIN_CODE) return res.json({ success: false, message: 'Code invalide.' });
+  const token = createAdminToken();
+  res.json({ success: true, token });
+});
+
+app.post('/api/admin/save-notes', async (req, res) => {
+  const auth = req.headers.authorization?.match(/^Bearer (.+)$/);
+  if (!verifyAdminToken(auth?.[1])) return res.status(401).json({ success: false, message: 'Token admin invalide.', code: 'INVALID_TOKEN' });
+  const { code, math, physique, info, moyenne } = req.body;
+  if (!code || math === undefined || physique === undefined || info === undefined) return res.status(400).json({ success: false, message: 'Données incomplètes.' });
+  const m = moyenne ? parseFloat(moyenne) : (parseFloat(math) + parseFloat(physique) + parseFloat(info)) / 3;
+  try {
+    await pool.query(
+      'INSERT INTO resultats (code_etudiant, math, physique, info, moyenne) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (code_etudiant) DO UPDATE SET math=$2, physique=$3, info=$4, moyenne=$5, updated_at=NOW()',
+      [code, math, physique, info, Math.round(m * 100) / 100]
+    );
+    res.json({ success: true, message: 'Notes sauvées.' });
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ success: false, message: 'Erreur DB.' });
+  }
+});
+
+// New Admin Toggle Endpoint
+app.post('/api/admin/toggle-synthese', async (req, res) => {
+  const auth = req.headers.authorization?.match(/^Bearer (.+)$/);
+  if (!verifyAdminToken(auth?.[1])) return res.status(401).json({ success: false, message: 'Token admin invalide.' });
+  const { visible } = req.body;
+  if (visible === undefined) return res.status(400).json({ success: false, message: 'Valeur visible manquante.' });
+  try {
+    await pool.query(
+      'INSERT INTO app_settings (setting_key, setting_value) VALUES ($1, $2) ON CONFLICT (setting_key) DO UPDATE SET setting_value = $2',
+      ['synthese_visible', !!visible]
+    );
+    res.json({ success: true, visible: !!visible });
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ success: false, message: 'Erreur lors de la mise à jour.' });
+  }
+});
+
+// server.js (correction dans la route /api/quiz/:quizName)
+app.post('/api/quiz/:quizName', requireAuth, quizLimiter, async (req, res) => {
+  const { quizName } = req.params;
+  const { answers: userAnswers } = req.body;  // Correction : extraire 'answers' du body
+  const client = await pool.connect();
+  try {
+      await client.query('BEGIN');
+      const quizRes = await client.query('SELECT id FROM quizzes WHERE name=$1', [quizName]);
+      if (quizRes.rowCount === 0) throw new Error('Quiz inconnu.');
+      const quizId = quizRes.rows[0].id;
+      const questionsRes = await client.query('SELECT id, key_name, correct_index FROM questions WHERE quiz_id=$1', [quizId]);
+      let bonnes = 0;
+      const total = questionsRes.rowCount;
+      for (const q of questionsRes.rows) {
+        const userAnswerIndex = userAnswers[q.key_name] ?? -1;  // Correction : gérer l'absence de réponse (défaut -1)
+        const isCorrect = userAnswerIndex == q.correct_index;
+        if (isCorrect) bonnes++;
+        // Correction : ajuster la requête pour 6 paramètres ($1 à $6) et VALUES avec $6 pour completion_time
+        await client.query('INSERT INTO quiz_sessions (user_id, quiz_id, question_id, user_answer, correct, completion_time) VALUES ($1, $2, $3, $4, $5, $6)',
+          [req.user.id, quizId, q.id, String(userAnswerIndex), isCorrect, 10]);
+      }
+      await client.query('INSERT INTO scores (user_id, quiz_id, score) VALUES ($1, $2, $3)', [req.user.id, quizId, bonnes]);
+      await client.query('COMMIT');
+      res.send(`Bonne${bonnes > 1 ? 's' : ''} : ${bonnes}/${total}. Score enregistré.`);
+    } catch(err) {
+        await client.query('ROLLBACK');
+        logger.error(err);
+        res.status(500).send('Erreur serveur.');
+    } finally {
+        client.release();
+    }
+
+    // Attribution badges après transaction
+    try {
+      await awardBadges(req.user.id, quizId, bonnes, total);
+    } catch (err) {
+      logger.error('Erreur lors de l\'attribution des badges:', err);
+    }
+});
+
+// Nouvelle route pour score total historique d'un quiz utilisateur
+app.get('/api/dashboard/user-quiz-total/:quizId', requireAuth, async (req, res) => {
+  const { quizId } = req.params;
+  try {
+    const totalRes = await pool.query('SELECT COALESCE(SUM(score), 0) as total FROM scores WHERE user_id=$1 AND quiz_id=$2', [req.user.id, quizId]);
+    res.json({ total: parseInt(totalRes.rows[0].total) });
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ error: 'Erreur récupération total.' });
+  }
+});
+
+// Routes Dashboard
+
+// Middleware anti-cache pour toutes les routes du dashboard
+app.use('/api/dashboard', (req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  res.set('Surrogate-Control', 'no-store');
+  next();
+});
+
+app.get('/api/dashboard/stats', requireAuth, async (req, res) => {
+  try {
+    const stats = await pool.query(`
+      SELECT 
+        (SELECT COUNT(*) FROM users) as totalUsers,
+        (SELECT COUNT(*) FROM quizzes) as totalQuiz,
+        (SELECT COUNT(*) FROM scores) as totalScores,
+        AVG(completion_time) as avgTime FROM quiz_sessions
+    `);
+    const monthly = await pool.query("SELECT to_char(date_trunc('month', completed_at), 'YYYY-MM') as month, AVG(score) as avg FROM scores GROUP BY month ORDER BY month");
+    res.json({
+      totalUsers: stats.rows[0].totalusers,
+      totalQuiz: stats.rows[0].totalquiz,
+      totalScores: stats.rows[0].totalscores,
+      avgTime: Math.round(stats.rows[0].avgtime || 0),
+      monthlyLabels: monthly.rows.map(r => r.month),
+      monthlyScores: monthly.rows.map(r => parseFloat(r.avg || 0).toFixed(2))
+    });
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ error: 'Erreur stats.' });
+  }
+});
+
+app.get('/api/dashboard/classement', requireAuth, async (req, res) => {
+  try {
+    const classement = await pool.query(`
+      SELECT u.name, COALESCE(SUM(s.score), 0) as score, u.xp,
+        (SELECT string_agg(b.name, ', ') FROM user_badges ub JOIN badges b ON ub.badge_id = b.id WHERE ub.user_id = u.id) as badges
+      FROM users u LEFT JOIN scores s ON u.id = s.user_id
+      GROUP BY u.id, u.name, u.xp ORDER BY score DESC, xp DESC LIMIT 50
+    `);
+    res.json(classement.rows.map((row, idx) => ({ ...row, rank: idx + 1, badges: row.badges ? row.badges.split(', ') : [] })));
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ error: 'Erreur classement.' });
+  }
+});
+
+app.get('/api/dashboard/progression', requireAuth, async (req, res) => {
+  try {
+    const user = await pool.query('SELECT xp FROM users WHERE id = $1', [req.user.id]);
+    const xp = user.rows[0]?.xp || 0;
+    const level = Math.floor(xp / 100) + 1;
+    const badges = await pool.query('SELECT b.name FROM user_badges ub JOIN badges b ON ub.badge_id = b.id WHERE ub.user_id = $1', [req.user.id]);
+    const feedbacks = await pool.query(`
+      SELECT q.question, qs.user_answer, qs.correct, q.explanation
+      FROM quiz_sessions qs JOIN questions q ON qs.question_id = q.id
+      WHERE qs.user_id = $1 ORDER BY qs.completed_at DESC LIMIT 5
+    `, [req.user.id]);
+    const matieres = await pool.query('SELECT q.matiere, AVG(s.score) as avg FROM scores s JOIN quizzes q ON s.quiz_id = q.id WHERE s.user_id = $1 GROUP BY q.matiere', [req.user.id]);
+    res.json({
+      xp: xp,
+      level,
+      levelName: level < 2 ? 'Novice' : level < 5 ? 'Apprenti' : level < 10 ? 'Connaisseur' : 'Maître',
+      badges: badges.rows.map(r => r.name),
+      feedbacks: feedbacks.rows,
+      matiereLabels: matieres.rows.map(r => r.matiere),
+      matiereScores: matieres.rows.map(r => Math.round(r.avg || 0))
+    });
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ error: 'Erreur progression.' });
+  }
+});
+
+// Renvoie TOUS les quiz pour que les utilisateurs puissent les passer
+app.get('/api/dashboard/quizzes', requireAuth, async (req, res) => {
+  try {
+    const quizzes = await pool.query(`
+      SELECT q.id, q.name, q.matiere, COUNT(que.id)::int as questions_count,
+        json_agg(json_build_object('key_name', que.key_name, 'question', que.question, 'options', que.options, 'correct_index', que.correct_index, 'explanation', que.explanation)) as questions
+      FROM quizzes q LEFT JOIN questions que ON q.id = que.quiz_id GROUP BY q.id ORDER BY q.name
+    `);
+    res.json(quizzes.rows.map(r => ({ ...r, questions: r.questions[0] === null ? [] : r.questions })));
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ error: 'Erreur quizzes.' });
+  }
+});
+
+// Routes nouvelles:
+
+const classeToAnnee = {
+ '1ère année': 1,
+ '2ème année': 2,
+ '3ème année': 3,
+};
+const periodeToNum = {
+ '1ère période': 1,
+ '2ème période': 2,
+ '3ème période': 3,
+};
+
+app.get('/api/admin/matieres', async (req, res) => {
+ const auth = req.headers.authorization?.match(/^Bearer (.+)$/);
+ if (!verifyAdminToken(auth?.[1])) return res.status(401).json({ success: false, message: 'Token invalide.' });
+ try {
+ const q = await pool.query('SELECT classe, periode, matieres FROM matieres_predefinies');
+ res.json(q.rows);
+ } catch (err) {
+ logger.error(err);
+ res.status(500).json({ success: false });
+ }
+});
+
+app.post('/api/admin/matieres', async (req, res) => {
+ const auth = req.headers.authorization?.match(/^Bearer (.+)$/);
+ if (!verifyAdminToken(auth?.[1])) return res.status(401).json({ success: false, message: 'Token invalide.' });
+ const { classe, periode, matieres } = req.body;
+ try {
+ await pool.query(
+ 'INSERT INTO matieres_predefinies (classe, periode, matieres) VALUES ($1, $2, $3) ON CONFLICT (classe, periode) DO UPDATE SET matieres = $3',
+ [classe, periode, matieres]
+ );
+ res.json({ success: true });
+ } catch (err) {
+ logger.error(err);
+ res.status(500).json({ success: false });
+ }
+});
+
+app.post('/api/admin/update-results', async (req, res) => {
+ const auth = req.headers.authorization?.match(/^Bearer (.+)$/);
+ if (!verifyAdminToken(auth?.[1])) return res.status(401).json({ success: false, message: 'Token invalide.' });
+ const { code, option, academicYear, classe, periode, notes } = req.body;
+ if (!code || !classe || !periode) return res.status(400).json({ success: false, message: 'Données incomplètes.' });
+ const annee = classeToAnnee[classe];
+ const perNum = periodeToNum[periode];
+ if (!annee || !perNum) return res.status(400).json({ success: false, message: 'Classe ou période invalide.' });
+ const table = `resultats_${annee}_${perNum}`;
+ const noteValues = Object.values(notes).map(Number);
+ const moyenne = noteValues.length > 0 ? noteValues.reduce((a, b) => a + b, 0) / noteValues.length : 0;
+ try {
+ await pool.query(
+ `INSERT INTO ${table} (code_etudiant, option, academic_year, notes, moyenne, user_id) VALUES ($1, $2, $3, $4, $5, NULL) ON CONFLICT (code_etudiant) DO UPDATE SET option=$2, academic_year=$3, notes=$4, moyenne=$5, updated_at=NOW()`,
+ [code, option, academicYear, notes, moyenne]
+ );
+ res.json({ success: true });
+ } catch (err) {
+ logger.error(err);
+ res.status(500).json({ success: false });
+ }
+});
+
+app.get('/api/admin/students', async (req, res) => {
+ const auth = req.headers.authorization?.match(/^Bearer (.+)$/);
+ if (!verifyAdminToken(auth?.[1])) return res.status(401).json({ success: false, message: 'Token invalide.' });
+ try {
+ const q = await pool.query(`
+ SELECT DISTINCT code_etudiant FROM resultats_1_1
+ UNION SELECT DISTINCT code_etudiant FROM resultats_1_2
+ UNION SELECT DISTINCT code_etudiant FROM resultats_1_3
+ UNION SELECT DISTINCT code_etudiant FROM resultats_2_1
+ UNION SELECT DISTINCT code_etudiant FROM resultats_2_2
+ UNION SELECT DISTINCT code_etudiant FROM resultats_2_3
+ UNION SELECT DISTINCT code_etudiant FROM resultats_3_1
+ UNION SELECT DISTINCT code_etudiant FROM resultats_3_2
+ UNION SELECT DISTINCT code_etudiant FROM resultats_3_3
+ `);
+ res.json(q.rows.map(r => r.code_etudiant));
+ } catch (err) {
+ logger.error(err);
+ res.status(500).json({ success: false });
+ }
+});
+
+app.get('/api/admin/get-results', async (req, res) => {
+ const auth = req.headers.authorization?.match(/^Bearer (.+)$/);
+ if (!verifyAdminToken(auth?.[1])) return res.status(401).json({ success: false, message: 'Token invalide.' });
+ const { code } = req.query;
+ if (!code) return res.status(400).json({ success: false, message: 'Code manquant.' });
+ // Le code ici est similaire à app.post('/api/resultats', ...) mais sans requireAuth, et avec query au lieu de body.
+ // Pour éviter duplication, vous pouvez extraire la logique en fonction, mais comme demandé "nouvelles routes", voici le code (copié/adapté).
+ try {
+ let years = [];
+ let option = '';
+ const periodNames = { 1: '1ère période', 2: '2ème période', 3: '3ème période' };
+ const academicYears = { 1: '2022-2023', 2: '2023-2024', 3: '2024-2025' };
+ const classes = { 1: '1ère année', 2: '2ème année', 3: '3ème année' };
+ let userId = null;
+ let firstOption = '';
+ let firstAcademic = new Map();
+
+ for (let a = 1; a <= 3 && !userId; a++) {
+ for (let p = 1; p <= 3 && !userId; p++) {
+ const table = `resultats_${a}_${p}`;
+ const q = await pool.query(`SELECT user_id, notes, moyenne, option, academic_year FROM ${table} WHERE code_etudiant = $1`, [code]);
+ if (q.rowCount > 0) {
+ userId = q.rows[0].user_id;
+ if (!firstOption) firstOption = q.rows[0].option || '';
+ firstAcademic.set(a, q.rows[0].academic_year || academicYears[a]);
+ }
+ }
+ }
+
+ if (!firstOption && !userId) return res.status(404).json({ success: false, message: 'Aucun résultat trouvé.' });
+
+ if (userId) {
+ const userQ = await pool.query('SELECT option FROM users WHERE id = $1', [userId]);
+ option = userQ.rowCount > 0 ? userQ.rows[0].option || '' : firstOption;
+ } else {
+ option = firstOption;
+ }
+
+ for (let a = 1; a <= 3; a++) {
+ let periods = [];
+ for (let p = 1; p <= 3; p++) {
+ const table = `resultats_${a}_${p}`;
+ const q = await pool.query(`SELECT notes, moyenne FROM ${table} WHERE code_etudiant = $1`, [code]);
+ let notesObj = {};
+ let moyenne = 0;
+ if (q.rowCount > 0) {
+ notesObj = q.rows[0].notes || {};
+ moyenne = parseFloat(q.rows[0].moyenne) || 0;
+ const noteValues = Object.values(notesObj).map(Number);
+ const calculatedMoy = noteValues.length > 0 ? noteValues.reduce((acc, val) => acc + val, 0) / noteValues.length : 0;
+ if (moyenne === 0 || Math.abs(moyenne - calculatedMoy) > 0.01) {
+ moyenne = calculatedMoy;
+ }
+ }
+ periods.push({
+ periode: p,
+ title: periodNames[p],
+ notes: notesObj,
+ moyenne: moyenne
+ });
+ }
+ if (periods.some(p => Object.keys(p.notes).length > 0 || p.moyenne > 0)) {
+ years.push({
+ annee: a,
+ academicYear: firstAcademic.get(a),
+ classe: classes[a],
+ periods: periods.sort((a, b) => a.periode - b.periode)
+ });
+ }
+ }
+
+ res.json({ success: true, results: { option, years } });
+ } catch (err) {
+ logger.error(err);
+ res.status(500).json({ success: false, message: 'Erreur DB.' });
+ }
+});
+
+app.post('/api/admin/update-field', async (req, res) => {
+ const auth = req.headers.authorization?.match(/^Bearer (.+)$/);
+ if (!verifyAdminToken(auth?.[1])) return res.status(401).json({ success: false, message: 'Token invalide.' });
+ const { code, field, value, annee, periode, matiere } = req.body;
+ if (!code || !field) return res.status(400).json({ success: false });
+ try {
+ if (field === 'note') {
+ if (!annee || !periode || !matiere) return res.status(400).json({ success: false });
+ const table = `resultats_${annee}_${periode}`;
+ const q = await pool.query(`SELECT notes FROM ${table} WHERE code_etudiant = $1`, [code]);
+ let currentNotes = q.rowCount > 0 ? q.rows[0].notes || {} : {};
+ currentNotes[matiere] = Number(value);
+ const noteValues = Object.values(currentNotes).map(Number);
+ const moyenne = noteValues.length > 0 ? noteValues.reduce((a, b) => a + b, 0) / noteValues.length : 0;
+ await pool.query(`UPDATE ${table} SET notes = $1, moyenne = $2, updated_at=NOW() WHERE code_etudiant = $3`, [currentNotes, moyenne, code]);
+ } else if (field === 'option') {
+ for (let a = 1; a <= 3; a++) {
+ for (let p = 1; p <= 3; p++) {
+ const table = `resultats_${a}_${p}`;
+ await pool.query(`UPDATE ${table} SET option = $1, updated_at=NOW() WHERE code_etudiant = $2`, [value, code]);
+ }
+ }
+ } else if (field === 'academicYear') {
+ if (!annee) return res.status(400).json({ success: false });
+ for (let p = 1; p <= 3; p++) {
+ const table = `resultats_${annee}_${p}`;
+ await pool.query(`UPDATE ${table} SET academic_year = $1, updated_at=NOW() WHERE code_etudiant = $2`, [value, code]);
+ }
+ }
+ res.json({ success: true });
+ } catch (err) {
+ logger.error(err);
+ res.status(500).json({ success: false });
+ }
+});
+
+app.delete('/api/admin/student/:code', async (req, res) => {
+ const auth = req.headers.authorization?.match(/^Bearer (.+)$/);
+ if (!verifyAdminToken(auth?.[1])) return res.status(401).json({ success: false, message: 'Token invalide.' });
+ const { code } = req.params;
+ try {
+ for (let a = 1; a <= 3; a++) {
+ for (let p = 1; p <= 3; p++) {
+ const table = `resultats_${a}_${p}`;
+ await pool.query(`DELETE FROM ${table} WHERE code_etudiant = $1`, [code]);
+ }
+ }
+ res.json({ success: true });
+ } catch (err) {
+ logger.error(err);
+ res.status(500).json({ success: false });
+ }
+});
+
+// Servir le front-end
+// app.use(express.static(path.join(__dirname, '../dist')));
+// app.get('*', (req, res) => {
+//    res.sendFile(path.join(__dirname, '../dist/index.html'));
+// });
+
+app.listen(PORT, () => logger.info(`Serveur unifié sur http://localhost:${PORT}`));
