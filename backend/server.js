@@ -498,6 +498,14 @@ app.post('/api/quiz/:quizName', requireAuth, quizLimiter, async (req, res) => {
       }
       await client.query('INSERT INTO scores (user_id, quiz_id, score) VALUES ($1, $2, $3)', [req.user.id, quizId, bonnes]);
       await client.query('COMMIT');
+
+      // Attribution badges après COMMIT (dans un sous-try pour isoler les erreurs)
+      try {
+        await awardBadges(req.user.id, quizId, bonnes, total);
+      } catch (badgeErr) {
+        logger.error('Erreur lors de l\'attribution des badges:', badgeErr);
+      }
+
       res.send(`Bonne${bonnes > 1 ? 's' : ''} : ${bonnes}/${total}. Score enregistré.`);
     } catch(err) {
         await client.query('ROLLBACK');
@@ -505,13 +513,6 @@ app.post('/api/quiz/:quizName', requireAuth, quizLimiter, async (req, res) => {
         res.status(500).send('Erreur serveur.');
     } finally {
         client.release();
-    }
-
-    // Attribution badges après transaction
-    try {
-      await awardBadges(req.user.id, quizId, bonnes, total);
-    } catch (err) {
-      logger.error('Erreur lors de l\'attribution des badges:', err);
     }
 });
 
