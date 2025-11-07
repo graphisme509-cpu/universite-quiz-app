@@ -50,6 +50,19 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
     u.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Ordre de supériorité des badges (du plus bas au plus haut)
+  const badgeOrder = ['Débutant', 'Amateur', 'Pro', 'Expert', 'Maître'];
+
+  // Fonction pour trouver le badge le plus élevé
+  const getHighestBadge = (badges: string[]) => {
+    for (let i = badgeOrder.length - 1; i >= 0; i--) {
+      if (badges.includes(badgeOrder[i])) {
+        return badgeOrder[i];
+      }
+    }
+    return null;
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center p-8 min-h-64">
@@ -102,13 +115,14 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
                 <th className="p-1 font-semibold text-gray-700 rounded-l-lg text-center">Rang</th>
                 <th className="px-1 py-1 font-semibold text-gray-700 text-center">Utilisateur</th>
                 <th className="px-1 py-1 font-semibold text-gray-700 text-center">Score</th>
-                <th className="p-1 font-semibold text-gray-700 rounded-r-lg text-center">Badges</th>
+                <th className="p-1 font-semibold text-gray-700 rounded-r-lg text-center">Badge</th>
               </tr>
             </thead>
 
             <tbody className="align-middle text-center">
               {filteredClassement.map((u: ClassementEntry) => {
                 const isCurrentUser = u.name === user.name;
+                const highestBadge = getHighestBadge(u.badges);
                 return (
                   <tr
                     key={u.rank}
@@ -132,15 +146,13 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
 
                     <td className="p-1 align-middle text-center">
                       <div className="flex flex-wrap gap-1 justify-center">
-                        {u.badges && u.badges.length > 0 ? (
-                          u.badges.map((b: string) => (
-                            <span 
-                              key={b} 
-                              className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded-full"
-                            >
-                              {b}
-                            </span>
-                          ))
+                        {highestBadge ? (
+                          <span 
+                            key={highestBadge} 
+                            className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded-full"
+                          >
+                            {highestBadge}
+                          </span>
                         ) : (
                           <span className="text-gray-400 text-xs italic">Aucun badge</span>
                         )}
@@ -155,4 +167,4 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
       )}
     </section>
   );
-          }
+}
