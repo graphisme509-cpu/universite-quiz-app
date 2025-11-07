@@ -33,6 +33,7 @@ export default function QuizDetail() {
   const [score, setScore] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false); // Pour spinner soumission
   const [navigating, setNavigating] = useState(false); // Pour spinner retour
+  const [totalHistoricalScore, setTotalHistoricalScore] = useState(0);
 
   // Charger le quiz
   useEffect(() => {
@@ -65,10 +66,36 @@ export default function QuizDetail() {
     loadQuiz();
   }, [id]);
 
+  // Charger le score total historique pour ce quiz
+  useEffect(() => {
+    const fetchTotalForQuiz = async () => {
+      if (!quiz) return;
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/dashboard/user-quiz-total/${quiz.id}`, { credentials: 'include' });
+        if (res.ok) {
+          const data = await res.json();
+          setTotalHistoricalScore(data.total || 0);
+        }
+      } catch (err) {
+        console.error('Erreur fetch total:', err);
+      }
+    };
+
+    fetchTotalForQuiz();
+  }, [quiz]);
+
   // Sélection d'une réponse
   const handleSelect = (questionKey: string, optionIndex: number) => {
     if (submitted) return;
     setAnswers(prev => ({ ...prev, [questionKey]: optionIndex }));
+  };
+
+  // Réessayer le quiz
+  const handleRetry = () => {
+    setAnswers({});
+    setSubmitted(false);
+    setResultMessage('');
+    setScore(null);
   };
 
   // Vérifie si toutes les questions ont une réponse
@@ -123,6 +150,7 @@ export default function QuizDetail() {
   return (
     <div className="max-w-3xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">{quiz.name}</h1>
+      <p className="mb-4 p-2 bg-blue-50 rounded text-center">Votre score cumulé pour ce quiz : {totalHistoricalScore} points</p>
 
       {quiz.questions.map((q, i) => (
         <div
@@ -168,7 +196,7 @@ export default function QuizDetail() {
       )}
 
       <div className="flex justify-center gap-4 mt-6">
-        {!submitted && (
+        {!submitted ? (
           <button
             onClick={handleSubmit}
             disabled={!allAnswered || submitting}
@@ -186,6 +214,13 @@ export default function QuizDetail() {
             ) : (
               'Soumettre le quiz'
             )}
+          </button>
+        ) : (
+          <button
+            onClick={handleRetry}
+            className="h-12 w-48 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center justify-center font-medium"
+          >
+            Recommencer le quiz
           </button>
         )}
 
@@ -212,4 +247,4 @@ export default function QuizDetail() {
       )}
     </div>
   );
-}
+          }
