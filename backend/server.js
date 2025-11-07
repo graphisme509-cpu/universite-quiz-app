@@ -516,6 +516,41 @@ app.get('/api/dashboard/user-quiz-total/:quizId', requireAuth, async (req, res) 
   }
 });
 
+// Nouvelle route pour détails d'un utilisateur (scores par quiz, badges, etc.)
+app.get('/api/dashboard/user-details/:userId', requireAuth, async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const userRes = await pool.query('SELECT name, xp FROM users WHERE id=$1', [userId]);
+    if (userRes.rowCount === 0) return res.status(404).json({ error: 'Utilisateur non trouvé.' });
+    const user = userRes.rows[0];
+
+    const totalScoreRes = await pool.query('SELECT COALESCE(SUM(score), 0) as total FROM scores WHERE user_id=$1', [userId]);
+    const totalScore = parseInt(totalScoreRes.rows[0].total);
+
+    const badgesRes = await pool.query(`
+      SELECT string_agg(b.name, ', ') as badges
+      FROM user_badges ub JOIN badges b ON ub.badge_id = b.id WHERE ub.user_id = $1
+    `, [userId]);
+    const badges = badgesRes.rows[0]?.badges || '';
+
+    const quizScoresRes = await pool.query(`
+      SELECT q.name as quizName, COALESCE(s.score, 0) as score
+      FROM quizzes q LEFT JOIN scores s ON q.id = s.quiz_id AND s.user_id = $1
+      ORDER BY q.name
+    `, [userId]);
+
+    res.json({
+      name: user.name,
+      xp: user.xp,
+      badges,
+      quizScores: quizScoresRes.rows.map(row => ({ quizName: row.quizname, score: parseInt(row.score) }))
+    });
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ error: 'Erreur récupération détails utilisateur.' });
+  }
+});
+
 // Routes Dashboard
 
 // Middleware anti-cache pour toutes les routes du dashboard
@@ -554,7 +589,7 @@ app.get('/api/dashboard/stats', requireAuth, async (req, res) => {
 app.get('/api/dashboard/classement', requireAuth, async (req, res) => {
   try {
     const classement = await pool.query(`
-      SELECT u.name, COALESCE(SUM(s.score), 0) as score, u.xp,
+      SELECT u.id, u.name, COALESCE(SUM(s.score), 0) as score, u.xp,
         (SELECT string_agg(b.name, ', ') FROM user_badges ub JOIN badges b ON ub.badge_id = b.id WHERE ub.user_id = u.id) as badges
       FROM users u LEFT JOIN scores s ON u.id = s.user_id
       GROUP BY u.id, u.name, u.xp ORDER BY score DESC, xp DESC LIMIT 50
