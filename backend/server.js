@@ -116,6 +116,60 @@ async function requireAuth(req, res, next) {
   }
 }
 
+// Fonctions pour badges (appelées après soumission quiz)
+async function awardSingleBadge(pool, userId, badgeName) {
+  try {
+    const badgeRes = await pool.query('SELECT id FROM badges WHERE name ILIKE $1', [badgeName]);
+    if (badgeRes.rowCount === 0) return;
+    const badgeId = badgeRes.rows[0].id;
+    const existsRes = await pool.query('SELECT 1 FROM user_badges WHERE user_id=$1 AND badge_id=$2', [userId, badgeId]);
+    if (existsRes.rowCount === 0) {
+      await pool.query('INSERT INTO user_badges (user_id, badge_id) VALUES ($1, $2)', [userId, badgeId]);
+    }
+  } catch (err) {
+    logger.error('Erreur attribution badge:', err);
+  }
+}
+
+async function awardBadges(userId, quizId, score, totalQuestions) {
+  try {
+    const quizRes = await pool.query('SELECT matiere FROM quizzes WHERE id=$1', [quizId]);
+    if (quizRes.rowCount === 0) return;
+    const matiere = quizRes.rows[0].matiere;
+
+    // Débutant : première soumission
+    const scoreCountRes = await pool.query('SELECT COUNT(*)::int as cnt FROM scores WHERE user_id=$1', [userId]);
+    const totalScoreCount = scoreCountRes.rows[0].cnt;
+    if (totalScoreCount === 1) {
+      await awardSingleBadge(pool, userId, 'Débutant');
+    }
+
+    // Maître Maths : 5+ quizzes maths parfaits
+    if (matiere === 'maths' && score === totalQuestions) {
+      const perfectCountRes = await pool.query(`
+        SELECT COUNT(*)::int as cnt 
+        FROM scores s 
+        JOIN quizzes q ON s.quiz_id = q.id 
+        JOIN (SELECT quiz_id, COUNT(*)::int as qcount FROM questions GROUP BY quiz_id) qq ON s.quiz_id = qq.quiz_id
+        WHERE s.user_id = $1 AND q.matiere = $2 AND s.score = qq.qcount
+      `, [userId, 'maths']);
+      const perfectCount = perfectCountRes.rows[0].cnt;
+      if (perfectCount >= 5) {
+        await awardSingleBadge(pool, userId, 'Maître Maths');
+      }
+    }
+
+    // Expert : XP >= 400
+    const xpRes = await pool.query('SELECT xp FROM users WHERE id=$1', [userId]);
+    const xp = xpRes.rows[0]?.xp || 0;
+    if (xp >= 400) {
+      await awardSingleBadge(pool, userId, 'Expert');
+    }
+  } catch (err) {
+    logger.error('Erreur awardBadges:', err);
+  }
+}
+
 // Routes Auth (Inscription/Connexion unifiées)
 app.post('/api/auth/inscription', async (req, res) => {
   try {
@@ -452,6 +506,25 @@ app.post('/api/quiz/:quizName', requireAuth, quizLimiter, async (req, res) => {
     } finally {
         client.release();
     }
+
+    // Attribution badges après transaction
+    try {
+      await awardBadges(req.user.id, quizId, bonnes, total);
+    } catch (err) {
+      logger.error('Erreur lors de l\'attribution des badges:', err);
+    }
+});
+
+// Nouvelle route pour score total historique d'un quiz utilisateur
+app.get('/api/dashboard/user-quiz-total/:quizId', requireAuth, async (req, res) => {
+  const { quizId } = req.params;
+  try {
+    const totalRes = await pool.query('SELECT COALESCE(SUM(score), 0) as total FROM scores WHERE user_id=$1 AND quiz_id=$2', [req.user.id, quizId]);
+    res.json({ total: parseInt(totalRes.rows[0].total) });
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ error: 'Erreur récupération total.' });
+  }
 });
 
 // Routes Dashboard
