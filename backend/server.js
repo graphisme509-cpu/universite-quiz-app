@@ -133,37 +133,25 @@ async function awardSingleBadge(pool, userId, badgeName) {
 
 async function awardBadges(userId, quizId, score, totalQuestions) {
   try {
-    const quizRes = await pool.query('SELECT matiere FROM quizzes WHERE id=$1', [quizId]);
-    if (quizRes.rowCount === 0) return;
-    const matiere = quizRes.rows[0].matiere;
-
-    // Débutant : première soumission
-    const scoreCountRes = await pool.query('SELECT COUNT(*)::int as cnt FROM scores WHERE user_id=$1', [userId]);
-    const totalScoreCount = scoreCountRes.rows[0].cnt;
-    if (totalScoreCount === 1) {
-      await awardSingleBadge(pool, userId, 'Débutant');
-    }
-
-    // Maître Maths : 5+ quizzes maths parfaits
-    if (matiere === 'maths' && score === totalQuestions) {
-      const perfectCountRes = await pool.query(`
-        SELECT COUNT(*)::int as cnt 
-        FROM scores s 
-        JOIN quizzes q ON s.quiz_id = q.id 
-        JOIN (SELECT quiz_id, COUNT(*)::int as qcount FROM questions GROUP BY quiz_id) qq ON s.quiz_id = qq.quiz_id
-        WHERE s.user_id = $1 AND q.matiere = $2 AND s.score = qq.qcount
-      `, [userId, 'maths']);
-      const perfectCount = perfectCountRes.rows[0].cnt;
-      if (perfectCount >= 5) {
-        await awardSingleBadge(pool, userId, 'Maître Maths');
-      }
-    }
-
-    // Expert : XP >= 400
+    // Récupérer l'XP mis à jour (après trigger sur scores)
     const xpRes = await pool.query('SELECT xp FROM users WHERE id=$1', [userId]);
     const xp = xpRes.rows[0]?.xp || 0;
-    if (xp >= 400) {
+
+    // Attribution basée sur seuils XP (cumulatif, seulement si pas déjà possédé)
+    if (xp >= 1) {
+      await awardSingleBadge(pool, userId, 'Débutant');
+    }
+    if (xp >= 1000) {
+      await awardSingleBadge(pool, userId, 'Amateur');
+    }
+    if (xp >= 2000) {
+      await awardSingleBadge(pool, userId, 'Pro');
+    }
+    if (xp >= 3000) {
       await awardSingleBadge(pool, userId, 'Expert');
+    }
+    if (xp >= 4000) {
+      await awardSingleBadge(pool, userId, 'Maître');
     }
   } catch (err) {
     logger.error('Erreur awardBadges:', err);
