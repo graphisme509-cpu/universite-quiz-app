@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { User, ClassementEntry } from '../../types';
 
 interface DashboardClassementProps {
@@ -30,7 +29,6 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
   const [error, setError] = useState('');
   const [selectedUser, setSelectedUser] = useState<UserDetails | null>(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
-  const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
     const fetchClassement = async () => {
@@ -67,16 +65,20 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
   }, []);
 
   useEffect(() => {
-    const userIdParam = searchParams.get('user');
-    if (userIdParam) {
-      const entry = classement.find(u => u.id === parseInt(userIdParam));
-      if (entry) {
-        fetchUserDetails(entry.id, entry.rank, entry.score);
-      }
-    } else {
-      setSelectedUser(null);
+    if (selectedUser) {
+      window.history.pushState({ details: true }, '', window.location.href);
     }
-  }, [searchParams, classement]);
+  }, [selectedUser]);
+
+  useEffect(() => {
+    const handlePopState = (e: PopStateEvent) => {
+      if (selectedUser) {
+        setSelectedUser(null);
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [selectedUser]);
 
   const fetchUserDetails = async (userId: number, rank: number, totalScore: number) => {
     setDetailsLoading(true);
@@ -106,11 +108,12 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
   };
 
   const handleUserClick = (entry: ClassementEntry) => {
-    setSearchParams({ user: entry.id.toString() });
+    fetchUserDetails(entry.id, entry.rank, entry.score);
   };
 
   const handleBackToClassement = () => {
-    setSearchParams({});
+    setSelectedUser(null);
+    window.history.back();
   };
 
   const filteredClassement = classement.filter(u =>
@@ -154,6 +157,7 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
   }
 
   if (selectedUser) {
+    const isCurrent = selectedUser.id === user.id;
     return (
       <section className="w-full min-h-64">
         {/* Nouvelle carte utilisateur simple */}
