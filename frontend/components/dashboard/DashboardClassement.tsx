@@ -140,20 +140,22 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
   }
 
   if (selectedUser) {
+    const isCurrent = selectedUser.id === user.id;
     return (
       <section className="w-full min-h-64">
         {/* Nouvelle carte utilisateur simple */}
-        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 max-w-md mx-auto">
-          <div className="space-y-3 text-sm">
-            <p><strong>Utilisateur:</strong> {selectedUser.name}</p>
-            <p><strong>Rang:</strong> #{selectedUser.rank}</p>
-            <p><strong>Score:</strong> {selectedUser.totalScore}</p>
-            <p><strong>Badge:</strong> {getHighestBadge(selectedUser.badges) || 'Aucun'}</p>
-            <p><strong>XP:</strong> {selectedUser.xp}</p>
+        <div className={`rounded-lg shadow-md border border-gray-200 p-6 max-w-md mx-auto ${isCurrent ? 'bg-green-100' : 'bg-white'}`}>
+          <h2 className="text-2xl font-bold text-center mb-4">Détails de {selectedUser.name}</h2>
+          <div className="space-y-3 text-lg">
+            <p><strong>Utilisateur :</strong> {selectedUser.name}</p>
+            <p><strong>Rang :</strong> #{selectedUser.rank}</p>
+            <p><strong>Score :</strong> {selectedUser.totalScore}</p>
+            <p><strong>Badge :</strong> {getHighestBadge(selectedUser.badges) || 'Aucun'}</p>
+            <p><strong>XP :</strong> {selectedUser.xp}</p>
             {selectedUser.quizScores.length > 0 && (
               <div>
-                <strong>Scores par quiz:</strong>
-                <ul className="mt-2 space-y-1 text-xs">
+                <strong>Scores par quiz :</strong>
+                <ul className="mt-2 space-y-1 text-lg">
                   {selectedUser.quizScores.map((quiz, idx) => (
                     <li key={idx}>{quiz.quizName}: {quiz.score}</li>
                   ))}
@@ -254,4 +256,4 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
       )}
     </section>
   );
-      }
+    }
