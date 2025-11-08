@@ -13,6 +13,7 @@ import Politique from './components/Politique';
 import { User } from './types';
 import QuizDetail from './components/QuizDetail';
 import NewAdmin from './components/dashboard/NewAdmin';
+import InfosKind from './components/dashboard/InfosKind';
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -163,6 +164,7 @@ function App() {
           <Route path="/termes" element={<Termes />} />
           <Route path="/politique" element={<Politique />} />
           <Route path="/dashboard/newadmin" element={<NewAdmin />} />
+          <Route path="/dashboard/infoskind" element={<InfosKind />} />
         </Routes>
       </main>
 
