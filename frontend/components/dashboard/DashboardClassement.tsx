@@ -167,7 +167,6 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
             <p><strong>Rang :</strong> #{selectedUser.rank}</p>
             <p><strong>Score :</strong> {selectedUser.totalScore}</p>
             <p><strong>Badge :</strong> {getHighestBadge(selectedUser.badges) || 'Aucun'}</p>
-            <p><strong>XP :</strong> {selectedUser.xp}</p>
             {selectedUser.quizScores.length > 0 && (
               <div>
                 <strong>Scores par quiz :</strong>
@@ -272,4 +271,4 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
       )}
     </section>
   );
-    }
+}
