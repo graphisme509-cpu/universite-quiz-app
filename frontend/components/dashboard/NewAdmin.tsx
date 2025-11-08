@@ -1,6 +1,7 @@
 // components/dashboard/NewAdmin.tsx
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Document,
   Packer,
@@ -22,6 +23,7 @@ export default function NewAdmin() {
  const [adminToken, setAdminToken] = useState('');
  const [isLoggedIn, setIsLoggedIn] = useState(false);
  const [isLoggingIn, setIsLoggingIn] = useState(false);
+ const [view, setView] = useState<'menu' | 'modification'>('menu');
 
  // New state for synthese visibility
  const [syntheseVisible, setSyntheseVisible] = useState(true);
@@ -55,6 +57,8 @@ export default function NewAdmin() {
  const [editingAcademicYears, setEditingAcademicYears] = useState<{ [key: number]: string }>({});
  const [isDeleting, setIsDeleting] = useState(false);
 
+ const navigate = useNavigate();
+
  const classes = ['1ère année', '2ème année', '3ème année'];
  const periodes = ['1ère période', '2ème période', '3ème période'];
 
@@ -71,6 +75,7 @@ export default function NewAdmin() {
  if (data.success) {
  setAdminToken(data.token);
  setIsLoggedIn(true);
+ setView('menu');
  } else {
  alert(data.message || 'Code invalide');
  }
@@ -582,322 +587,344 @@ export default function NewAdmin() {
  }
 
  return (
- <div className="space-y-12">
- <h1 className="text-3xl font-bold text-center">Page Administration</h1>
+ <>
+ {view === 'menu' ? (
+   <div className="max-w-md mx-auto p-8 bg-white rounded-xl shadow-lg border">
+     <h1 className="text-3xl font-bold text-center mb-8">Page Administration</h1>
+     <div className="flex flex-col space-y-4">
+       <button
+         onClick={() => setView('modification')}
+         className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 flex items-center justify-center"
+       >
+         Modification des résultats
+       </button>
+       <button
+         onClick={() => navigate('/dashboard/infoskind')}
+         className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 flex items-center justify-center"
+       >
+         Informations Kindergarten
+       </button>
+     </div>
+   </div>
+ ) : (
+   <div className="space-y-12">
+     <h1 className="text-3xl font-bold text-center">Page Administration</h1>
 
- <section className="bg-white p-8 rounded-xl shadow-lg border">
- <h2 className="text-2xl font-bold mb-6">Ajouter des notes</h2>
- <form onSubmit={handleSubmitForm1} className="space-y-4">
- <input
- type="text"
- placeholder="Code (ex: ETU-J-2024-040-A)"
- value={code}
- onChange={(e) => setCode(e.target.value)}
- required
- className="w-full p-3 border rounded-lg"
- />
- <select
- value={option}
- onChange={(e) => setOption(e.target.value)}
- className="w-full p-3 border rounded-lg"
- >
- <option>Jardinière</option>
- <option>Aide-jardinière</option>
- </select>
- <input
- type="text"
- placeholder="Année académique (ex: 2022-23)"
- value={academicYear}
- onChange={(e) => setAcademicYear(e.target.value)}
- required
- className="w-full p-3 border rounded-lg"
- />
- <select
- value={periode}
- onChange={(e) => { setPeriode(e.target.value); setNotes({}); }}
- className="w-full p-3 border rounded-lg"
- >
- {periodes.map((p) => <option key={p}>{p}</option>)}
- </select>
- <select
- value={classe}
- onChange={(e) => { setClasse(e.target.value); setNotes({}); }}
- className="w-full p-3 border rounded-lg"
- >
- {classes.map((c) => <option key={c}>{c}</option>)}
- </select>
- {currentMatieres.map((matiere) => (
- <div key={matiere} className="flex items-center space-x-2">
- <label className="w-1/2">{matiere}</label>
- <input
- type="number"
- min={0}
- max={100}
- step={0.01}
- value={notes[matiere] || ''}
- onChange={(e) => handleNoteChange(matiere, e.target.value)}
- className="w-1/2 p-2 border rounded-lg"
- />
- </div>
- ))}
- <div>Total: {total}</div>
- <div>Moyenne: {moyenne}</div>
- <div>Moyenne générale: {moyenneGenerale}</div>
- <button type="button" onClick={calculateMoyenneGenerale} disabled={isCalculating} className="hidden bg-blue-600 text-white py-2 px-4 rounded-lg flex items-center justify-center">
- {isCalculating ? (
-   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
- ) : (
-   'Calculer Moyenne Générale'
- )}
- </button>
- <button type="submit" disabled={isSubmitting} className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 flex items-center justify-center">
- {isSubmitting ? (
-   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
- ) : (
-   'Soumettre'
- )}
- </button>
- {message1 && <p className="text-center">{message1}</p>}
- </form>
- </section>
-
- <section className="bg-white p-8 rounded-xl shadow-lg border">
- <h2 className="text-2xl font-bold mb-6">Matières</h2>
- {classes.map((cl) => (
- periodes.map((per) => {
- const key = `${cl}_${per}`;
- const list = allMatieres[key] || [];
- return (
- <div key={key} className="mb-6">
- <h3 className="text-xl font-semibold mb-2">{cl} - {per}</h3>
- <ul className="space-y-2 mb-4">
- {list.map((m) => (
- <li key={m} className="flex justify-between">
- {m}
- <button
- onClick={() => handleRemoveMatiere(cl, per, m)}
- className="text-red-600 w-20 flex items-center justify-center"
- disabled={loadingMatiereKeys.has(`remove_${cl}_${per}_${m}`)}
- >
- {loadingMatiereKeys.has(`remove_${cl}_${per}_${m}`) ? (
- <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-red-600"></div>
- ) : (
- 'Retirer'
- )}
- </button>
- </li>
- ))}
- </ul>
- <div className="flex space-x-2">
- <input
- type="text"
- value={matiereToAdd[key] || ''}
- onChange={(e) => setMatiereToAdd((prev) => ({ ...prev, [key]: e.target.value }))}
- placeholder="Nouvelle matière"
- className="flex-1 min-w-0 p-2 border rounded-lg"
- />
- <button
- onClick={() => handleAddMatiere(cl, per)}
- className="bg-green-600 text-white py-2 px-4 rounded-lg w-28 flex items-center justify-center"
- disabled={loadingMatiereKeys.has(`add_${key}`)}
- >
- {loadingMatiereKeys.has(`add_${key}`) ? (
- <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
- ) : (
- 'Ajouter'
- )}
- </button>
- </div>
- </div>
- );
- })
- ))}
- </section>
-
- <section className="bg-white p-8 rounded-xl shadow-lg border">
- <h2 className="text-2xl font-bold mb-6">Étudiantes</h2>
- <select
- value={selectedCode}
- onChange={(e) => setSelectedCode(e.target.value)}
- className="w-full p-3 border rounded-lg mb-4"
- >
- <option value="">Sélectionnez un code</option>
- {students.map((c) => <option key={c} value={c}>{c}</option>)}
- </select>
- {results && (
- <div>
- <div className="text-center">
- <h3 className="text-2xl font-semibold mb-2">
- <span className="font-mono text-green-700 bg-green-50 px-2 py-1 rounded">{selectedCode}</span>
- </h3>
- <div className="flex items-center space-x-2 justify-center mb-4">
- <label className="font-bold whitespace-nowrap">Option:</label>
- <input
- type="text"
- value={editingOption}
- onChange={(e) => setEditingOption(e.target.value)}
- onBlur={() => updateField(selectedCode, 'option', editingOption)}
- className="flex-1 p-2 border rounded-lg max-w-md"
- />
- </div>
- </div>
- {results.years.map((year: any) => {
- const p1 = year.periods[0]?.moyenne ?? 0;
- const p2 = year.periods[1]?.moyenne ?? 0;
- const p3 = year.periods[2]?.moyenne ?? 0;
- const genMoy = (p1 + p2 + p3) / 3;
- const avgPercent = genMoy;
- return (
- <div key={year.annee} className="space-y-6 mb-12">
- <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 justify-center">
- {year.periods.map((period: any) => {
- if (Object.keys(period.notes).length === 0) {
- return null;
- }
- const periodKey = `${year.annee}_${period.periode}`;
- const editNotes = editingNotes[periodKey] || {};
- const noteValues = Object.values(editNotes);
- const totalVal = noteValues.reduce((acc: number, n: any) => acc + n, 0);
- const maxTotal = noteValues.length * 100;
- const passingNote = 50;
- return (
- <div key={period.periode} className="bg-gray-50 p-6 rounded-lg shadow border border-gray-200">
- <h4 className="text-xl font-bold mb-1 text-center text-slate-800">{period.title}</h4>
- <p className="text-sm text-center text-gray-600 mb-1">{year.academicYear}</p>
- <p className="text-sm text-center text-gray-600 mb-4 font-medium">{year.classe}</p>
- <ul className="space-y-3 mb-4">
- {Object.entries(editNotes).map(([matiere, note]) => {
- const currentNote = editNotes[matiere] || 0;
- return (
- <li key={matiere} className="flex justify-between items-center p-3 bg-white rounded border">
- <span className="font-medium text-gray-700">{matiere}</span>
- <input
- type="number"
- min={0}
- max={100}
- step={0.01}
- value={editNotes[matiere] !== undefined ? editNotes[matiere] : ''}
- onChange={(e) => setEditingNotes((prev) => ({
- ...prev,
- [periodKey]: { ...prev[periodKey], [matiere]: parseFloat(e.target.value) || 0 },
- }))}
- onBlur={(e) => updateField(selectedCode, 'note', parseFloat(e.target.value) || 0, {
- annee: year.annee,
- periode: period.periode,
- matiere,
- })}
- className={`w-24 text-right border rounded p-1 ${currentNote >= passingNote ? 'text-green-600' : 'text-red-600'}`}
- />
- </li>
- );
- })}
- </ul>
- <div className="text-center font-medium py-1 mb-2 min-w-[120px] mx-auto">
- Total: {totalVal.toFixed(2)} / {maxTotal}
- </div>
- <div className={`text-center font-bold text-xl py-2 rounded min-w-[120px] mx-auto ${period.moyenne >= passingNote ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
- Moyenne: {period.moyenne.toFixed(2)} / 100
- </div>
- </div>
- );
- })}
- </div>
- {syntheseVisible && (
- <div className="mt-6 mb-12">
- <div className="bg-blue-50 p-6 rounded-lg shadow border border-blue-200">
- <h4 className="text-xl font-bold mb-4 text-center text-blue-800">ÉCOLE NORMALE D'INSTITUTEURS ET DE JARDINIÈRES D'ENFANTS (ENIJE)</h4>
- <h4 className="text-xl font-bold mb-4 text-center text-blue-800">Synthèse des résultats annuels</h4>
- <table className="w-full table-auto border-collapse border border-blue-300">
- <tbody className="divide-y divide-blue-200">
- <tr className="bg-blue-100">
- <td className="px-4 py-2 font-medium text-left text-sm">Code de l'étudiante</td>
- <td className="px-4 py-2 text-sm text-left">{selectedCode}</td>
- </tr>
- <tr>
- <td className="px-4 py-2 font-medium text-left text-sm">Option</td>
- <td className="px-4 py-2 text-sm text-left">{editingOption}</td>
- </tr>
- <tr className="bg-blue-100">
- <td className="px-4 py-2 font-medium text-left text-sm">Classe</td>
- <td className="px-4 py-2 text-sm text-left">{year.classe}</td>
- </tr>
- <tr>
- <td className="px-4 py-2 font-medium text-left text-sm">1ère période</td>
- <td className="px-4 py-2 min-w-[90px] text-left text-sm">{p1.toFixed(2)} / 100</td>
- </tr>
- <tr className="bg-blue-100">
- <td className="px-4 py-2 font-medium text-left text-sm">2ème période</td>
- <td className="px-4 py-2 min-w-[90px] text-left text-sm">{p2.toFixed(2)} / 100</td>
- </tr>
- <tr>
- <td className="px-4 py-2 font-medium text-left text-sm">3ème période</td>
- <td className="px-4 py-2 min-w-[90px] text-left text-sm">{p3.toFixed(2)} / 100</td>
- </tr>
- <tr className="bg-blue-100">
- <td className="px-4 py-2 font-medium text-left text-sm">Moyenne générale</td>
- <td className="px-4 py-2 font-bold min-w-[90px] text-left text-sm">
- {genMoy.toFixed(2)} / 100
- </td>
- </tr>
- <tr className="bg-green-100">
- <td className="px-4 py-2 font-medium text-left text-sm">Décision</td>
- <td className="px-4 py-2 font-bold text-green-700 text-sm text-left">
- {avgPercent >= 60 ? 'Admise' : avgPercent >= 50 ? 'Reprise' : 'Non admise'}
- </td>
- </tr>
- {avgPercent >= 60 && (
- <tr className="bg-yellow-100">
- <td className="px-4 py-2 font-medium text-left text-sm">Mention</td>
- <td className="px-4 py-2 font-bold text-yellow-700 text-sm text-left">
- {avgPercent < 75 ? 'Bien' : avgPercent < 90 ? 'Très bien' : 'Excellent'}
- </td>
- </tr>
- )}
- <tr className="bg-blue-100">
- <td className="px-4 py-2 font-medium text-left text-sm">Année académique</td>
- <td className="px-4 py-2 text-sm text-left">{year.academicYear}</td>
- </tr>
- </tbody>
- </table>
- </div>
- </div>
- )}
- </div>
- );
- })}
- <div className="mt-6 flex space-x-4 justify-center">
- <button onClick={generateWordDocument} className="bg-blue-600 text-white py-2 px-4 rounded-lg flex items-center justify-center hover:bg-blue-700">
-   Télécharger en Word
- </button>
- <button onClick={() => handleDeleteStudent(selectedCode)} disabled={isDeleting} className="bg-red-600 text-white py-2 px-4 rounded-lg flex items-center justify-center">
- {isDeleting ? (
-   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
- ) : (
-   'Supprimer l\'étudiant'
- )}
- </button>
- </div>
- </div>
- )}
- </section>
-
- <section className="bg-white p-8 rounded-xl shadow-lg border">
-   <h2 className="text-2xl font-bold mb-6">Visibilité de la Synthèse des résultats annuels (page Résultats)</h2>
-   <div className="flex items-center space-x-4">
-     <span className="text-lg">Actuellement: {syntheseVisible ? 'Visible' : 'Cachée'}</span>
-     <button
-       onClick={handleToggleSynthese}
-       disabled={isToggling}
-       className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 flex items-center justify-center"
-     >
-       {isToggling ? (
+     <section className="bg-white p-8 rounded-xl shadow-lg border">
+     <h2 className="text-2xl font-bold mb-6">Ajouter des notes</h2>
+     <form onSubmit={handleSubmitForm1} className="space-y-4">
+     <input
+       type="text"
+       placeholder="Code (ex: ETU-J-2024-040-A)"
+       value={code}
+       onChange={(e) => setCode(e.target.value)}
+       required
+       className="w-full p-3 border rounded-lg"
+     />
+     <select
+       value={option}
+       onChange={(e) => setOption(e.target.value)}
+       className="w-full p-3 border rounded-lg"
+       >
+       <option>Jardinière</option>
+       <option>Aide-jardinière</option>
+     </select>
+     <input
+       type="text"
+       placeholder="Année académique (ex: 2022-23)"
+       value={academicYear}
+       onChange={(e) => setAcademicYear(e.target.value)}
+       required
+       className="w-full p-3 border rounded-lg"
+     />
+     <select
+       value={periode}
+       onChange={(e) => { setPeriode(e.target.value); setNotes({}); }}
+       className="w-full p-3 border rounded-lg"
+       >
+       {periodes.map((p) => <option key={p}>{p}</option>)}
+     </select>
+     <select
+       value={classe}
+       onChange={(e) => { setClasse(e.target.value); setNotes({}); }}
+       className="w-full p-3 border rounded-lg"
+       >
+       {classes.map((c) => <option key={c}>{c}</option>)}
+     </select>
+     {currentMatieres.map((matiere) => (
+       <div key={matiere} className="flex items-center space-x-2">
+         <label className="w-1/2">{matiere}</label>
+         <input
+           type="number"
+           min={0}
+           max={100}
+           step={0.01}
+           value={notes[matiere] || ''}
+           onChange={(e) => handleNoteChange(matiere, e.target.value)}
+           className="w-1/2 p-2 border rounded-lg"
+         />
+       </div>
+     ))}
+     <div>Total: {total}</div>
+     <div>Moyenne: {moyenne}</div>
+     <div>Moyenne générale: {moyenneGenerale}</div>
+     <button type="button" onClick={calculateMoyenneGenerale} disabled={isCalculating} className="hidden bg-blue-600 text-white py-2 px-4 rounded-lg flex items-center justify-center">
+       {isCalculating ? (
          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
        ) : (
-         syntheseVisible ? 'Cacher' : 'Afficher'
+         'Calculer Moyenne Générale'
        )}
      </button>
+     <button type="submit" disabled={isSubmitting} className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 flex items-center justify-center">
+       {isSubmitting ? (
+         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+       ) : (
+         'Soumettre'
+       )}
+     </button>
+     {message1 && <p className="text-center">{message1}</p>}
+     </form>
+     </section>
+
+     <section className="bg-white p-8 rounded-xl shadow-lg border">
+     <h2 className="text-2xl font-bold mb-6">Matières</h2>
+     {classes.map((cl) => (
+       periodes.map((per) => {
+         const key = `${cl}_${per}`;
+         const list = allMatieres[key] || [];
+         return (
+           <div key={key} className="mb-6">
+             <h3 className="text-xl font-semibold mb-2">{cl} - {per}</h3>
+             <ul className="space-y-2 mb-4">
+               {list.map((m) => (
+                 <li key={m} className="flex justify-between">
+                   {m}
+                   <button
+                     onClick={() => handleRemoveMatiere(cl, per, m)}
+                     className="text-red-600 w-20 flex items-center justify-center"
+                     disabled={loadingMatiereKeys.has(`remove_${cl}_${per}_${m}`)}
+                     >
+                     {loadingMatiereKeys.has(`remove_${cl}_${per}_${m}`) ? (
+                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-red-600"></div>
+                     ) : (
+                       'Retirer'
+                     )}
+                   </button>
+                 </li>
+               ))}
+             </ul>
+             <div className="flex space-x-2">
+               <input
+                 type="text"
+                 value={matiereToAdd[key] || ''}
+                 onChange={(e) => setMatiereToAdd((prev) => ({ ...prev, [key]: e.target.value }))}
+                 placeholder="Nouvelle matière"
+                 className="flex-1 min-w-0 p-2 border rounded-lg"
+               />
+               <button
+                 onClick={() => handleAddMatiere(cl, per)}
+                 className="bg-green-600 text-white py-2 px-4 rounded-lg w-28 flex items-center justify-center"
+                 disabled={loadingMatiereKeys.has(`add_${key}`)}
+                 >
+                 {loadingMatiereKeys.has(`add_${key}`) ? (
+                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                 ) : (
+                   'Ajouter'
+                 )}
+               </button>
+             </div>
+           </div>
+         );
+       })
+     ))}
+     </section>
+
+     <section className="bg-white p-8 rounded-xl shadow-lg border">
+     <h2 className="text-2xl font-bold mb-6">Étudiantes</h2>
+     <select
+       value={selectedCode}
+       onChange={(e) => setSelectedCode(e.target.value)}
+       className="w-full p-3 border rounded-lg mb-4"
+       >
+       <option value="">Sélectionnez un code</option>
+       {students.map((c) => <option key={c} value={c}>{c}</option>)}
+     </select>
+     {results && (
+       <div>
+         <div className="text-center">
+           <h3 className="text-2xl font-semibold mb-2">
+             <span className="font-mono text-green-700 bg-green-50 px-2 py-1 rounded">{selectedCode}</span>
+           </h3>
+           <div className="flex items-center space-x-2 justify-center mb-4">
+             <label className="font-bold whitespace-nowrap">Option:</label>
+             <input
+               type="text"
+               value={editingOption}
+               onChange={(e) => setEditingOption(e.target.value)}
+               onBlur={() => updateField(selectedCode, 'option', editingOption)}
+               className="flex-1 p-2 border rounded-lg max-w-md"
+             />
+           </div>
+         </div>
+         {results.years.map((year: any) => {
+           const p1 = year.periods[0]?.moyenne ?? 0;
+           const p2 = year.periods[1]?.moyenne ?? 0;
+           const p3 = year.periods[2]?.moyenne ?? 0;
+           const genMoy = (p1 + p2 + p3) / 3;
+           const avgPercent = genMoy;
+           return (
+             <div key={year.annee} className="space-y-6 mb-12">
+               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 justify-center">
+                 {year.periods.map((period: any) => {
+                   if (Object.keys(period.notes).length === 0) {
+                     return null;
+                   }
+                   const periodKey = `${year.annee}_${period.periode}`;
+                   const editNotes = editingNotes[periodKey] || {};
+                   const noteValues = Object.values(editNotes);
+                   const totalVal = noteValues.reduce((acc: number, n: any) => acc + n, 0);
+                   const maxTotal = noteValues.length * 100;
+                   const passingNote = 50;
+                   return (
+                     <div key={period.periode} className="bg-gray-50 p-6 rounded-lg shadow border border-gray-200">
+                       <h4 className="text-xl font-bold mb-1 text-center text-slate-800">{period.title}</h4>
+                       <p className="text-sm text-center text-gray-600 mb-1">{year.academicYear}</p>
+                       <p className="text-sm text-center text-gray-600 mb-4 font-medium">{year.classe}</p>
+                       <ul className="space-y-3 mb-4">
+                         {Object.entries(editNotes).map(([matiere, note]) => {
+                           const currentNote = editNotes[matiere] || 0;
+                           return (
+                             <li key={matiere} className="flex justify-between items-center p-3 bg-white rounded border">
+                               <span className="font-medium text-gray-700">{matiere}</span>
+                               <input
+                                 type="number"
+                                 min={0}
+                                 max={100}
+                                 step={0.01}
+                                 value={editNotes[matiere] !== undefined ? editNotes[matiere] : ''}
+                                 onChange={(e) => setEditingNotes((prev) => ({
+                                   ...prev,
+                                   [periodKey]: { ...prev[periodKey], [matiere]: parseFloat(e.target.value) || 0 },
+                                 }))}
+                                 onBlur={(e) => updateField(selectedCode, 'note', parseFloat(e.target.value) || 0, {
+                                   annee: year.annee,
+                                   periode: period.periode,
+                                   matiere,
+                                 })}
+                                 className={`w-24 text-right border rounded p-1 ${currentNote >= passingNote ? 'text-green-600' : 'text-red-600'}`}
+                               />
+                             </li>
+                           );
+                         })}
+                       </ul>
+                       <div className="text-center font-medium py-1 mb-2 min-w-[120px] mx-auto">
+                         Total: {totalVal.toFixed(2)} / {maxTotal}
+                       </div>
+                       <div className={`text-center font-bold text-xl py-2 rounded min-w-[120px] mx-auto ${period.moyenne >= passingNote ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                         Moyenne: {period.moyenne.toFixed(2)} / 100
+                       </div>
+                     </div>
+                   );
+                 })}
+               </div>
+               {syntheseVisible && (
+                 <div className="mt-6 mb-12">
+                   <div className="bg-blue-50 p-6 rounded-lg shadow border border-blue-200">
+                     <h4 className="text-xl font-bold mb-4 text-center text-blue-800">ÉCOLE NORMALE D'INSTITUTEURS ET DE JARDINIÈRES D'ENFANTS (ENIJE)</h4>
+                     <h4 className="text-xl font-bold mb-4 text-center text-blue-800">Synthèse des résultats annuels</h4>
+                     <table className="w-full table-auto border-collapse border border-blue-300">
+                       <tbody className="divide-y divide-blue-200">
+                         <tr className="bg-blue-100">
+                           <td className="px-4 py-2 font-medium text-left text-sm">Code de l'étudiante</td>
+                           <td className="px-4 py-2 text-sm text-left">{selectedCode}</td>
+                         </tr>
+                         <tr>
+                           <td className="px-4 py-2 font-medium text-left text-sm">Option</td>
+                           <td className="px-4 py-2 text-sm text-left">{editingOption}</td>
+                         </tr>
+                         <tr className="bg-blue-100">
+                           <td className="px-4 py-2 font-medium text-left text-sm">Classe</td>
+                           <td className="px-4 py-2 text-sm text-left">{year.classe}</td>
+                         </tr>
+                         <tr>
+                           <td className="px-4 py-2 font-medium text-left text-sm">1ère période</td>
+                           <td className="px-4 py-2 min-w-[90px] text-left text-sm">{p1.toFixed(2)} / 100</td>
+                         </tr>
+                         <tr className="bg-blue-100">
+                           <td className="px-4 py-2 font-medium text-left text-sm">2ème période</td>
+                           <td className="px-4 py-2 min-w-[90px] text-left text-sm">{p2.toFixed(2)} / 100</td>
+                         </tr>
+                         <tr>
+                           <td className="px-4 py-2 font-medium text-left text-sm">3ème période</td>
+                           <td className="px-4 py-2 min-w-[90px] text-left text-sm">{p3.toFixed(2)} / 100</td>
+                         </tr>
+                         <tr className="bg-blue-100">
+                           <td className="px-4 py-2 font-medium text-left text-sm">Moyenne générale</td>
+                           <td className="px-4 py-2 font-bold min-w-[90px] text-left text-sm">
+                             {genMoy.toFixed(2)} / 100
+                           </td>
+                         </tr>
+                         <tr className="bg-green-100">
+                           <td className="px-4 py-2 font-medium text-left text-sm">Décision</td>
+                           <td className="px-4 py-2 font-bold text-green-700 text-sm text-left">
+                             {avgPercent >= 60 ? 'Admise' : avgPercent >= 50 ? 'Reprise' : 'Non admise'}
+                           </td>
+                         </tr>
+                         {avgPercent >= 60 && (
+                           <tr className="bg-yellow-100">
+                             <td className="px-4 py-2 font-medium text-left text-sm">Mention</td>
+                             <td className="px-4 py-2 font-bold text-yellow-700 text-sm text-left">
+                               {avgPercent < 75 ? 'Bien' : avgPercent < 90 ? 'Très bien' : 'Excellent'}
+                             </td>
+                           </tr>
+                         )}
+                         <tr className="bg-blue-100">
+                           <td className="px-4 py-2 font-medium text-left text-sm">Année académique</td>
+                           <td className="px-4 py-2 text-sm text-left">{year.academicYear}</td>
+                         </tr>
+                       </tbody>
+                     </table>
+                   </div>
+                 </div>
+               )}
+             </div>
+           );
+         })}
+         <div className="mt-6 flex space-x-4 justify-center">
+           <button onClick={generateWordDocument} className="bg-blue-600 text-white py-2 px-4 rounded-lg flex items-center justify-center hover:bg-blue-700">
+             Télécharger en Word
+           </button>
+           <button onClick={() => handleDeleteStudent(selectedCode)} disabled={isDeleting} className="bg-red-600 text-white py-2 px-4 rounded-lg flex items-center justify-center">
+             {isDeleting ? (
+               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+             ) : (
+               'Supprimer l\'étudiant'
+             )}
+           </button>
+         </div>
+       </div>
+     )}
+     </section>
+
+     <section className="bg-white p-8 rounded-xl shadow-lg border">
+       <h2 className="text-2xl font-bold mb-6">Visibilité de la Synthèse des résultats annuels (page Résultats)</h2>
+       <div className="flex items-center space-x-4">
+         <span className="text-lg">Actuellement: {syntheseVisible ? 'Visible' : 'Cachée'}</span>
+         <button
+           onClick={handleToggleSynthese}
+           disabled={isToggling}
+           className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 flex items-center justify-center"
+         >
+           {isToggling ? (
+             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+           ) : (
+             syntheseVisible ? 'Cacher' : 'Afficher'
+           )}
+         </button>
+       </div>
+     </section>
    </div>
- </section>
- </div>
+ )}
+ </>
  );
-   }
+                  }
