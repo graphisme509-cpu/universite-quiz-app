@@ -14,6 +14,7 @@ import { User } from './types';
 import QuizDetail from './components/QuizDetail';
 import NewAdmin from './components/dashboard/NewAdmin';
 import InfosKind from './components/dashboard/InfosKind';
+import InfosNormale from './components/dashboard/InfosNormale';
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -165,6 +166,7 @@ function App() {
           <Route path="/politique" element={<Politique />} />
           <Route path="/dashboard/newadmin" element={<NewAdmin />} />
           <Route path="/dashboard/infoskind" element={<InfosKind />} />
+          <Route path="/dashboard/infosnormale" element={<InfosNormale />} />
         </Routes>
       </main>
 
