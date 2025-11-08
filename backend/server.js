@@ -534,7 +534,7 @@ app.get('/api/dashboard/user-details/:userId', requireAuth, async (req, res) => 
     const badges = badgesRes.rows[0]?.badges || '';
 
     const quizScoresRes = await pool.query(`
-      SELECT q.name as quizName, COALESCE(SUM(s.score), 0) as score
+      SELECT q.name as "quizName", COALESCE(SUM(s.score), 0) as "score"
       FROM quizzes q LEFT JOIN scores s ON q.id = s.quiz_id AND s.user_id = $1
       GROUP BY q.id, q.name
       ORDER BY q.name
