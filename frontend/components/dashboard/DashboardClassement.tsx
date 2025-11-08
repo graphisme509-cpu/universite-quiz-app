@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { User, ClassementEntry } from '../../types';
 
 interface DashboardClassementProps {
@@ -29,6 +30,7 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
   const [error, setError] = useState('');
   const [selectedUser, setSelectedUser] = useState<UserDetails | null>(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
     const fetchClassement = async () => {
@@ -64,6 +66,18 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
     fetchClassement();
   }, []);
 
+  useEffect(() => {
+    const userIdParam = searchParams.get('user');
+    if (userIdParam) {
+      const entry = classement.find(u => u.id === parseInt(userIdParam));
+      if (entry) {
+        fetchUserDetails(entry.id, entry.rank, entry.score);
+      }
+    } else {
+      setSelectedUser(null);
+    }
+  }, [searchParams, classement]);
+
   const fetchUserDetails = async (userId: number, rank: number, totalScore: number) => {
     setDetailsLoading(true);
     try {
@@ -92,11 +106,11 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
   };
 
   const handleUserClick = (entry: ClassementEntry) => {
-    fetchUserDetails(entry.id, entry.rank, entry.score);
+    setSearchParams({ user: entry.id.toString() });
   };
 
   const handleBackToClassement = () => {
-    setSelectedUser(null);
+    setSearchParams({});
   };
 
   const filteredClassement = classement.filter(u =>
@@ -140,14 +154,12 @@ export default function DashboardClassement({ user }: DashboardClassementProps) 
   }
 
   if (selectedUser) {
-    const isCurrent = selectedUser.id === user.id;
     return (
       <section className="w-full min-h-64">
         {/* Nouvelle carte utilisateur simple */}
-        <div className={`rounded-lg shadow-md border border-gray-200 p-6 max-w-md mx-auto ${isCurrent ? 'bg-green-100' : 'bg-white'}`}>
-          <h2 className="text-2xl font-bold text-center mb-4">Détails de {selectedUser.name}</h2>
+        <div className={`rounded-lg shadow-md border border-gray-200 p-6 max-w-md mx-auto bg-green-100`}>
+          <h2 className="text-2xl font-bold text-center mb-4">{selectedUser.name}</h2>
           <div className="space-y-3 text-lg">
-            <p><strong>Utilisateur :</strong> {selectedUser.name}</p>
             <p><strong>Rang :</strong> #{selectedUser.rank}</p>
             <p><strong>Score :</strong> {selectedUser.totalScore}</p>
             <p><strong>Badge :</strong> {getHighestBadge(selectedUser.badges) || 'Aucun'}</p>
