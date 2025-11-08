@@ -150,7 +150,7 @@ export default function QuizDetail() {
   return (
     <div className="max-w-3xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">{quiz.name}</h1>
-      <p className="mb-4 p-2 bg-blue-50 rounded text-center">Votre score cumulé pour ce quiz : {totalHistoricalScore} points</p>
+      <p className="mb-4 p-2 bg-blue-50 rounded text-center">Votre score cumulé pour ce quiz : {totalHistoricalScore}</p>
 
       {quiz.questions.map((q, i) => (
         <div
@@ -247,4 +247,4 @@ export default function QuizDetail() {
       )}
     </div>
   );
-          }
+}
