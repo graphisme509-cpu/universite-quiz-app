@@ -534,8 +534,9 @@ app.get('/api/dashboard/user-details/:userId', requireAuth, async (req, res) => 
     const badges = badgesRes.rows[0]?.badges || '';
 
     const quizScoresRes = await pool.query(`
-      SELECT q.name as quizName, COALESCE(s.score, 0) as score
+      SELECT q.name as quizName, COALESCE(SUM(s.score), 0) as score
       FROM quizzes q LEFT JOIN scores s ON q.id = s.quiz_id AND s.user_id = $1
+      GROUP BY q.id, q.name
       ORDER BY q.name
     `, [userId]);
 
@@ -543,7 +544,7 @@ app.get('/api/dashboard/user-details/:userId', requireAuth, async (req, res) => 
       name: user.name,
       xp: user.xp,
       badges,
-      quizScores: quizScoresRes.rows.map(row => ({ quizName: row.quizname, score: parseInt(row.score) }))
+      quizScores: quizScoresRes.rows.map(row => ({ quizName: row.quizName, score: parseInt(row.score) }))
     });
   } catch (err) {
     logger.error(err);
