@@ -463,6 +463,123 @@ app.post('/api/admin/toggle-synthese', async (req, res) => {
   }
 });
 
+// Routes Admin Kindergarten
+
+app.get('/api/admin/eleves-kind', async (req, res) => {
+  const auth = req.headers.authorization?.match(/^Bearer (.+)$/);
+  if (!verifyAdminToken(auth?.[1])) return res.status(401).json({ success: false, message: 'Token invalide.' });
+  try {
+    const q = await pool.query('SELECT id, nom, prenom FROM eleves_kind ORDER BY LOWER(nom), LOWER(prenom)');
+    res.json(q.rows);
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ success: false });
+  }
+});
+
+app.get('/api/admin/eleve-kind/:id', async (req, res) => {
+  const auth = req.headers.authorization?.match(/^Bearer (.+)$/);
+  if (!verifyAdminToken(auth?.[1])) return res.status(401).json({ success: false, message: 'Token invalide.' });
+  const { id } = req.params;
+  try {
+    const q = await pool.query('SELECT * FROM eleves_kind WHERE id = $1', [id]);
+    if (q.rowCount === 0) return res.status(404).json({ success: false, message: 'Élève non trouvé.' });
+    res.json(q.rows[0]);
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ success: false });
+  }
+});
+
+app.post('/api/admin/add-eleve-kind', async (req, res) => {
+  const auth = req.headers.authorization?.match(/^Bearer (.+)$/);
+  if (!verifyAdminToken(auth?.[1])) return res.status(401).json({ success: false, message: 'Token invalide.' });
+  const {
+    nom, prenom, sexe, date_naissance, lieu_naissance, classe, adresse,
+    personne_responsable_cin, nom_responsable, prenom_responsable, tel_responsable,
+    enseignant_cin, nom_enseignant, prenom_enseignant
+  } = req.body;
+  if (!nom || !prenom || !sexe || !date_naissance || !lieu_naissance || !classe || !adresse ||
+      !personne_responsable_cin || !nom_responsable || !prenom_responsable || !tel_responsable ||
+      !enseignant_cin || !nom_enseignant || !prenom_enseignant) {
+    return res.status(400).json({ success: false, message: 'Données incomplètes.' });
+  }
+  try {
+    const insert = await pool.query(
+      `INSERT INTO eleves_kind (nom, prenom, sexe, date_naissance, lieu_naissance, classe, adresse,
+       personne_responsable_cin, nom_responsable, prenom_responsable, tel_responsable,
+       enseignant_cin, nom_enseignant, prenom_enseignant)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+       RETURNING id`,
+      [nom, prenom, sexe, date_naissance, lieu_naissance, classe, adresse, personne_responsable_cin,
+       nom_responsable, prenom_responsable, tel_responsable, enseignant_cin, nom_enseignant, prenom_enseignant]
+    );
+    res.json({ success: true, id: insert.rows[0].id });
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ success: false, message: 'Erreur DB.' });
+  }
+});
+
+app.post('/api/admin/update-field-eleve-kind', async (req, res) => {
+  const auth = req.headers.authorization?.match(/^Bearer (.+)$/);
+  if (!verifyAdminToken(auth?.[1])) return res.status(401).json({ success: false, message: 'Token invalide.' });
+  const { id, field, value } = req.body;
+  if (!id || !field || value === undefined) return res.status(400).json({ success: false, message: 'Données incomplètes.' });
+  try {
+    await pool.query(`UPDATE eleves_kind SET ${field} = $1, updated_at = NOW() WHERE id = $2`, [value, id]);
+    res.json({ success: true });
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ success: false });
+  }
+});
+
+app.delete('/api/admin/eleve-kind/:id', async (req, res) => {
+  const auth = req.headers.authorization?.match(/^Bearer (.+)$/);
+  if (!verifyAdminToken(auth?.[1])) return res.status(401).json({ success: false, message: 'Token invalide.' });
+  const { id } = req.params;
+  try {
+    await pool.query('DELETE FROM eleves_kind WHERE id = $1', [id]);
+    res.json({ success: true });
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ success: false });
+  }
+});
+
+app.get('/api/admin/infos-ecole-kind', async (req, res) => {
+  const auth = req.headers.authorization?.match(/^Bearer (.+)$/);
+  if (!verifyAdminToken(auth?.[1])) return res.status(401).json({ success: false, message: 'Token invalide.' });
+  try {
+    const q = await pool.query('SELECT * FROM infos_ecole_kind LIMIT 1');
+    res.json(q.rows[0] || {});
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ success: false });
+  }
+});
+
+app.post('/api/admin/update-infos-ecole-kind', async (req, res) => {
+  const auth = req.headers.authorization?.match(/^Bearer (.+)$/);
+  if (!verifyAdminToken(auth?.[1])) return res.status(401).json({ success: false, message: 'Token invalide.' });
+  const { annee_academique, ecole, directeur, telephone, zone, inspecteur_zone } = req.body;
+  try {
+    await pool.query(
+      `INSERT INTO infos_ecole_kind (annee_academique, ecole, directeur, telephone, zone, inspecteur_zone)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       ON CONFLICT (id) DO UPDATE SET
+       annee_academique = $1, ecole = $2, directeur = $3, telephone = $4, zone = $5, inspecteur_zone = $6
+       WHERE infos_ecole_kind.id = 1`,
+      [annee_academique, ecole, directeur, telephone, zone, inspecteur_zone]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ success: false });
+  }
+});
+
 // server.js (correction dans la route /api/quiz/:quizName)
 app.post('/api/quiz/:quizName', requireAuth, quizLimiter, async (req, res) => {
   const { quizName } = req.params;
