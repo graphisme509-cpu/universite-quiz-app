@@ -62,8 +62,6 @@ export default function InfosKind() {
       if (data.success) {
         setAdminToken(data.token);
         setIsLoggedIn(true);
-        fetchEleves();
-        fetchSchoolInfo();
       } else {
         alert(data.message || 'Code invalide');
       }
@@ -86,10 +84,12 @@ export default function InfosKind() {
       const res = await fetch(`${API_BASE_URL}/api/admin/eleves-kind`, {
         headers: { Authorization: `Bearer ${adminToken}` },
       });
+      if (!res.ok) throw new Error('Failed to fetch');
       const data = await res.json();
-      setEleves(data);
+      setEleves(Array.isArray(data) ? data : []);
     } catch {
       alert('Erreur lors du chargement des élèves');
+      setEleves([]);
     }
   };
 
@@ -98,9 +98,10 @@ export default function InfosKind() {
       const res = await fetch(`${API_BASE_URL}/api/admin/infos-ecole-kind`, {
         headers: { Authorization: `Bearer ${adminToken}` },
       });
+      if (!res.ok) throw new Error('Failed to fetch');
       const data = await res.json();
+      setSchoolInfo(data);
       if (data.id) {
-        setSchoolInfo(data);
         setAnneeAcademique(data.annee_academique || '');
         setEcole(data.ecole || '');
         setDirecteur(data.directeur || '');
@@ -110,6 +111,7 @@ export default function InfosKind() {
       }
     } catch {
       // No data yet, remains empty
+      setSchoolInfo(null);
     }
   };
 
@@ -118,6 +120,7 @@ export default function InfosKind() {
       const res = await fetch(`${API_BASE_URL}/api/admin/eleve-kind/${id}`, {
         headers: { Authorization: `Bearer ${adminToken}` },
       });
+      if (!res.ok) throw new Error('Failed to fetch');
       const data = await res.json();
       if (data.id) {
         setSelectedEleve(data);
@@ -125,6 +128,8 @@ export default function InfosKind() {
       }
     } catch {
       alert('Erreur lors du chargement de l\'élève');
+      setSelectedEleve(null);
+      setEditingEleve({});
     }
   };
 
@@ -357,7 +362,7 @@ export default function InfosKind() {
                 placeholder="Nom de l'élève"
                 value={editingEleve.nom || ''}
                 onChange={(e) => setEditingEleve((prev: any) => ({ ...prev, nom: e.target.value }))}
-                onBlur={() => updateFieldEleve('nom', editingEleve.nom)}
+                onBlur={() => updateFieldEleve('nom', editingEleve.nom || '')}
                 className="w-full p-3 border rounded-lg"
               />
               <input
@@ -365,7 +370,7 @@ export default function InfosKind() {
                 placeholder="Prénom de l'élève"
                 value={editingEleve.prenom || ''}
                 onChange={(e) => setEditingEleve((prev: any) => ({ ...prev, prenom: e.target.value }))}
-                onBlur={() => updateFieldEleve('prenom', editingEleve.prenom)}
+                onBlur={() => updateFieldEleve('prenom', editingEleve.prenom || '')}
                 className="w-full p-3 border rounded-lg"
               />
               <input
@@ -373,7 +378,7 @@ export default function InfosKind() {
                 placeholder="Sexe de l'élève"
                 value={editingEleve.sexe || ''}
                 onChange={(e) => setEditingEleve((prev: any) => ({ ...prev, sexe: e.target.value }))}
-                onBlur={() => updateFieldEleve('sexe', editingEleve.sexe)}
+                onBlur={() => updateFieldEleve('sexe', editingEleve.sexe || '')}
                 className="w-full p-3 border rounded-lg"
               />
               <input
@@ -381,7 +386,7 @@ export default function InfosKind() {
                 placeholder="Date de naissance de l’élève"
                 value={editingEleve.date_naissance || ''}
                 onChange={(e) => setEditingEleve((prev: any) => ({ ...prev, date_naissance: e.target.value }))}
-                onBlur={() => updateFieldEleve('date_naissance', editingEleve.date_naissance)}
+                onBlur={() => updateFieldEleve('date_naissance', editingEleve.date_naissance || '')}
                 className="w-full p-3 border rounded-lg"
               />
               <input
@@ -389,7 +394,7 @@ export default function InfosKind() {
                 placeholder="Lieu de naissance"
                 value={editingEleve.lieu_naissance || ''}
                 onChange={(e) => setEditingEleve((prev: any) => ({ ...prev, lieu_naissance: e.target.value }))}
-                onBlur={() => updateFieldEleve('lieu_naissance', editingEleve.lieu_naissance)}
+                onBlur={() => updateFieldEleve('lieu_naissance', editingEleve.lieu_naissance || '')}
                 className="w-full p-3 border rounded-lg"
               />
               <input
@@ -397,7 +402,7 @@ export default function InfosKind() {
                 placeholder="Classe"
                 value={editingEleve.classe || ''}
                 onChange={(e) => setEditingEleve((prev: any) => ({ ...prev, classe: e.target.value }))}
-                onBlur={() => updateFieldEleve('classe', editingEleve.classe)}
+                onBlur={() => updateFieldEleve('classe', editingEleve.classe || '')}
                 className="w-full p-3 border rounded-lg"
               />
               <input
@@ -405,7 +410,7 @@ export default function InfosKind() {
                 placeholder="Adresse"
                 value={editingEleve.adresse || ''}
                 onChange={(e) => setEditingEleve((prev: any) => ({ ...prev, adresse: e.target.value }))}
-                onBlur={() => updateFieldEleve('adresse', editingEleve.adresse)}
+                onBlur={() => updateFieldEleve('adresse', editingEleve.adresse || '')}
                 className="w-full p-3 border rounded-lg"
               />
               <input
@@ -413,7 +418,7 @@ export default function InfosKind() {
                 placeholder="Personne responsable CIN/NIF"
                 value={editingEleve.personne_responsable_cin || ''}
                 onChange={(e) => setEditingEleve((prev: any) => ({ ...prev, personne_responsable_cin: e.target.value }))}
-                onBlur={() => updateFieldEleve('personne_responsable_cin', editingEleve.personne_responsable_cin)}
+                onBlur={() => updateFieldEleve('personne_responsable_cin', editingEleve.personne_responsable_cin || '')}
                 className="w-full p-3 border rounded-lg"
               />
               <input
@@ -421,7 +426,7 @@ export default function InfosKind() {
                 placeholder="Nom de la personne responsable"
                 value={editingEleve.nom_responsable || ''}
                 onChange={(e) => setEditingEleve((prev: any) => ({ ...prev, nom_responsable: e.target.value }))}
-                onBlur={() => updateFieldEleve('nom_responsable', editingEleve.nom_responsable)}
+                onBlur={() => updateFieldEleve('nom_responsable', editingEleve.nom_responsable || '')}
                 className="w-full p-3 border rounded-lg"
               />
               <input
@@ -429,7 +434,7 @@ export default function InfosKind() {
                 placeholder="Prénom de la personne responsable"
                 value={editingEleve.prenom_responsable || ''}
                 onChange={(e) => setEditingEleve((prev: any) => ({ ...prev, prenom_responsable: e.target.value }))}
-                onBlur={() => updateFieldEleve('prenom_responsable', editingEleve.prenom_responsable)}
+                onBlur={() => updateFieldEleve('prenom_responsable', editingEleve.prenom_responsable || '')}
                 className="w-full p-3 border rounded-lg"
               />
               <input
@@ -437,7 +442,7 @@ export default function InfosKind() {
                 placeholder="Téléphone de la personne responsable"
                 value={editingEleve.tel_responsable || ''}
                 onChange={(e) => setEditingEleve((prev: any) => ({ ...prev, tel_responsable: e.target.value }))}
-                onBlur={() => updateFieldEleve('tel_responsable', editingEleve.tel_responsable)}
+                onBlur={() => updateFieldEleve('tel_responsable', editingEleve.tel_responsable || '')}
                 className="w-full p-3 border rounded-lg"
               />
               <input
@@ -445,7 +450,7 @@ export default function InfosKind() {
                 placeholder="Enseignant CIN/NIF"
                 value={editingEleve.enseignant_cin || ''}
                 onChange={(e) => setEditingEleve((prev: any) => ({ ...prev, enseignant_cin: e.target.value }))}
-                onBlur={() => updateFieldEleve('enseignant_cin', editingEleve.enseignant_cin)}
+                onBlur={() => updateFieldEleve('enseignant_cin', editingEleve.enseignant_cin || '')}
                 className="w-full p-3 border rounded-lg"
               />
               <input
@@ -453,7 +458,7 @@ export default function InfosKind() {
                 placeholder="Nom de l'enseignant"
                 value={editingEleve.nom_enseignant || ''}
                 onChange={(e) => setEditingEleve((prev: any) => ({ ...prev, nom_enseignant: e.target.value }))}
-                onBlur={() => updateFieldEleve('nom_enseignant', editingEleve.nom_enseignant)}
+                onBlur={() => updateFieldEleve('nom_enseignant', editingEleve.nom_enseignant || '')}
                 className="w-full p-3 border rounded-lg"
               />
               <input
@@ -461,7 +466,7 @@ export default function InfosKind() {
                 placeholder="Prénom de l'enseignant"
                 value={editingEleve.prenom_enseignant || ''}
                 onChange={(e) => setEditingEleve((prev: any) => ({ ...prev, prenom_enseignant: e.target.value }))}
-                onBlur={() => updateFieldEleve('prenom_enseignant', editingEleve.prenom_enseignant)}
+                onBlur={() => updateFieldEleve('prenom_enseignant', editingEleve.prenom_enseignant || '')}
                 className="w-full p-3 border rounded-lg"
               />
             </div>
