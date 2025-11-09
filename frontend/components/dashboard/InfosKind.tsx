@@ -2,6 +2,18 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {
+  Document,
+  Packer,
+  Paragraph,
+  TextRun,
+  Table,
+  TableRow,
+  TableCell,
+  AlignmentType,
+  BorderStyle,
+  WidthType,
+} from 'docx';
 
 const API_BASE_URL = 'https://universite-quiz-app-production.up.railway.app';
 
@@ -47,6 +59,9 @@ export default function InfosKind() {
   const [editingEleve, setEditingEleve] = useState<any>({});
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // New state for all élèves details (for Word generation)
+  const [allEleves, setAllEleves] = useState<any[]>([]);
+
   const navigate = useNavigate();
 
   const handleAdminLogin = async (e: React.FormEvent) => {
@@ -76,6 +91,7 @@ export default function InfosKind() {
     if (isLoggedIn) {
       fetchEleves();
       fetchSchoolInfo();
+      fetchAllEleves(); // New: Fetch all details for Word
     }
   }, [isLoggedIn]);
 
@@ -90,6 +106,21 @@ export default function InfosKind() {
     } catch {
       alert('Erreur lors du chargement des élèves');
       setEleves([]);
+    }
+  };
+
+  // New: Fetch all élèves with full details
+  const fetchAllEleves = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/all-eleves-kind`, {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      });
+      if (!res.ok) throw new Error('Failed to fetch');
+      const data = await res.json();
+      setAllEleves(Array.isArray(data) ? data : []);
+    } catch {
+      console.error('Erreur lors du chargement de tous les élèves');
+      setAllEleves([]);
     }
   };
 
@@ -184,6 +215,7 @@ export default function InfosKind() {
         setNomEnseignant('');
         setPrenomEnseignant('');
         fetchEleves();
+        fetchAllEleves(); // New: Refresh full list after add
       }
     } catch {
       setMessageEleve('Erreur lors de l\'ajout');
@@ -245,6 +277,7 @@ export default function InfosKind() {
         setSelectedId('');
         setSelectedEleve(null);
         setEditingEleve({});
+        fetchAllEleves(); // New: Refresh full list after delete
       } else {
         alert('Erreur lors de la suppression');
       }
@@ -253,6 +286,145 @@ export default function InfosKind() {
     } finally {
       setIsDeleting(false);
     }
+  };
+
+  // New: Generate Word document for liste formation
+  const generateListeFormationWord = async () => {
+    if (!allEleves.length) {
+      alert('Aucun élève à exporter.');
+      return;
+    }
+
+    // Group by classe and sort by nom
+    const sections = {
+      'Section des petits': allEleves.filter(e => e.classe === 'Section des petits').sort((a, b) => a.nom.localeCompare(b.nom, undefined, { sensitivity: 'base' })),
+      'Section des moyens': allEleves.filter(e => e.classe === 'Section des moyens').sort((a, b) => a.nom.localeCompare(b.nom, undefined, { sensitivity: 'base' })),
+      'Section des grands': allEleves.filter(e => e.classe === 'Section des grands').sort((a, b) => a.nom.localeCompare(b.nom, undefined, { sensitivity: 'base' })),
+    };
+
+    const doc = new Document({
+      sections: [
+        {
+          properties: {},
+          children: [
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: 'Liste de formation - Kindergarten',
+                  bold: true,
+                  size: 28,
+                  centering: { type: AlignmentType.CENTER },
+                }),
+              ],
+            }),
+            // Table 1: Section des petits
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: 'Section des petits',
+                  bold: true,
+                  size: 24,
+                }),
+              ],
+              spacing: { after: 200 },
+            }),
+            ...createTableRows(sections['Section des petits']),
+            // Table 2: Section des moyens
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: 'Section des moyens',
+                  bold: true,
+                  size: 24,
+                }),
+              ],
+              spacing: { after: 200 },
+            }),
+            ...createTableRows(sections['Section des moyens']),
+            // Table 3: Section des grands
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: 'Section des grands',
+                  bold: true,
+                  size: 24,
+                }),
+              ],
+              spacing: { after: 200 },
+            }),
+            ...createTableRows(sections['Section des grands']),
+          ],
+        },
+      ],
+    });
+
+    const blob = await Packer.toBlob(doc);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'liste_formation_kindergarten.docx';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Helper: Create table rows for a section
+  const createTableRows = (elevesSection: any[]) => {
+    const headers = [
+      'Nom de l\'élève', 'Prénom de l\'élève', 'Sexe de l\'élève', 'Date de naissance de l’élève',
+      'Lieu de naissance', 'Classe', 'Adresse', 'Personne responsable CIN/NIF',
+      'Nom de la personne responsable', 'Prénom de la personne responsable', 'Téléphone de la personne responsable',
+      'Enseignant CIN/NIF', 'Nom de l\'enseignant', 'Prénom de l\'enseignant'
+    ];
+
+    let tableRows = [
+      new TableRow({
+        children: headers.map(header => new TableCell({
+          children: [new Paragraph({
+            children: [new TextRun({ text: header, bold: true })],
+          })],
+          width: { size: 100 / headers.length, type: WidthType.PERCENTAGE },
+        })),
+      }),
+    ];
+
+    if (elevesSection.length === 0) {
+      tableRows.push(
+        new TableRow({
+          children: headers.map(() => new TableCell({
+            children: [new Paragraph('Aucun élève inscrit dans cette section.')],
+            width: { size: 100 / headers.length, type: WidthType.PERCENTAGE },
+          })),
+        })
+      );
+    } else {
+      elevesSection.forEach(eleve => {
+        const rowCells = [
+          eleve.nom, eleve.prenom, eleve.sexe, eleve.date_naissance,
+          eleve.lieu_naissance, eleve.classe, eleve.adresse, eleve.personne_responsable_cin,
+          eleve.nom_responsable, eleve.prenom_responsable, eleve.tel_responsable,
+          eleve.enseignant_cin, eleve.nom_enseignant, eleve.prenom_enseignant
+        ].map(value => new TableCell({
+          children: [new Paragraph(value || '')],
+          width: { size: 100 / headers.length, type: WidthType.PERCENTAGE },
+        }));
+        tableRows.push(new TableRow({ children: rowCells }));
+      });
+    }
+
+    const table = new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      borders: {
+        top: { style: BorderStyle.SINGLE, size: 1 },
+        bottom: { style: BorderStyle.SINGLE, size: 1 },
+        left: { style: BorderStyle.SINGLE, size: 1 },
+        right: { style: BorderStyle.SINGLE, size: 1 },
+        insideHorizontal: { style: BorderStyle.SINGLE, size: 1 },
+        insideVertical: { style: BorderStyle.SINGLE, size: 1 },
+      },
+      rows: tableRows,
+    });
+
+    return [table, new Paragraph({ spacing: { after: 400 } })];
   };
 
   if (!isLoggedIn) {
@@ -482,6 +654,17 @@ export default function InfosKind() {
           </div>
         )}
       </section>
+
+      {/* New Section: Liste de formation */}
+      <section className="bg-white p-8 rounded-xl shadow-lg border">
+        <h2 className="text-2xl font-bold mb-6">Liste de formation</h2>
+        <button
+          onClick={generateListeFormationWord}
+          className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 flex items-center justify-center"
+        >
+          Télécharger la liste de formation
+        </button>
+      </section>
     </div>
   );
-  }
+    }
