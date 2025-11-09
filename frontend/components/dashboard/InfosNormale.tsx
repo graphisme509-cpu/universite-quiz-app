@@ -311,7 +311,7 @@ export default function InfosNormale() {
   const createTableRows = (etudiantesSection: any[]) => {
     const headers = [
       'Nom de l\'étudiante', 'Prénom de l\'étudiante', 'Option', 'Sexe de l\'étudiante', 'Date de naissance de l’étudiante',
-      'Commune', 'Nom dernière école', 'District dernière école', 'Dernière classe', 'Classe actuelle',
+      'Commune', 'Nom dernière école', 'District dernière école', 'Dernière classe',
       'Année dernière école', 'Mention dernière école'
     ];
 
@@ -340,7 +340,7 @@ export default function InfosNormale() {
         const rowCells = [
           etudiante.nom, etudiante.prenom, etudiante.option, etudiante.sexe, etudiante.date_naissance,
           etudiante.commune, etudiante.nom_derniere_ecole, etudiante.district_derniere_ecole, etudiante.derniere_classe,
-          etudiante.classe_actuelle, etudiante.annee_derniere_ecole, etudiante.mention_derniere_ecole
+          etudiante.annee_derniere_ecole, etudiante.mention_derniere_ecole
         ].map(value => new TableCell({
           children: [new Paragraph(value || '')],
           width: { size: 100 / headers.length, type: WidthType.PERCENTAGE },
