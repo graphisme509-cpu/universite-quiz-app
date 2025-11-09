@@ -600,6 +600,8 @@ app.post('/api/admin/update-infos-ecole-kind', async (req, res) => {
 
 // Routes Admin Normale
 
+// Routes Admin Normale
+
 app.get('/api/admin/etudiantes-normale', async (req, res) => {
   const auth = req.headers.authorization?.match(/^Bearer (.+)$/);
   if (!verifyAdminToken(auth?.[1])) return res.status(401).json({ success: false, message: 'Token invalide.' });
@@ -620,7 +622,8 @@ app.get('/api/admin/all-etudiantes-normale', async (req, res) => {
     const q = await pool.query(`
       SELECT id, nom, prenom, option, sexe, date_naissance, commune,
              nom_derniere_ecole, district_derniere_ecole, derniere_classe,
-             annee_derniere_ecole, mention_derniere_ecole, classe_actuelle, annee_academique, code_etudiante
+             annee_derniere_ecole, mention_derniere_ecole, classe_actuelle,
+             annee_academique, code_etudiante
       FROM etudiantes_normale ORDER BY LOWER(nom), LOWER(prenom)
     `);
     res.json(q.rows);
@@ -650,23 +653,27 @@ app.post('/api/admin/add-etudiante-normale', async (req, res) => {
   const {
     nom, prenom, option, sexe, date_naissance, commune,
     nom_derniere_ecole, district_derniere_ecole, derniere_classe,
-    annee_derniere_ecole, mention_derniere_ecole, classe_actuelle, annee_academique, code_etudiante
+    annee_derniere_ecole, mention_derniere_ecole, classe_actuelle,
+    annee_academique, code_etudiante
   } = req.body;
   if (!nom || !prenom || !option || !sexe || !date_naissance || !commune ||
       !nom_derniere_ecole || !district_derniere_ecole || !derniere_classe ||
-      !annee_derniere_ecole || !mention_derniere_ecole || !classe_actuelle || !annee_academique || !code_etudiante) {
+      !annee_derniere_ecole || !mention_derniere_ecole || !classe_actuelle ||
+      !annee_academique || !code_etudiante) {
     return res.status(400).json({ success: false, message: 'Données incomplètes.' });
   }
   try {
     const insert = await pool.query(
       `INSERT INTO etudiantes_normale (nom, prenom, option, sexe, date_naissance, commune,
        nom_derniere_ecole, district_derniere_ecole, derniere_classe,
-       annee_derniere_ecole, mention_derniere_ecole, classe_actuelle, annee_academique, code_etudiante)
+       annee_derniere_ecole, mention_derniere_ecole, classe_actuelle,
+       annee_academique, code_etudiante)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
        RETURNING id`,
       [nom, prenom, option, sexe, date_naissance, commune,
        nom_derniere_ecole, district_derniere_ecole, derniere_classe,
-       annee_derniere_ecole, mention_derniere_ecole, classe_actuelle, annee_academique, code_etudiante]
+       annee_derniere_ecole, mention_derniere_ecole, classe_actuelle,
+       annee_academique, code_etudiante]
     );
     res.json({ success: true, id: insert.rows[0].id });
   } catch (err) {
@@ -1074,7 +1081,6 @@ app.post('/api/admin/update-field', async (req, res) => {
  for (let p = 1; p <= 3; p++) {
  const table = `resultats_${annee}_${p}`;
  await pool.query(`UPDATE ${table} SET academic_year = $1, updated_at=NOW() WHERE code_etudiant = $2`, [value, code]);
- }
  }
  }
  res.json({ success: true });
