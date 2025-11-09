@@ -604,6 +604,12 @@ export default function NewAdmin() {
        >
          Informations Kindergarten
        </button>
+       <button
+         onClick={() => navigate('/dashboard/infosnormale')}
+         className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 flex items-center justify-center"
+       >
+         Informations Normale
+       </button>
      </div>
    </div>
  ) : (
@@ -927,4 +933,4 @@ export default function NewAdmin() {
  )}
  </>
  );
-                  }
+   }
