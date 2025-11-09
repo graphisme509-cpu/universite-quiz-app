@@ -24,6 +24,9 @@ export default function InfosNormale() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // States for first form (Ajouter étudiante)
+  const [classeActuelle, setClasseActuelle] = useState('');
+  const [anneeAcademique, setAnneeAcademique] = useState('');
+  const [codeEtudiante, setCodeEtudiante] = useState('');
   const [nomEtudiante, setNomEtudiante] = useState('');
   const [prenomEtudiante, setPrenomEtudiante] = useState('');
   const [option, setOption] = useState('');
@@ -144,6 +147,9 @@ export default function InfosNormale() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
         body: JSON.stringify({
+          classe_actuelle: classeActuelle,
+          annee_academique: anneeAcademique,
+          code_etudiante: codeEtudiante,
           nom: nomEtudiante,
           prenom: prenomEtudiante,
           option,
@@ -160,6 +166,9 @@ export default function InfosNormale() {
       const data = await res.json();
       setMessageEtudiante(data.success ? 'Étudiante ajoutée avec succès' : data.message);
       if (data.success) {
+        setClasseActuelle('');
+        setAnneeAcademique('');
+        setCodeEtudiante('');
         setNomEtudiante('');
         setPrenomEtudiante('');
         setOption('');
@@ -226,11 +235,11 @@ export default function InfosNormale() {
       return;
     }
 
-    // Group by derniere_classe and sort by nom
+    // Group by classe_actuelle and sort by nom
     const sections = {
-      '1ère année': allEtudiantes.filter(e => e.derniere_classe === '1ère année').sort((a, b) => a.nom.localeCompare(b.nom, undefined, { sensitivity: 'base' })),
-      '2ème année': allEtudiantes.filter(e => e.derniere_classe === '2ème année').sort((a, b) => a.nom.localeCompare(b.nom, undefined, { sensitivity: 'base' })),
-      '3ème année': allEtudiantes.filter(e => e.derniere_classe === '3ème année').sort((a, b) => a.nom.localeCompare(b.nom, undefined, { sensitivity: 'base' })),
+      '1ère année': allEtudiantes.filter(e => e.classe_actuelle === '1ère année').sort((a, b) => a.nom.localeCompare(b.nom, undefined, { sensitivity: 'base' })),
+      '2ème année': allEtudiantes.filter(e => e.classe_actuelle === '2ème année').sort((a, b) => a.nom.localeCompare(b.nom, undefined, { sensitivity: 'base' })),
+      '3ème année': allEtudiantes.filter(e => e.classe_actuelle === '3ème année').sort((a, b) => a.nom.localeCompare(b.nom, undefined, { sensitivity: 'base' })),
     };
 
     const doc = new Document({
@@ -302,7 +311,7 @@ export default function InfosNormale() {
   const createTableRows = (etudiantesSection: any[]) => {
     const headers = [
       'Nom de l\'étudiante', 'Prénom de l\'étudiante', 'Option', 'Sexe de l\'étudiante', 'Date de naissance de l’étudiante',
-      'Commune', 'Nom dernière école', 'District dernière école', 'Dernière classe', 'Année dernière école', 'Mention dernière école'
+      'Commune', 'Nom dernière école', 'District dernière école', 'Classe actuelle', 'Année dernière école', 'Mention dernière école'
     ];
 
     let tableRows = [
@@ -329,7 +338,7 @@ export default function InfosNormale() {
       etudiantesSection.forEach(etudiante => {
         const rowCells = [
           etudiante.nom, etudiante.prenom, etudiante.option, etudiante.sexe, etudiante.date_naissance,
-          etudiante.commune, etudiante.nom_derniere_ecole, etudiante.district_derniere_ecole, etudiante.derniere_classe,
+          etudiante.commune, etudiante.nom_derniere_ecole, etudiante.district_derniere_ecole, etudiante.classe_actuelle,
           etudiante.annee_derniere_ecole, etudiante.mention_derniere_ecole
         ].map(value => new TableCell({
           children: [new Paragraph(value || '')],
@@ -387,6 +396,9 @@ export default function InfosNormale() {
       <section className="bg-white p-8 rounded-xl shadow-lg border">
         <h2 className="text-2xl font-bold mb-6">Ajouter une étudiante</h2>
         <form onSubmit={handleSubmitEtudiante} className="space-y-4">
+          <input type="text" placeholder="Classe actuelle" value={classeActuelle} onChange={(e) => setClasseActuelle(e.target.value)} required className="w-full p-3 border rounded-lg" />
+          <input type="text" placeholder="Année académique" value={anneeAcademique} onChange={(e) => setAnneeAcademique(e.target.value)} className="w-full p-3 border rounded-lg" />
+          <input type="text" placeholder="Code de l'étudiante" value={codeEtudiante} onChange={(e) => setCodeEtudiante(e.target.value)} className="w-full p-3 border rounded-lg" />
           <input type="text" placeholder="Nom" value={nomEtudiante} onChange={(e) => setNomEtudiante(e.target.value)} required className="w-full p-3 border rounded-lg" />
           <input type="text" placeholder="Prénom" value={prenomEtudiante} onChange={(e) => setPrenomEtudiante(e.target.value)} required className="w-full p-3 border rounded-lg" />
           <input type="text" placeholder="Option" value={option} onChange={(e) => setOption(e.target.value)} required className="w-full p-3 border rounded-lg" />
@@ -433,6 +445,30 @@ export default function InfosNormale() {
         {selectedEtudiante && (
           <div>
             <div className="space-y-4">
+              <input
+                type="text"
+                placeholder="Classe actuelle"
+                value={editingEtudiante.classe_actuelle || ''}
+                onChange={(e) => setEditingEtudiante((prev: any) => ({ ...prev, classe_actuelle: e.target.value }))}
+                onBlur={() => updateFieldEtudiante('classe_actuelle', editingEtudiante.classe_actuelle || '')}
+                className="w-full p-3 border rounded-lg"
+              />
+              <input
+                type="text"
+                placeholder="Année académique"
+                value={editingEtudiante.annee_academique || ''}
+                onChange={(e) => setEditingEtudiante((prev: any) => ({ ...prev, annee_academique: e.target.value }))}
+                onBlur={() => updateFieldEtudiante('annee_academique', editingEtudiante.annee_academique || '')}
+                className="w-full p-3 border rounded-lg"
+              />
+              <input
+                type="text"
+                placeholder="Code de l'étudiante"
+                value={editingEtudiante.code_etudiante || ''}
+                onChange={(e) => setEditingEtudiante((prev: any) => ({ ...prev, code_etudiante: e.target.value }))}
+                onBlur={() => updateFieldEtudiante('code_etudiante', editingEtudiante.code_etudiante || '')}
+                className="w-full p-3 border rounded-lg"
+              />
               <input
                 type="text"
                 placeholder="Nom"
@@ -547,4 +583,4 @@ export default function InfosNormale() {
       </section>
     </div>
   );
-}
+  }
