@@ -311,7 +311,8 @@ export default function InfosNormale() {
   const createTableRows = (etudiantesSection: any[]) => {
     const headers = [
       'Nom de l\'étudiante', 'Prénom de l\'étudiante', 'Option', 'Sexe de l\'étudiante', 'Date de naissance de l’étudiante',
-      'Commune', 'Nom dernière école', 'District dernière école', 'Classe actuelle', 'Année dernière école', 'Mention dernière école'
+      'Commune', 'Nom dernière école', 'District dernière école', 'Dernière classe', 'Classe actuelle',
+      'Année dernière école', 'Mention dernière école'
     ];
 
     let tableRows = [
@@ -338,8 +339,8 @@ export default function InfosNormale() {
       etudiantesSection.forEach(etudiante => {
         const rowCells = [
           etudiante.nom, etudiante.prenom, etudiante.option, etudiante.sexe, etudiante.date_naissance,
-          etudiante.commune, etudiante.nom_derniere_ecole, etudiante.district_derniere_ecole, etudiante.classe_actuelle,
-          etudiante.annee_derniere_ecole, etudiante.mention_derniere_ecole
+          etudiante.commune, etudiante.nom_derniere_ecole, etudiante.district_derniere_ecole, etudiante.derniere_classe,
+          etudiante.classe_actuelle, etudiante.annee_derniere_ecole, etudiante.mention_derniere_ecole
         ].map(value => new TableCell({
           children: [new Paragraph(value || '')],
           width: { size: 100 / headers.length, type: WidthType.PERCENTAGE },
@@ -397,8 +398,8 @@ export default function InfosNormale() {
         <h2 className="text-2xl font-bold mb-6">Ajouter une étudiante</h2>
         <form onSubmit={handleSubmitEtudiante} className="space-y-4">
           <input type="text" placeholder="Classe actuelle" value={classeActuelle} onChange={(e) => setClasseActuelle(e.target.value)} required className="w-full p-3 border rounded-lg" />
-          <input type="text" placeholder="Année académique" value={anneeAcademique} onChange={(e) => setAnneeAcademique(e.target.value)} className="w-full p-3 border rounded-lg" />
-          <input type="text" placeholder="Code de l'étudiante" value={codeEtudiante} onChange={(e) => setCodeEtudiante(e.target.value)} className="w-full p-3 border rounded-lg" />
+          <input type="text" placeholder="Année académique" value={anneeAcademique} onChange={(e) => setAnneeAcademique(e.target.value)} required className="w-full p-3 border rounded-lg" />
+          <input type="text" placeholder="Code de l'étudiante" value={codeEtudiante} onChange={(e) => setCodeEtudiante(e.target.value)} required className="w-full p-3 border rounded-lg" />
           <input type="text" placeholder="Nom" value={nomEtudiante} onChange={(e) => setNomEtudiante(e.target.value)} required className="w-full p-3 border rounded-lg" />
           <input type="text" placeholder="Prénom" value={prenomEtudiante} onChange={(e) => setPrenomEtudiante(e.target.value)} required className="w-full p-3 border rounded-lg" />
           <input type="text" placeholder="Option" value={option} onChange={(e) => setOption(e.target.value)} required className="w-full p-3 border rounded-lg" />
@@ -583,4 +584,4 @@ export default function InfosNormale() {
       </section>
     </div>
   );
-  }
+}
