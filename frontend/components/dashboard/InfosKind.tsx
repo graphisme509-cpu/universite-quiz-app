@@ -18,6 +18,11 @@ import {
 const API_BASE_URL = 'https://universite-quiz-app-production.up.railway.app';
 
 export default function InfosKind() {
+  const [adminCode, setAdminCode] = useState('');
+  const [adminToken, setAdminToken] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
   // States for first form (Ajouter élève)
   const [nomEleve, setNomEleve] = useState('');
   const [prenomEleve, setPrenomEleve] = useState('');
@@ -59,15 +64,42 @@ export default function InfosKind() {
 
   const navigate = useNavigate();
 
+  const handleAdminLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoggingIn(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: adminCode }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setAdminToken(data.token);
+        setIsLoggedIn(true);
+      } else {
+        alert(data.message || 'Code invalide');
+      }
+    } catch {
+      alert('Erreur lors de la connexion admin');
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
   useEffect(() => {
-    fetchEleves();
-    fetchSchoolInfo();
-    fetchAllEleves(); // New: Fetch all details for Word
-  }, []);
+    if (isLoggedIn) {
+      fetchEleves();
+      fetchSchoolInfo();
+      fetchAllEleves(); // New: Fetch all details for Word
+    }
+  }, [isLoggedIn]);
 
   const fetchEleves = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/admin/eleves-kind`);
+      const res = await fetch(`${API_BASE_URL}/api/admin/eleves-kind`, {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      });
       if (!res.ok) throw new Error('Failed to fetch');
       const data = await res.json();
       setEleves(Array.isArray(data) ? data : []);
@@ -80,7 +112,9 @@ export default function InfosKind() {
   // New: Fetch all élèves with full details
   const fetchAllEleves = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/admin/all-eleves-kind`);
+      const res = await fetch(`${API_BASE_URL}/api/admin/all-eleves-kind`, {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      });
       if (!res.ok) throw new Error('Failed to fetch');
       const data = await res.json();
       setAllEleves(Array.isArray(data) ? data : []);
@@ -92,7 +126,9 @@ export default function InfosKind() {
 
   const fetchSchoolInfo = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/admin/infos-ecole-kind`);
+      const res = await fetch(`${API_BASE_URL}/api/admin/infos-ecole-kind`, {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      });
       if (!res.ok) throw new Error('Failed to fetch');
       const data = await res.json();
       setSchoolInfo(data);
@@ -112,7 +148,9 @@ export default function InfosKind() {
 
   const fetchSelectedEleve = async (id: number) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/admin/eleve-kind/${id}`);
+      const res = await fetch(`${API_BASE_URL}/api/admin/eleve-kind/${id}`, {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      });
       if (!res.ok) throw new Error('Failed to fetch');
       const data = await res.json();
       if (data.id) {
@@ -141,7 +179,7 @@ export default function InfosKind() {
     try {
       const res = await fetch(`${API_BASE_URL}/api/admin/add-eleve-kind`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
         body: JSON.stringify({
           nom: nomEleve,
           prenom: prenomEleve,
@@ -192,7 +230,7 @@ export default function InfosKind() {
     try {
       const res = await fetch(`${API_BASE_URL}/api/admin/update-infos-ecole-kind`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
         body: JSON.stringify({
           annee_academique: anneeAcademique,
           ecole,
@@ -216,7 +254,7 @@ export default function InfosKind() {
     try {
       const res = await fetch(`${API_BASE_URL}/api/admin/update-field-eleve-kind`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
         body: JSON.stringify({ id: selectedId, field, value }),
       });
       if (!res.ok) alert('Erreur lors de la mise à jour');
@@ -232,6 +270,7 @@ export default function InfosKind() {
     try {
       const res = await fetch(`${API_BASE_URL}/api/admin/eleve-kind/${id}`, {
         method: 'DELETE',
+        headers: { Authorization: `Bearer ${adminToken}` },
       });
       if (res.ok) {
         setEleves((prev) => prev.filter((e) => e.id.toString() !== id));
@@ -387,6 +426,30 @@ export default function InfosKind() {
 
     return [table, new Paragraph({ spacing: { after: 400 } })];
   };
+
+  if (!isLoggedIn) {
+    return (
+      <div className="max-w-md mx-auto p-8 bg-white rounded-xl shadow-lg border">
+        <h2 className="text-2xl font-bold mb-6 text-center">Accès Administrateur Kindergarten</h2>
+        <form onSubmit={handleAdminLogin} className="space-y-4">
+          <input
+            type="password"
+            placeholder="Code administrateur"
+            value={adminCode}
+            onChange={(e) => setAdminCode(e.target.value)}
+            className="w-full p-3 border rounded-lg"
+          />
+          <button type="submit" disabled={isLoggingIn} className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 flex items-center justify-center">
+            {isLoggingIn ? (
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+            ) : (
+              'Entrer'
+            )}
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-12 p-8">
@@ -604,4 +667,4 @@ export default function InfosKind() {
       </section>
     </div>
   );
-                      }
+    }
