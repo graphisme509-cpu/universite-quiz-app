@@ -1,6 +1,6 @@
 // components/dashboard/NewAdmin.tsx
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Document,
@@ -24,27 +24,6 @@ export default function NewAdmin() {
  const [isLoggedIn, setIsLoggedIn] = useState(false);
  const [isLoggingIn, setIsLoggingIn] = useState(false);
  const [view, setView] = useState<'menu' | 'modification'>('menu');
-
- const viewRef = useRef<'menu' | 'modification'>('menu');
-
- useEffect(() => {
-   viewRef.current = view;
- }, [view]);
-
- useEffect(() => {
-   const handlePopState = () => {
-     if (viewRef.current === 'modification') {
-       setIsLoggedIn(false);
-       setAdminToken('');
-     }
-   };
-
-   window.addEventListener('popstate', handlePopState);
-
-   return () => {
-     window.removeEventListener('popstate', handlePopState);
-   };
- }, []);
 
  // New state for synthese visibility
  const [syntheseVisible, setSyntheseVisible] = useState(true);
@@ -614,10 +593,7 @@ export default function NewAdmin() {
      <h1 className="text-3xl font-bold text-center mb-8">Page Administration</h1>
      <div className="flex flex-col space-y-4">
        <button
-         onClick={() => {
-           window.history.pushState(null, '', window.location.pathname);
-           setView('modification');
-         }}
+         onClick={() => setView('modification')}
          className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 flex items-center justify-center"
        >
          Modification des résultats
