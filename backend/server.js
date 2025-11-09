@@ -598,6 +598,110 @@ app.post('/api/admin/update-infos-ecole-kind', async (req, res) => {
   }
 });
 
+// Routes Admin Normale
+
+app.get('/api/admin/etudiantes-normale', async (req, res) => {
+  const auth = req.headers.authorization?.match(/^Bearer (.+)$/);
+  if (!verifyAdminToken(auth?.[1])) return res.status(401).json({ success: false, message: 'Token invalide.' });
+  try {
+    const q = await pool.query('SELECT id, nom, prenom FROM etudiantes_normale ORDER BY LOWER(nom), LOWER(prenom)');
+    res.json(q.rows);
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ success: false });
+  }
+});
+
+// Get all étudiantes with full details, sorted by nom
+app.get('/api/admin/all-etudiantes-normale', async (req, res) => {
+  const auth = req.headers.authorization?.match(/^Bearer (.+)$/);
+  if (!verifyAdminToken(auth?.[1])) return res.status(401).json({ success: false, message: 'Token invalide.' });
+  try {
+    const q = await pool.query(`
+      SELECT id, nom, prenom, option, sexe, date_naissance, commune,
+             nom_derniere_ecole, district_derniere_ecole, derniere_classe,
+             annee_derniere_ecole, mention_derniere_ecole
+      FROM etudiantes_normale ORDER BY LOWER(nom), LOWER(prenom)
+    `);
+    res.json(q.rows);
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ success: false });
+  }
+});
+
+app.get('/api/admin/etudiante-normale/:id', async (req, res) => {
+  const auth = req.headers.authorization?.match(/^Bearer (.+)$/);
+  if (!verifyAdminToken(auth?.[1])) return res.status(401).json({ success: false, message: 'Token invalide.' });
+  const { id } = req.params;
+  try {
+    const q = await pool.query('SELECT * FROM etudiantes_normale WHERE id = $1', [id]);
+    if (q.rowCount === 0) return res.status(404).json({ success: false, message: 'Étudiante non trouvée.' });
+    res.json(q.rows[0]);
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ success: false });
+  }
+});
+
+app.post('/api/admin/add-etudiante-normale', async (req, res) => {
+  const auth = req.headers.authorization?.match(/^Bearer (.+)$/);
+  if (!verifyAdminToken(auth?.[1])) return res.status(401).json({ success: false, message: 'Token invalide.' });
+  const {
+    nom, prenom, option, sexe, date_naissance, commune,
+    nom_derniere_ecole, district_derniere_ecole, derniere_classe,
+    annee_derniere_ecole, mention_derniere_ecole
+  } = req.body;
+  if (!nom || !prenom || !option || !sexe || !date_naissance || !commune ||
+      !nom_derniere_ecole || !district_derniere_ecole || !derniere_classe ||
+      !annee_derniere_ecole || !mention_derniere_ecole) {
+    return res.status(400).json({ success: false, message: 'Données incomplètes.' });
+  }
+  try {
+    const insert = await pool.query(
+      `INSERT INTO etudiantes_normale (nom, prenom, option, sexe, date_naissance, commune,
+       nom_derniere_ecole, district_derniere_ecole, derniere_classe,
+       annee_derniere_ecole, mention_derniere_ecole)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+       RETURNING id`,
+      [nom, prenom, option, sexe, date_naissance, commune,
+       nom_derniere_ecole, district_derniere_ecole, derniere_classe,
+       annee_derniere_ecole, mention_derniere_ecole]
+    );
+    res.json({ success: true, id: insert.rows[0].id });
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ success: false, message: 'Erreur DB.' });
+  }
+});
+
+app.post('/api/admin/update-field-etudiante-normale', async (req, res) => {
+  const auth = req.headers.authorization?.match(/^Bearer (.+)$/);
+  if (!verifyAdminToken(auth?.[1])) return res.status(401).json({ success: false, message: 'Token invalide.' });
+  const { id, field, value } = req.body;
+  if (!id || !field || value === undefined) return res.status(400).json({ success: false, message: 'Données incomplètes.' });
+  try {
+    await pool.query(`UPDATE etudiantes_normale SET ${field} = $1, updated_at = NOW() WHERE id = $2`, [value, id]);
+    res.json({ success: true });
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ success: false });
+  }
+});
+
+app.delete('/api/admin/etudiante-normale/:id', async (req, res) => {
+  const auth = req.headers.authorization?.match(/^Bearer (.+)$/);
+  if (!verifyAdminToken(auth?.[1])) return res.status(401).json({ success: false, message: 'Token invalide.' });
+  const { id } = req.params;
+  try {
+    await pool.query('DELETE FROM etudiantes_normale WHERE id = $1', [id]);
+    res.json({ success: true });
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ success: false });
+  }
+});
+
 // server.js (correction dans la route /api/quiz/:quizName)
 app.post('/api/quiz/:quizName', requireAuth, quizLimiter, async (req, res) => {
   const { quizName } = req.params;
