@@ -477,6 +477,24 @@ app.get('/api/admin/eleves-kind', async (req, res) => {
   }
 });
 
+// New: Get all élèves with full details, sorted by nom
+app.get('/api/admin/all-eleves-kind', async (req, res) => {
+  const auth = req.headers.authorization?.match(/^Bearer (.+)$/);
+  if (!verifyAdminToken(auth?.[1])) return res.status(401).json({ success: false, message: 'Token invalide.' });
+  try {
+    const q = await pool.query(`
+      SELECT id, nom, prenom, sexe, date_naissance, lieu_naissance, classe, adresse,
+             personne_responsable_cin, nom_responsable, prenom_responsable, tel_responsable,
+             enseignant_cin, nom_enseignant, prenom_enseignant
+      FROM eleves_kind ORDER BY LOWER(nom), LOWER(prenom)
+    `);
+    res.json(q.rows);
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ success: false });
+  }
+});
+
 app.get('/api/admin/eleve-kind/:id', async (req, res) => {
   const auth = req.headers.authorization?.match(/^Bearer (.+)$/);
   if (!verifyAdminToken(auth?.[1])) return res.status(401).json({ success: false, message: 'Token invalide.' });
