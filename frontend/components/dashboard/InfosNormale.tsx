@@ -237,9 +237,9 @@ export default function InfosNormale() {
 
     // Group by classe_actuelle and sort by nom
     const sections = {
-      '1ère année': allEtudiantes.filter(e => e.classe_actuelle === '1ère année').sort((a, b) => a.nom.localeCompare(b.nom, undefined, { sensitivity: 'base' })),
-      '2ème année': allEtudiantes.filter(e => e.classe_actuelle === '2ème année').sort((a, b) => a.nom.localeCompare(b.nom, undefined, { sensitivity: 'base' })),
-      '3ème année': allEtudiantes.filter(e => e.classe_actuelle === '3ème année').sort((a, b) => a.nom.localeCompare(b.nom, undefined, { sensitivity: 'base' })),
+      '1ère année': allEtudiantes.filter(e => e.classe_actuelle.trim() === '1ère année').sort((a, b) => a.nom.localeCompare(b.nom, undefined, { sensitivity: 'base' })),
+      '2ème année': allEtudiantes.filter(e => e.classe_actuelle.trim() === '2ème année').sort((a, b) => a.nom.localeCompare(b.nom, undefined, { sensitivity: 'base' })),
+      '3ème année': allEtudiantes.filter(e => e.classe_actuelle.trim() === '3ème année').sort((a, b) => a.nom.localeCompare(b.nom, undefined, { sensitivity: 'base' })),
     };
 
     const doc = new Document({
@@ -489,99 +489,54 @@ export default function InfosNormale() {
               <input
                 type="text"
                 placeholder="Option"
-                value={editingEtudiante.option || ''}
-                onChange={(e) => setEditingEtudiante((prev: any) => ({ ...prev, option: e.target.value }))}
-                onBlur={() => updateFieldEtudiante('option', editingEtudiante.option || '')}
+                value={editingEtudiant.option || ''}
+                onChange={(e) => setEditingEtudiant((prev: any) => ({ ...prev, option: e.target.value }))}
+                onBlur={() => updateFieldEtudiant('option', editingEtudiant.option || '')}
                 className="w-full p-3 border rounded-lg"
               />
               <input
                 type="text"
                 placeholder="Sexe"
-                value={editingEtudiante.sexe || ''}
-                onChange={(e) => setEditingEtudiante((prev: any) => ({ ...prev, sexe: e.target.value }))}
-                onBlur={() => updateFieldEtudiante('sexe', editingEtudiante.sexe || '')}
+                value={editingEtudiant.sexe || ''}
+                onChange={(e) => setEditingEtudiant((prev: any) => ({ ...prev, sexe: e.target.value }))}
+                onBlur={() => updateFieldEtudiant('sexe', editingEtudiant.sexe || '')}
                 className="w-full p-3 border rounded-lg"
               />
               <input
                 type="text"
                 placeholder="Date de naissance (jour/mois/année)"
-                value={editingEtudiante.date_naissance || ''}
-                onChange={(e) => setEditingEtudiante((prev: any) => ({ ...prev, date_naissance: e.target.value }))}
-                onBlur={() => updateFieldEtudiante('date_naissance', editingEtudiante.date_naissance || '')}
+                value={editingEtudiant.date_naissance || ''}
+                onChange={(e) => setEditingEtudiant((prev: any) => ({ ...prev, date_naissance: e.target.value }))}
+                onBlur={() => updateFieldEtudiant('date_naissance', editingEtudiant.date_naissance || '')}
                 className="w-full p-3 border rounded-lg"
               />
               <input
                 type="text"
                 placeholder="Commune"
-                value={editingEtudiante.commune || ''}
-                onChange={(e) => setEditingEtudiante((prev: any) => ({ ...prev, commune: e.target.value }))}
-                onBlur={() => updateFieldEtudiante('commune', editingEtudiante.commune || '')}
+                value={editingEtudiant.commune || ''}
+                onChange={(e) => setEditingEtudiant((prev: any) => ({ ...prev, commune: e.target.value }))}
+                onBlur={() => updateFieldEtudiant('commune', editingEtudiant.commune || '')}
                 className="w-full p-3 border rounded-lg"
               />
               <input
                 type="text"
                 placeholder="Nom dernière école"
-                value={editingEtudiante.nom_derniere_ecole || ''}
-                onChange={(e) => setEditingEtudiante((prev: any) => ({ ...prev, nom_derniere_ecole: e.target.value }))}
-                onBlur={() => updateFieldEtudiante('nom_derniere_ecole', editingEtudiante.nom_derniere_ecole || '')}
+                value={editingEtudiant.nom_derniere_ecole || ''}
+                onChange={(e) => setEditingEtudiant((prev: any) => ({ ...prev, nom_derniere_ecole: e.target.value }))}
+                onBlur={() => updateFieldEtudiant('nom_derniere_ecole', editingEtudiant.nom_derniere_ecole || '')}
                 className="w-full p-3 border rounded-lg"
               />
               <input
                 type="text"
                 placeholder="District dernière école"
-                value={editingEtudiante.district_derniere_ecole || ''}
-                onChange={(e) => setEditingEtudiante((prev: any) => ({ ...prev, district_derniere_ecole: e.target.value }))}
-                onBlur={() => updateFieldEtudiante('district_derniere_ecole', editingEtudiante.district_derniere_ecole || '')}
+                value={editingEtudiant.district_derniere_ecole || ''}
+                onChange={(e) => setEditingEtudiant((prev: any) => ({ ...prev, district_derniere_ecole: e.target.value }))}
+                onBlur={() => updateFieldEtudiant('district_derniere_ecole', editingEtudiant.district_derniere_ecole || '')}
                 className="w-full p-3 border rounded-lg"
               />
               <input
                 type="text"
                 placeholder="Dernière classe"
-                value={editingEtudiante.derniere_classe || ''}
-                onChange={(e) => setEditingEtudiante((prev: any) => ({ ...prev, derniere_classe: e.target.value }))}
-                onBlur={() => updateFieldEtudiante('derniere_classe', editingEtudiante.derniere_classe || '')}
-                className="w-full p-3 border rounded-lg"
-              />
-              <input
-                type="text"
-                placeholder="Année dernière école"
-                value={editingEtudiante.annee_derniere_ecole || ''}
-                onChange={(e) => setEditingEtudiante((prev: any) => ({ ...prev, annee_derniere_ecole: e.target.value }))}
-                onBlur={() => updateFieldEtudiante('annee_derniere_ecole', editingEtudiante.annee_derniere_ecole || '')}
-                className="w-full p-3 border rounded-lg"
-              />
-              <input
-                type="text"
-                placeholder="Mention dernière école"
-                value={editingEtudiante.mention_derniere_ecole || ''}
-                onChange={(e) => setEditingEtudiante((prev: any) => ({ ...prev, mention_derniere_ecole: e.target.value }))}
-                onBlur={() => updateFieldEtudiante('mention_derniere_ecole', editingEtudiante.mention_derniere_ecole || '')}
-                className="w-full p-3 border rounded-lg"
-              />
-            </div>
-            <div className="mt-6 flex space-x-4 justify-center">
-              <button onClick={() => handleDeleteEtudiante(selectedId)} disabled={isDeleting} className="bg-red-600 text-white py-2 px-4 rounded-lg flex items-center justify-center">
-                {isDeleting ? (
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                ) : (
-                  'Supprimer l\'étudiante'
-                )}
-              </button>
-            </div>
-          </div>
-        )}
-      </section>
-
-      {/* New Section: Liste de formation */}
-      <section className="bg-white p-8 rounded-xl shadow-lg border">
-        <h2 className="text-2xl font-bold mb-6">Liste de formation</h2>
-        <button
-          onClick={generateListeFormationWord}
-          className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 flex items-center justify-center"
-        >
-          Télécharger la liste de formation
-        </button>
-      </section>
-    </div>
-  );
-      }
+                value={editingEtudiant.derniere_classe || ''}
+                onChange={(e) => setEditingEtudiant((prev: any) => ({ ...prev, derniere_classe: e.target.value }))}
+                onBlur={() => updateFieldEtudiant('derniere_classe
