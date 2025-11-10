@@ -41,17 +41,6 @@ export default function InfosKind() {
   const [isSubmittingEleve, setIsSubmittingEleve] = useState(false);
   const [messageEleve, setMessageEleve] = useState('');
 
-  // States for second form (Infos école)
-  const [anneeAcademique, setAnneeAcademique] = useState('');
-  const [ecole, setEcole] = useState('');
-  const [directeur, setDirecteur] = useState('');
-  const [telephone, setTelephone] = useState('');
-  const [zone, setZone] = useState('');
-  const [inspecteurZone, setInspecteurZone] = useState('');
-  const [isSubmittingEcole, setIsSubmittingEcole] = useState(false);
-  const [messageEcole, setMessageEcole] = useState('');
-  const [schoolInfo, setSchoolInfo] = useState<any>(null);
-
   // States for Élèves section
   const [eleves, setEleves] = useState<{ id: number; nom: string; prenom: string }[]>([]);
   const [selectedId, setSelectedId] = useState('');
@@ -90,7 +79,6 @@ export default function InfosKind() {
   useEffect(() => {
     if (isLoggedIn) {
       fetchEleves();
-      fetchSchoolInfo();
       fetchAllEleves(); // New: Fetch all details for Word
     }
   }, [isLoggedIn]);
@@ -121,28 +109,6 @@ export default function InfosKind() {
     } catch {
       console.error('Erreur lors du chargement de tous les élèves');
       setAllEleves([]);
-    }
-  };
-
-  const fetchSchoolInfo = async () => {
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/admin/infos-ecole-kind`, {
-        headers: { Authorization: `Bearer ${adminToken}` },
-      });
-      if (!res.ok) throw new Error('Failed to fetch');
-      const data = await res.json();
-      setSchoolInfo(data);
-      if (data.id) {
-        setAnneeAcademique(data.annee_academique || '');
-        setEcole(data.ecole || '');
-        setDirecteur(data.directeur || '');
-        setTelephone(data.telephone || '');
-        setZone(data.zone || '');
-        setInspecteurZone(data.inspecteur_zone || '');
-      }
-    } catch {
-      // No data yet, remains empty
-      setSchoolInfo(null);
     }
   };
 
@@ -221,32 +187,6 @@ export default function InfosKind() {
       setMessageEleve('Erreur lors de l\'ajout');
     } finally {
       setIsSubmittingEleve(false);
-    }
-  };
-
-  const handleSubmitEcole = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmittingEcole(true);
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/admin/update-infos-ecole-kind`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
-        body: JSON.stringify({
-          annee_academique: anneeAcademique,
-          ecole,
-          directeur,
-          telephone,
-          zone,
-          inspecteur_zone: inspecteurZone,
-        }),
-      });
-      const data = await res.json();
-      setMessageEcole(data.success ? 'Infos école mises à jour' : data.message);
-      fetchSchoolInfo();
-    } catch {
-      setMessageEcole('Erreur lors de la mise à jour');
-    } finally {
-      setIsSubmittingEcole(false);
     }
   };
 
@@ -484,27 +424,6 @@ export default function InfosKind() {
         </form>
       </section>
 
-      {/* Deuxième formulaire : Infos école */}
-      <section className="bg-white p-8 rounded-xl shadow-lg border">
-        <h2 className="text-2xl font-bold mb-6">Informations École</h2>
-        <form onSubmit={handleSubmitEcole} className="space-y-4">
-          <input type="text" placeholder="Année académique" value={anneeAcademique} onChange={(e) => setAnneeAcademique(e.target.value)} required className="w-full p-3 border rounded-lg" />
-          <input type="text" placeholder="École" value={ecole} onChange={(e) => setEcole(e.target.value)} required className="w-full p-3 border rounded-lg" />
-          <input type="text" placeholder="Directeur(rice)" value={directeur} onChange={(e) => setDirecteur(e.target.value)} required className="w-full p-3 border rounded-lg" />
-          <input type="text" placeholder="Téléphone" value={telephone} onChange={(e) => setTelephone(e.target.value)} required className="w-full p-3 border rounded-lg" />
-          <input type="text" placeholder="Zone" value={zone} onChange={(e) => setZone(e.target.value)} required className="w-full p-3 border rounded-lg" />
-          <input type="text" placeholder="Inspecteur de zone" value={inspecteurZone} onChange={(e) => setInspecteurZone(e.target.value)} required className="w-full p-3 border rounded-lg" />
-          <button type="submit" disabled={isSubmittingEcole} className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 flex items-center justify-center">
-            {isSubmittingEcole ? (
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-            ) : (
-              'Mettre à jour'
-            )}
-          </button>
-          {messageEcole && <p className="text-center">{messageEcole}</p>}
-        </form>
-      </section>
-
       {/* Section Élèves */}
       <section className="bg-white p-8 rounded-xl shadow-lg border">
         <h2 className="text-2xl font-bold mb-6">Élèves</h2>
@@ -667,4 +586,4 @@ export default function InfosKind() {
       </section>
     </div>
   );
-}
+    }
