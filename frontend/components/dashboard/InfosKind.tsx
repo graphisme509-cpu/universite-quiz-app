@@ -297,9 +297,9 @@ export default function InfosKind() {
 
     // Group by classe and sort by nom
     const sections = {
-      'Section des petits': allEleves.filter(e => e.classe === 'Section des petits').sort((a, b) => a.nom.localeCompare(b.nom, undefined, { sensitivity: 'base' })),
-      'Section des moyens': allEleves.filter(e => e.classe === 'Section des moyens').sort((a, b) => a.nom.localeCompare(b.nom, undefined, { sensitivity: 'base' })),
-      'Section des grands': allEleves.filter(e => e.classe === 'Section des grands').sort((a, b) => a.nom.localeCompare(b.nom, undefined, { sensitivity: 'base' })),
+      'Section des petits': allEleves.filter(e => e.classe.trim() === 'Section des petits').sort((a, b) => a.nom.localeCompare(b.nom, undefined, { sensitivity: 'base' })),
+      'Section des moyens': allEleves.filter(e => e.classe.trim() === 'Section des moyens').sort((a, b) => a.nom.localeCompare(b.nom, undefined, { sensitivity: 'base' })),
+      'Section des grands': allEleves.filter(e => e.classe.trim() === 'Section des grands').sort((a, b) => a.nom.localeCompare(b.nom, undefined, { sensitivity: 'base' })),
     };
 
     const doc = new Document({
@@ -667,4 +667,4 @@ export default function InfosKind() {
       </section>
     </div>
   );
-    }
+}
