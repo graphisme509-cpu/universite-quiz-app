@@ -125,8 +125,8 @@ export default function QuizDetail() {
       });
 
       if (!res.ok) throw new Error('Erreur serveur');
-      const text = await res.text();
-      setResultMessage(`Score : ${points}/${total} (${percent}%) — ${text}`);
+      // Ligne modifiée ci-dessous
+      setResultMessage(`Score : ${points}/${total} — enregistré.`);
       setSubmitted(true);
     } catch {
       setResultMessage('Erreur serveur lors de la soumission.');
